@@ -11,6 +11,7 @@ async function arrayBufferToBase64(buffer: ArrayBuffer): Promise<string> {
   for (let i = 0; i < len; i++) {
     binary += String.fromCharCode(bytes[i]);
   }
+  // Use btoa for base64 encoding in Edge runtime
   return btoa(binary);
 }
 
@@ -139,7 +140,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-  } catch (error: any) {
+  } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
     console.error('Error in remove-bg API route:', error);
     // Ensure a generic error is returned to the client for unhandled exceptions
     return NextResponse.json({ error: error.message || 'An unexpected error occurred' }, { status: 500 });

@@ -1,6 +1,6 @@
-import Image from "next/image";
+// import Image from "next/image"; // Removed unused import
 // componentsフォルダからBgRemoverをインポート (パスは実際の構成に合わせてください)
-import BgRemover from "@/components/BgRemover"; // '@/components/...' は src ディレクトリがある場合
+import BgRemoverMulti from "../components/BgRemover"; // '@/components/...' は src ディレクトリがある場合
 // import BgRemover from "../components/BgRemover"; // src ディレクトリがない場合など
 
 export default function Home() {
@@ -13,7 +13,7 @@ export default function Home() {
 
       {/* --- ここに背景除去コンポーネントを配置 --- */}
       <h1 className="text-4xl font-bold mb-8">画像背景除去ツール</h1> {/* 例としてタイトル追加 */}
-      <BgRemover />
+      <BgRemoverMulti />
 
       {/* --- 元々あったコード (Vercelロゴなど) は削除またはコメントアウト --- */}
       {/* <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">

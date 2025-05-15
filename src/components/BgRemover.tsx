@@ -39,7 +39,7 @@ export default function BgRemoverMulti() {
             blob: Array.isArray(conv) ? conv[0] : conv,
             name: file.name.replace(/\.[^.]+$/, ".png"),
           });
-        } catch (err: any) {
+        } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
           if (err?.code === 1) {
             processed.push({ blob: file, name: file.name });
           } else {
@@ -83,7 +83,7 @@ export default function BgRemoverMulti() {
         newOutputs.push({ url, name });
         setOutputs([...newOutputs]); // 逐次結果を表示
       }
-    } catch (err: any) {
+    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       console.error(err);
       setMsg(err.message || "背景除去中にエラーが発生しました。");
     } finally {
