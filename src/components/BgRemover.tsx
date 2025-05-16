@@ -34,10 +34,10 @@ export default function BgRemoverMulti() {
       if (heic) {
         try {
           const { default: heic2any } = await import("heic2any");
-          const conv = await heic2any({ blob: file, toType: "image/png" });
+          const conv = await heic2any({ blob: file, toType: "image/jpeg" });
           processed.push({
             blob: Array.isArray(conv) ? conv[0] : conv,
-            name: file.name.replace(/\.[^.]+$/, ".png"),
+            name: file.name.replace(/\.[^.]+$/, ".jpg"),
           });
         } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
           if (err?.code === 1) {
