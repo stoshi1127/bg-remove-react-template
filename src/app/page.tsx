@@ -2,27 +2,26 @@
 // componentsフォルダからBgRemoverをインポート (パスは実際の構成に合わせてください)
 import BgRemoverMulti from "../components/BgRemover"; // '@/components/...' は src ディレクトリがある場合
 // import BgRemover from "../components/BgRemover"; // src ディレクトリがない場合など
-import type { Metadata } from 'next';
+// import type { Metadata } from 'next'; // 一時的にコメントアウト
 
 const siteName = 'クイックカット';
-const description = '複数の画像を一度にアップロードして、背景を自動で透過できます。iPhoneで撮影した画像（HEIC/HEIF形式）も自動的に変換されます。無料で使えるオンライン背景透過ツールです。';
+// const description = '複数の画像を一度にアップロードして、背景を自動で透過できます。iPhoneで撮影した画像（HEIC/HEIF形式）も自動的に変換されます。無料で使えるオンライン背景透過ツールです。';
 // const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'; // 一時的にコメントアウト
 
+/* // 一時的にメタデータ全体をコメントアウト
 export const metadata: Metadata = {
   title: `${siteName} - 簡単背景透過AIツール`,
   description: description,
-  // metadataBase: new URL(siteUrl), // 一時的にコメントアウト
   alternates: {
-    canonical: '/', // 相対パスとして扱われる
+    canonical: '/', 
   },
   openGraph: {
     title: `${siteName} - 簡単背景透過AIツール`,
     description: description,
-    // url: siteUrl, // 一時的にコメントアウト
     siteName: siteName,
     images: [
       {
-        url: '/ogp.png', // 相対パスとして扱われる
+        url: '/ogp.png', 
         width: 1200,
         height: 630,
         alt: `${siteName} OGP画像`,
@@ -34,16 +33,14 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: `${siteName} - 簡単背景透過AIツール`,
     description: description,
-    images: ['/ogp.png'], // 相対パスとして扱われる
-    // site: '@yourtwitterhandle', // Xのユーザー名があれば
-    // creator: '@yourtwitterhandle', // Xのユーザー名があれば
+    images: ['/ogp.png'], 
   },
   icons: {
-    icon: '/favicon.ico', // 後でpublicディレクトリに配置するfavicon.icoのパス
-    apple: '/apple-touch-icon.png', // 後でpublicディレクトリに配置するAppleタッチアイコンのパス
+    icon: '/favicon.ico', 
+    apple: '/apple-touch-icon.png',
   },
-  // viewport: 'width=device-width, initial-scale=1', // Next.jsが自動で設定することが多い
 };
+*/
 
 export default function Home() {
   return (

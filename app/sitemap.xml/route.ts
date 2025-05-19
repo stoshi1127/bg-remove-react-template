@@ -1,4 +1,5 @@
-// const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'; // 一時的にコメントアウト
+/* // 一時的にファイル全体をコメントアウト
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
 export async function GET() {
   const staticPages = [
@@ -27,4 +28,5 @@ export async function GET() {
       'Content-Type': 'application/xml',
     },
   });
-} 
+}
+*/ 
