@@ -34,7 +34,7 @@ export default function BgRemoverMulti() {
   const [inputs,  setInputs]  = useState<InFile[]>([]);
   // outputs は inputs の中に outputUrl として統合するため、不要になる。
   // const [outputs, setOutputs] = useState<OutFile[]>([]); 
-  const [busy,    setBusy]    = useState(false); 
+  const [busy,    setBusy]    = useState(false);
   const [msg,     setMsg]     = useState<string | null>(null);
   const [progress, setProgress] = useState<number>(0);
   const [processedCount, setProcessedCount] = useState<number>(0);
@@ -97,7 +97,7 @@ export default function BgRemoverMulti() {
       const isHeic = file.type.includes("heic")
         || /\\.(heic|heif)$/i.test(file.name)
         || (file.type === "" && /\\.(heic|heif)$/i.test(file.name));
-      
+
       let previewUrl: string | undefined = undefined;
       if (file.type.startsWith("image/")) {
         previewUrl = URL.createObjectURL(file);
@@ -152,7 +152,7 @@ export default function BgRemoverMulti() {
     // ファイル選択後にinputの値をクリアして同じファイルを選択できるようにする
     if (e.target) {
       e.target.value = '';
-    }
+          }
   };
   
   // ドラッグアンドドロップハンドラ
@@ -244,7 +244,7 @@ export default function BgRemoverMulti() {
         setProcessedCount(prev => prev + 1);
         const currentProgress = Math.round(((i + 1) / filesToProcess.length) * 100);
         setProgress(currentProgress);
-      }
+      }      
     } catch (err: unknown) {
       console.error("全体的な処理エラー:", err);
       const generalErrorMessage = typeof err === 'object' && err !== null && 'message' in err && typeof err.message === 'string'
@@ -289,14 +289,14 @@ export default function BgRemoverMulti() {
                     ${isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'}
                     ${busy ? 'opacity-50 cursor-not-allowed' : ''}`}
       >
-        <input
+      <input
           ref={fileInputRef}
           id="file-upload" // ラベルとの紐付けは残す
-          type="file"
-          accept="image/*,.heic,.heif"
-          multiple
-          onChange={handleFileChange}
-          disabled={busy}
+        type="file"
+        accept="image/*,.heic,.heif"
+        multiple
+        onChange={handleFileChange}
+        disabled={busy}
           className="hidden" // input自体は非表示に
         />
         <div className="flex flex-col items-center justify-center space-y-2 text-gray-600">
@@ -377,15 +377,15 @@ export default function BgRemoverMulti() {
 
       {/* 背景除去ボタン */}
       {inputs.length > 0 && inputs.some(i => i.status === 'ready' || i.status === 'error') && (
-        <button
-          onClick={handleRemove}
+      <button
+        onClick={handleRemove}
           disabled={busy || inputs.filter(i => i.status === 'ready').length === 0}
           className="w-full py-3.5 px-4 rounded-lg font-bold text-white shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-100"
-        >
+      >
           {busy 
             ? `処理中... (${processedCount}/${inputs.filter(i => i.status === 'ready' || i.status === 'uploading' || i.status === 'processing' || i.status === 'completed' || i.status === 'error').length}枚, ${progress}%)` 
             : `選択した画像（${inputs.filter(i => i.status === 'ready').length}枚）の背景を透過する`}
-        </button>
+      </button>
       )}
 
       {/* 進捗バー */}
@@ -396,7 +396,7 @@ export default function BgRemoverMulti() {
             style={{ width: `${progress}%` }}
           >
             {progress > 10 && `${progress}%`}
-          </div>
+            </div>
         </div>
       )}
 
