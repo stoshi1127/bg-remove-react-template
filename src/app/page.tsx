@@ -2,6 +2,48 @@
 // componentsフォルダからBgRemoverをインポート (パスは実際の構成に合わせてください)
 import BgRemoverMulti from "../components/BgRemover"; // '@/components/...' は src ディレクトリがある場合
 // import BgRemover from "../components/BgRemover"; // src ディレクトリがない場合など
+import type { Metadata } from 'next';
+
+const siteName = 'クイックカット';
+const description = '複数の画像を一度にアップロードして、背景を自動で透過できます。iPhoneで撮影した画像（HEIC/HEIF形式）も自動的に変換されます。無料で使えるオンライン背景透過ツールです。';
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'; // Vercelの環境変数などで設定することを推奨
+
+export const metadata: Metadata = {
+  title: `${siteName} - 簡単背景透過AIツール`,
+  description: description,
+  metadataBase: new URL(siteUrl),
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    title: `${siteName} - 簡単背景透過AIツール`,
+    description: description,
+    url: siteUrl,
+    siteName: siteName,
+    images: [
+      {
+        url: '/ogp.png', // 後でpublicディレクトリに配置するOGP画像のパス
+        width: 1200,
+        height: 630,
+        alt: `${siteName} OGP画像`,
+      },
+    ],
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: `${siteName} - 簡単背景透過AIツール`,
+    description: description,
+    images: ['/ogp.png'], // OGP画像と同じものを指定
+    // site: '@yourtwitterhandle', // Xのユーザー名があれば
+    // creator: '@yourtwitterhandle', // Xのユーザー名があれば
+  },
+  icons: {
+    icon: '/favicon.ico', // 後でpublicディレクトリに配置するfavicon.icoのパス
+    apple: '/apple-touch-icon.png', // 後でpublicディレクトリに配置するAppleタッチアイコンのパス
+  },
+  // viewport: 'width=device-width, initial-scale=1', // Next.jsが自動で設定することが多い
+};
 
 export default function Home() {
   return (
@@ -12,7 +54,7 @@ export default function Home() {
       </div> */}
 
       {/* --- ここに背景除去コンポーネントを配置 --- */}
-      <h1 className="text-4xl font-bold mb-8">クイックカット</h1>
+      <h1 className="text-4xl font-bold mb-8">{siteName}</h1>
       <p className="text-lg text-gray-600 mb-8 text-center max-w-2xl">
         複数の画像を一度にアップロードして、背景を自動で透過できます。
         iPhoneで撮影した画像（HEIC/HEIF形式）も自動的に変換されます。
