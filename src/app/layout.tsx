@@ -7,6 +7,10 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata = {
   title: 'QuickTools',
   description: 'Online background removal tool using AI',
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
+  },
 };
 
 export default function RootLayout({
