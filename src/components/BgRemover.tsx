@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 // import { removeBackground } from "@imgly/background-removal"; // Removed
 // import { env as ortEnv } from "onnxruntime-web"; // Removed
 // ortEnv.wasm.simd = false; // Removed
@@ -24,6 +24,7 @@ type InFile  = {
   blob: File | Blob;   // 処理用Blob (HEIC変換後は変換後のBlob)
   name: string;        // ファイル名
   status: FileStatus;  // 現在のステータス
+  previewUrl?: string; // 追加: 元ファイルのプレビュー用URL
   errorMessage?: string; // エラーメッセージ
   outputUrl?: string;   // 処理後の画像URL (背景除去成功時)
 };
@@ -40,19 +41,51 @@ export default function BgRemoverMulti() {
   const [isDragging, setIsDragging] = useState(false); // ドラッグ状態
   const fileInputRef = useRef<HTMLInputElement>(null); // ファイル入力への参照
 
+  // オブジェクトURLを管理するためのRef
+  const objectUrlsRef = useRef<string[]>([]);
+
+  // オブジェクトURLをクリーンアップする関数
+  const cleanupObjectUrls = useCallback(() => {
+    objectUrlsRef.current.forEach(url => URL.revokeObjectURL(url));
+    objectUrlsRef.current = [];
+  }, []);
+
+  // 新しいオブジェクトURLを登録
+  const registerObjectUrl = (url: string) => {
+    objectUrlsRef.current.push(url);
+  };
+
+  // コンポーネントのアンマウント時にクリーンアップ
+  useEffect(() => {
+    return () => {
+      cleanupObjectUrls();
+    };
+  }, [cleanupObjectUrls]);
+
   // 特定の入力ファイルのステータスを更新するヘルパー関数
   const updateInputStatus = useCallback((id: string, newStatus: FileStatus, newMessage?: string, newOutputUrl?: string) => {
     setInputs(prevInputs => 
-      prevInputs.map(input => 
-        input.id === id 
-          ? { ...input, status: newStatus, errorMessage: newMessage, outputUrl: newOutputUrl ?? input.outputUrl } 
-          : input
-      )
+      prevInputs.map(input => {
+        if (input.id === id) {
+          if (newOutputUrl && newOutputUrl !== input.outputUrl) {
+            // 新しい outputUrl が設定される場合、古いものがあれば解放候補（ただし現状はcleanupObjectUrlsで一括）
+            // もし input.outputUrl が objectUrlsRef にあれば削除する処理も検討可能
+            registerObjectUrl(newOutputUrl); // 新しいURLを登録
+          }
+          return { ...input, status: newStatus, errorMessage: newMessage, outputUrl: newOutputUrl ?? input.outputUrl };
+        } 
+        return input;
+      })
     );
   }, []);
 
   const processFiles = useCallback(async (files: FileList | null) => {
     if (!files || files.length === 0) return;
+
+    // 既存のオブジェクトURLをクリーンアップ
+    cleanupObjectUrls(); 
+    // inputs をクリアする前に、各 input の previewUrl と outputUrl も revoke することが望ましいが、
+    // cleanupObjectUrls ですべてクリアしているので、ここでは setInputs のみ。
 
     setInputs([]);
     setMsg(null); setProgress(0); setProcessedCount(0);
@@ -64,19 +97,26 @@ export default function BgRemoverMulti() {
       const isHeic = file.type.includes("heic")
         || /\\.(heic|heif)$/i.test(file.name)
         || (file.type === "" && /\\.(heic|heif)$/i.test(file.name));
+      
+      let previewUrl: string | undefined = undefined;
+      if (file.type.startsWith("image/")) {
+        previewUrl = URL.createObjectURL(file);
+        registerObjectUrl(previewUrl);
+      }
 
       newInputs.push({ 
         id, 
         originalFile: file, 
         blob: file, 
         name: file.name, 
-        status: isHeic ? "pending" : "ready"
+        status: isHeic ? "pending" : "ready",
+        previewUrl, // 追加
       });
     }
     setInputs(newInputs);
 
     for (const input of newInputs) {
-      if (input.status === "pending") { // "pending" は HEIC の可能性があるもの
+      if (input.status === "pending") { 
         updateInputStatus(input.id, "converting");
         try {
           const { default: heic2any } = await import("heic2any");
@@ -84,11 +124,14 @@ export default function BgRemoverMulti() {
           const finalBlob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
           const newName = input.originalFile.name.replace(/\\.[^.]+$/, ".jpg");
           
+          // HEIC変換後のblobで新しいプレビューURLを生成するか検討
+          // ここでは元のプレビューを維持し、変換後のblobは処理に使用
           setInputs(prev => prev.map(i => i.id === input.id ? {
             ...i,
             blob: finalBlob,
             name: newName,
             status: "ready"
+            // HEIC変換後のプレビューが必要ならここで input.previewUrl も更新
           } : i));
         } catch (err: unknown) {
           console.error("HEIC 変換エラー:", err, input.name);
@@ -101,7 +144,7 @@ export default function BgRemoverMulti() {
         }
       }
     }
-  }, [updateInputStatus]);
+  }, [updateInputStatus, cleanupObjectUrls]); // cleanupObjectUrls を依存配列に追加
 
   /* ------------ ① ファイル選択（複数 OK） --------------- */
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -271,10 +314,19 @@ export default function BgRemoverMulti() {
           <h3 className="text-lg font-semibold text-gray-800">選択されたファイル:</h3>
           <ul className="border border-gray-200 rounded-md divide-y divide-gray-200 shadow-sm bg-white">
             {inputs.map(input => (
-              <li key={input.id} className={`p-3 flex justify-between items-center transition-all duration-300 ease-in-out ${
+              <li key={input.id} className={`p-3 flex items-start space-x-3 transition-all duration-300 ease-in-out ${
                 input.status === 'completed' ? 'bg-green-50' :
                 input.status === 'error' ? 'bg-red-50' : 'bg-white'
               }`}>
+                {(input.outputUrl || input.previewUrl) && (
+                  <div className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded overflow-hidden flex items-center justify-center">
+                    <img 
+                      src={input.outputUrl ?? input.previewUrl} 
+                      alt={`プレビュー ${input.name}`}
+                      className="object-contain w-full h-full"
+                    />
+                  </div>
+                )}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900 truncate">{input.name}</p>
                   <p className={`text-xs font-medium ${
@@ -294,27 +346,29 @@ export default function BgRemoverMulti() {
                   </p>
                   {input.errorMessage && <p className="text-xs text-red-600 mt-0.5">詳細: {input.errorMessage}</p>}
                 </div>
-                {input.outputUrl && input.status === 'completed' && (
-                  <a
-                    href={input.outputUrl}
-                    download={input.name.replace(/\\.[^.]+$/, "") + "-bg-removed.png"}
-                    className="ml-4 px-3 py-1.5 rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700 transition-colors"
-                  >
-                    ダウンロード
-                  </a>
-                )}
-                 {input.status === 'error' && (
-                  <button 
-                    onClick={() => {
-                        updateInputStatus(input.id, 'ready', undefined);
-                        setMsg(null); // 個別リトライ時は全体メッセージを一旦クリア
-                    }}
-                    className="ml-4 px-3 py-1.5 rounded-md text-sm font-medium text-white bg-yellow-500 hover:bg-yellow-600 transition-colors"
-                    title="このファイルで再試行（エラークリア）"
-                   >
-                     再試行
-                   </button>
-                )}
+                <div className="flex-shrink-0 flex flex-col items-end space-y-1">
+                  {input.outputUrl && input.status === 'completed' && (
+                    <a
+                      href={input.outputUrl}
+                      download={input.name.replace(/\\.[^.]+$/, "") + "-bg-removed.png"}
+                      className="px-3 py-1.5 rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700 transition-colors whitespace-nowrap"
+                    >
+                      ダウンロード
+                    </a>
+                  )}
+                  {input.status === 'error' && (
+                    <button 
+                      onClick={() => {
+                          updateInputStatus(input.id, 'ready', undefined);
+                          setMsg(null); 
+                      }}
+                      className="px-3 py-1.5 rounded-md text-sm font-medium text-white bg-yellow-500 hover:bg-yellow-600 transition-colors whitespace-nowrap"
+                      title="このファイルで再試行（エラークリア）"
+                    >
+                      再試行
+                    </button>
+                  )}
+                </div>
               </li>
             ))}
           </ul>
