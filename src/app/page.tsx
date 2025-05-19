@@ -12,7 +12,11 @@ export default function Home() {
       </div> */}
 
       {/* --- ここに背景除去コンポーネントを配置 --- */}
-      <h1 className="text-4xl font-bold mb-8">画像背景除去ツール</h1> {/* 例としてタイトル追加 */}
+      <h1 className="text-4xl font-bold mb-8">クイックカット</h1>
+      <p className="text-lg text-gray-600 mb-8 text-center max-w-2xl">
+        複数の画像を一度にアップロードして、背景を自動で透過できます。
+        iPhoneで撮影した画像（HEIC/HEIF形式）も自動的に変換されます。
+      </p>
       <BgRemoverMulti />
 
       {/* --- 元々あったコード (Vercelロゴなど) は削除またはコメントアウト --- */}

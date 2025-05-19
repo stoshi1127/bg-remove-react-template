@@ -22,14 +22,6 @@ export default function RootLayout({
             <Link href="/" className="text-xl font-bold">
               QuickTools
             </Link>
-            <nav>
-              <Link href="/" className="mx-2 hover:underline">
-                背景除去
-              </Link>
-              <Link href="/privacy-policy" className="mx-2 hover:underline">
-                プライバシーポリシー
-              </Link>
-            </nav>
           </div>
         </header>
 
@@ -39,12 +31,12 @@ export default function RootLayout({
 
         <footer className="bg-gray-800 text-white p-4 mt-8 text-center">
           <div className="container mx-auto">
-            <p>© 2025 QuickTools. All rights reserved.</p>
             <p className="mt-2">
               <Link href="/privacy-policy" className="hover:underline">
                 プライバシーポリシー
               </Link>
             </p>
+            <p>© 2025 QuickTools. All rights reserved.</p>
           </div>
         </footer>
       </body>
