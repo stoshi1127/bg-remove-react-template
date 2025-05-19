@@ -27,8 +27,6 @@ type InFile  = {
   errorMessage?: string; // エラーメッセージ
   outputUrl?: string;   // 処理後の画像URL (背景除去成功時)
 };
-// OutFile は InFile に統合されたため不要になる可能性あり。一旦残す。
-type OutFile = { url: string; name: string }; 
 
 export default function BgRemoverMulti() {
   /* ------------ state --------------- */
@@ -92,13 +90,14 @@ export default function BgRemoverMulti() {
             name: newName,
             status: "ready"
           } : i));
-        } catch (err: any) {
+        } catch (err: unknown) {
           console.error("HEIC 変換エラー:", err, input.name);
           let errMsg = "HEIC 変換エラー";
-          if (err?.code === 1) { 
+          if (typeof err === 'object' && err !== null && 'code' in err && err.code === 1) { 
              errMsg = "HEIC形式ではないか、サポートされていない形式です。";
           }
-          updateInputStatus(input.id, "error", `${input.name}: ${errMsg}`);
+          const detailMsg = typeof err === 'object' && err !== null && 'message' in err && typeof err.message === 'string' ? `: ${err.message}` : '';
+          updateInputStatus(input.id, "error", `${input.name}: ${errMsg}${detailMsg}`);
         }
       }
     }
@@ -190,9 +189,11 @@ export default function BgRemoverMulti() {
                 updateInputStatus(input.id, "completed", undefined, url);
                 completedSuccessfullyCount++;
             }
-        } catch (fetchError: any) {
+        } catch (fetchError: unknown) {
             console.error("Fetchエラー:", fetchError, input.name);
-            const errorMessage = `ネットワークエラーまたはサーバー接続不可: ${fetchError.message}`;
+            const errorMessage = typeof fetchError === 'object' && fetchError !== null && 'message' in fetchError && typeof fetchError.message === 'string'
+              ? `ネットワークエラーまたはサーバー接続不可: ${fetchError.message}`
+              : "ネットワークエラーまたはサーバー接続不可（詳細不明）";
             updateInputStatus(input.id, "error", errorMessage);
             setMsg(prevMsg => prevMsg ? `${prevMsg}\\n${input.name}: ${errorMessage}` : `${input.name}: ${errorMessage}`);
         }
@@ -201,12 +202,14 @@ export default function BgRemoverMulti() {
         const currentProgress = Math.round(((i + 1) / filesToProcess.length) * 100);
         setProgress(currentProgress);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("全体的な処理エラー:", err);
-      setMsg(err.message || "背景除去中に予期せぬエラーが発生しました。");
+      const generalErrorMessage = typeof err === 'object' && err !== null && 'message' in err && typeof err.message === 'string'
+        ? err.message : "背景除去中に予期せぬエラーが発生しました。詳細不明。";
+      setMsg(generalErrorMessage);
       const currentlyProcessingFile = inputs.find(i => i.status === "uploading" || i.status === "processing");
       if (currentlyProcessingFile) {
-        updateInputStatus(currentlyProcessingFile.id, "error", "予期せぬエラーにより処理中断");
+        updateInputStatus(currentlyProcessingFile.id, "error", `予期せぬエラーにより処理中断: ${generalErrorMessage}`);
       }
     } finally {
       setBusy(false);
