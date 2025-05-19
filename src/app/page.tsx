@@ -6,23 +6,23 @@ import type { Metadata } from 'next';
 
 const siteName = 'クイックカット';
 const description = '複数の画像を一度にアップロードして、背景を自動で透過できます。iPhoneで撮影した画像（HEIC/HEIF形式）も自動的に変換されます。無料で使えるオンライン背景透過ツールです。';
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'; // Vercelの環境変数などで設定することを推奨
+// const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'; // 一時的にコメントアウト
 
 export const metadata: Metadata = {
   title: `${siteName} - 簡単背景透過AIツール`,
   description: description,
-  metadataBase: new URL(siteUrl),
+  // metadataBase: new URL(siteUrl), // 一時的にコメントアウト
   alternates: {
-    canonical: '/',
+    canonical: '/', // 相対パスとして扱われる
   },
   openGraph: {
     title: `${siteName} - 簡単背景透過AIツール`,
     description: description,
-    url: siteUrl,
+    // url: siteUrl, // 一時的にコメントアウト
     siteName: siteName,
     images: [
       {
-        url: '/ogp.png', // 後でpublicディレクトリに配置するOGP画像のパス
+        url: '/ogp.png', // 相対パスとして扱われる
         width: 1200,
         height: 630,
         alt: `${siteName} OGP画像`,
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: `${siteName} - 簡単背景透過AIツール`,
     description: description,
-    images: ['/ogp.png'], // OGP画像と同じものを指定
+    images: ['/ogp.png'], // 相対パスとして扱われる
     // site: '@yourtwitterhandle', // Xのユーザー名があれば
     // creator: '@yourtwitterhandle', // Xのユーザー名があれば
   },

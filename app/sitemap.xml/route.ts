@@ -1,4 +1,4 @@
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+// const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'; // 一時的にコメントアウト
 
 export async function GET() {
   const staticPages = [
@@ -12,7 +12,7 @@ export async function GET() {
     .map((path) => {
       return `
     <url>
-      <loc>${`${siteUrl}${path}`}</loc>
+      <loc>${path}</loc>
       <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
       <changefreq>weekly</changefreq>
       <priority>${path === '/' ? '1.0' : '0.8'}</priority>
