@@ -6,45 +6,45 @@ import type { Metadata } from 'next'; // コメントアウト解除
 
 const siteName = 'クイックカット';
 const description = '複数の画像を一度にアップロードして、背景を自動で透過できます。iPhoneで撮影した画像（HEIC/HEIF形式）も自動的に変換されます。無料で使えるオンライン背景透過ツールです。'; // コメントアウト解除
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'; // コメントアウト解除
 
-// メタデータ定義を復元・調整
-export const metadata: Metadata = {
-  title: `${siteName} - 簡単背景透過AIツール`,
-  description: description,
-  metadataBase: new URL(siteUrl), // 有効化
-  alternates: {
-    canonical: '/', // metadataBaseがあるので絶対パスになる
-  },
-  openGraph: {
+// メタデータ定義を generateMetadata 関数を使用して動的に生成
+export async function generateMetadata(): Promise<Metadata> {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'; // コメントアウト解除
+
+  return {
     title: `${siteName} - 簡単背景透過AIツール`,
     description: description,
-    url: siteUrl, // 有効化
-    siteName: siteName,
-    images: [
-      {
-        url: '/ogp.png', // metadataBaseからの相対パス
-        width: 1200,
-        height: 630,
-        alt: `${siteName} OGP画像`,
-      },
-    ],
-    type: 'website',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: `${siteName} - 簡単背景透過AIツール`,
-    description: description,
-    images: ['/ogp.png'], // metadataBaseからの相対パス
-    // site: '@yourtwitterhandle', 
-    // creator: '@yourtwitterhandle', 
-  },
-  icons: {
-    icon: '/favicon.ico',
-    apple: '/apple-touch-icon.png',
-  },
-  // viewport: 'width=device-width, initial-scale=1', // Next.jsが自動で設定
-};
+    metadataBase: new URL(siteUrl), // 有効化
+    alternates: {
+      canonical: '/', // metadataBaseがあるので絶対パスになる
+    },
+    openGraph: {
+      title: `${siteName} - 簡単背景透過AIツール`,
+      description: description,
+      url: siteUrl, // 有効化
+      siteName: siteName,
+      images: [
+        {
+          url: '/ogp.png', // metadataBaseからの相対パス
+          width: 1200,
+          height: 630,
+          alt: `${siteName} OGP画像`,
+        },
+      ],
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${siteName} - 簡単背景透過AIツール`,
+      description: description,
+      images: ['/ogp.png'], // metadataBaseからの相対パス
+      // site: '@yourtwitterhandle', 
+      // creator: '@yourtwitterhandle', 
+    },
+    // icons は layout.tsx で設定するためここでは不要
+    // viewport: 'width=device-width, initial-scale=1', // Next.jsが自動で設定
+  };
+}
 
 export default function Home() {
   return (
