@@ -8,6 +8,9 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata = {
   title: 'QuickTools',
   description: 'Online background removal tool using AI',
+  verification: {
+    google: '-SgV6VIRvfRUUP3Qp7ejZw4HCjo8hRLeis0upVAPsSU',
+  },
 };
 
 export default function RootLayout({
