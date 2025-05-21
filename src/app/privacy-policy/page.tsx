@@ -1,3 +1,11 @@
+import type { Metadata } from 'next';
+
+// メタデータ定義
+export const metadata: Metadata = {
+  title: 'クイックカット | プライバシーポリシー',
+  description: 'クイックカットのプライバシーポリシーに関するページです。個人情報の取り扱いについて説明しています。',
+};
+
 export default function PrivacyPolicyPage() {
   return (
     <div className="container mx-auto px-4 py-8">
@@ -6,7 +14,7 @@ export default function PrivacyPolicyPage() {
       <p>制定日：2025年5月19日<br />最終改定日：2025年5月19日</p>
 
       <p className="mt-4">
-        QuickTools（以下「当サイト」といいます）は、当サイトが提供するQuickCutサービス（以下「本サービス」といいます）における、ユーザーの個人情報を含む利用者情報の取扱いについて、以下のとおりプライバシーポリシー（以下「本ポリシー」といいます）を定めます。
+        QuickTools（以下「当サイト」といいます）は、当サイトが提供するクイックカットサービス（以下「本サービス」といいます）における、ユーザーの個人情報を含む利用者情報の取扱いについて、以下のとおりプライバシーポリシー（以下「本ポリシー」といいます）を定めます。
       </p>
 
       <h2 className="text-2xl font-semibold mt-6 mb-3">1. 収集する利用者情報及び収集方法</h2>
