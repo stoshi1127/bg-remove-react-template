@@ -22,7 +22,7 @@ export async function generateMetadata(): Promise<Metadata> {
       title: `${siteName} - 簡単背景透過AIツール`,
       description: description,
       url: siteUrl, // 有効化
-      siteName: siteName,
+      siteName: 'QuickTools',
       images: [
         {
           url: '/ogp.png', // metadataBaseからの相対パス
