@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 
 // メタデータ定義
 export const metadata: Metadata = {
-  title: 'クイックカット | プライバシーポリシー',
-  description: 'クイックカットのプライバシーポリシーに関するページです。個人情報の取り扱いについて説明しています。',
+  title: 'QuickTools | プライバシーポリシー',
+  description: 'QuickToolsのプライバシーポリシーに関するページです。個人情報の取り扱いについて説明しています。',
 };
 
 export default function PrivacyPolicyPage() {

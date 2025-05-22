@@ -4,7 +4,7 @@ import BgRemoverMulti from "../components/BgRemover"; // '@/components/...' は 
 // import BgRemover from "../components/BgRemover"; // src ディレクトリがない場合など
 import type { Metadata } from 'next'; // コメントアウト解除
 
-const siteName = 'クイックカット';
+const siteName = 'イージーカット';
 const description = '複数の画像を一度にアップロードして、背景を自動で透過できます。iPhoneで撮影した画像（HEIC/HEIF形式）も自動的に変換されます。無料で使えるオンライン背景透過ツールです。'; // コメントアウト解除
 
 // メタデータ定義を generateMetadata 関数を使用して動的に生成
@@ -67,7 +67,7 @@ export default function Home() {
         <h2 className="text-3xl font-bold mb-8 text-center">使い方ガイド</h2>
 
         <p className="mb-12 text-center text-lg text-gray-600 max-w-3xl mx-auto">
-          クイックカットを使って画像を背景透過する基本的な手順を分かりやすく説明します。
+          イージーカットを使って画像を背景透過する基本的な手順を分かりやすく説明します。
           数ステップで簡単に透過画像を作成できます。
         </p>
 
