@@ -62,6 +62,51 @@ export default function Home() {
       </p>
       <BgRemoverMulti />
 
+      {/* --- ここに使い方ガイドを追加 --- */}
+      <div className="container mx-auto px-4 py-8 mt-12"> {/* 適宜マージンを追加 */}
+        <h2 className="text-3xl font-bold mb-6 text-center">使い方ガイド</h2>
+
+        <p className="mb-8 text-center">
+          クイックカットを使って画像を背景透過する基本的な手順を分かりやすく説明します。
+        </p>
+
+        <div className="space-y-8"> {/* 各セクションの間隔 */}
+          <div>
+            <h3 className="text-2xl font-semibold mb-3">1. 画像をアップロードする</h3>
+            <p>
+              背景を透過したい画像をアップロードエリアにドラッグ＆ドロップするか、クリックしてファイルを選択します。複数画像の一括アップロードにも対応しています。
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-2xl font-semibold mb-3">2. 背景透過処理の開始</h3>
+            <p>
+              画像をアップロードすると、自動的に背景透過処理が開始されます。
+              （もし手動で開始ボタンが必要な場合は、その手順を記載）
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-2xl font-semibold mb-3">3. 処理結果の確認とダウンロード</h3>
+            <p>
+              処理が完了すると、透過された画像が表示されます。ダウンロードボタンをクリックして、結果の画像を保存します。
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-2xl font-semibold mt-6 mb-3">その他の便利な機能</h3>
+            <ul className="list-disc list-inside ml-4">
+              <li>HEIC/HEIF形式への対応</li>
+              <li>複数画像の一括処理</li>
+            </ul>
+          </div>
+        </div> {/* 各セクションの間隔 終了 */}
+
+        <p className="mt-8 text-center">
+          ご不明な点がありましたら、<a href="/privacy-policy" className="text-blue-600 hover:underline">プライバシーポリシー</a>をご確認いただくか、お問い合わせください。（お問い合わせページがあればリンクを修正）
+        </p>
+      </div>
+
       {/* --- 元々あったコード (Vercelロゴなど) は削除またはコメントアウト --- */}
       {/* <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
         ... (元のコード) ...
