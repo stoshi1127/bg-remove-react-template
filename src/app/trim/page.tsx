@@ -152,7 +152,7 @@ const TrimPage = () => {
         </div>
       )}
       {croppedImage && (
-        <div className="mt-8 text-center">
+        <div className="mt-8 text-center max-w-2xl mx-auto">
           <h2 className="text-2xl font-semibold mb-4">トリミング結果</h2>
           <img src={croppedImage} alt="cropped" className="max-w-full mx-auto rounded-lg border border-gray-200 shadow" />
           <a href={croppedImage} download="cropped.png">
