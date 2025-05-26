@@ -12,7 +12,7 @@ const TrimPage = () => {
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
   const [croppedImage, setCroppedImage] = useState<string | null>(null);
 
-  const onCropComplete = useCallback((_, croppedAreaPixels) => {
+  const onCropComplete = useCallback((_: any, croppedAreaPixels: any) => {
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
@@ -59,7 +59,7 @@ const TrimPage = () => {
             max={3}
             step={0.1}
             aria-labelledby="Zoom"
-            onChange={(_, value) => setZoom(value as number)}
+            onChange={(_: Event, value: number | number[]) => setZoom(value as number)}
           />
           <Button variant="contained" color="primary" onClick={showCroppedImage} style={{ marginTop: 8 }}>
             トリミング
