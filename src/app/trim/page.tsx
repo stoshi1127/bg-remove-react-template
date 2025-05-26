@@ -30,7 +30,7 @@ const TrimPage = () => {
     try {
       const croppedImg = await getCroppedImg(imageSrc, croppedAreaPixels);
       setCroppedImage(croppedImg);
-    } catch (e) {
+    } catch {
       alert("トリミングに失敗しました");
     }
   }, [imageSrc, croppedAreaPixels]);
