@@ -17,11 +17,11 @@ const TrimPage = () => {
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
-  const onSelectFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
+  const onSelectFile = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files.length > 0) {
       const reader = new FileReader();
       reader.addEventListener("load", () => setImageSrc(reader.result as string));
-      reader.readAsDataURL(e.target.files[0]);
+      reader.readAsDataURL(event.target.files[0]);
     }
   };
 
