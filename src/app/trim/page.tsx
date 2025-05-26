@@ -4,15 +4,16 @@ import Cropper from "react-easy-crop";
 import Slider from "@mui/material/Slider";
 import Button from "@mui/material/Button";
 import { getCroppedImg } from "./utils/cropImage";
+import type { Area } from "react-easy-crop";
 
 const TrimPage = () => {
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [croppedImage, setCroppedImage] = useState<string | null>(null);
 
-  const onCropComplete = useCallback((_: any, croppedAreaPixels: any) => {
+  const onCropComplete = useCallback((_: Area, croppedAreaPixels: Area) => {
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
