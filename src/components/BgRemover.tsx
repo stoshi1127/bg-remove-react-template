@@ -29,6 +29,9 @@ type InFile  = {
   outputUrl?: string;   // 処理後の画像URL (背景除去成功時)
 };
 
+import UploadArea from "./UploadArea";
+import PrimaryButton from "./PrimaryButton";
+
 export default function BgRemoverMulti() {
   /* ------------ state --------------- */
   const [inputs,  setInputs]  = useState<InFile[]>([]);
@@ -279,34 +282,14 @@ export default function BgRemoverMulti() {
   return (
     <div className="w-full max-w-3xl mx-auto p-6 space-y-6 bg-white rounded-xl shadow-2xl">
       {/* ファイル入力エリア (ドラッグ＆ドロップ対応) */}
-      <div 
-        onDragEnter={handleDragEnter}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        onClick={() => fileInputRef.current?.click()} // divクリックでinput発火
-        className={`p-6 border-2 border-dashed rounded-lg cursor-pointer transition-colors duration-200 ease-in-out 
-                    ${isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'}
-                    ${busy ? 'opacity-50 cursor-not-allowed' : ''}`}
-      >
-      <input
-          ref={fileInputRef}
-          id="file-upload" // ラベルとの紐付けは残す
-        type="file"
+      <UploadArea
+        onFileSelect={file => handleFileChange({ target: { files: [file] } } as any)}
         accept="image/*,.heic,.heif"
-        multiple
-        onChange={handleFileChange}
+        label="クリックまたはドラッグ＆ドロップでファイルを選択"
+        description="画像ファイル (JPG, PNG, HEIC等) を複数選択できます"
+        shadow="shadow-2xl"
         disabled={busy}
-          className="hidden" // input自体は非表示に
-        />
-        <div className="flex flex-col items-center justify-center space-y-2 text-gray-600">
-          <svg className={`w-12 h-12 ${isDragging ? 'text-blue-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-          <p className="text-lg font-medium">
-            {isDragging ? "ここにファイルをドロップ" : "クリックまたはドラッグ＆ドロップでファイルを選択"}
-          </p>
-          <p className="text-xs text-gray-500">画像ファイル (JPG, PNG, HEIC等) を複数選択できます</p>
-        </div>
-      </div>
+      />
       
       {/* 選択されたファイルリスト */}
       {inputs.length > 0 && (
@@ -377,15 +360,14 @@ export default function BgRemoverMulti() {
 
       {/* 背景除去ボタン */}
       {inputs.length > 0 && inputs.some(i => i.status === 'ready' || i.status === 'error') && (
-      <button
-        onClick={handleRemove}
+        <PrimaryButton
+          onClick={handleRemove}
           disabled={busy || inputs.filter(i => i.status === 'ready').length === 0}
-          className="w-full py-3.5 px-4 rounded-lg font-bold text-white shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-100"
-      >
-          {busy 
-            ? `処理中... (${processedCount}/${inputs.filter(i => i.status === 'ready' || i.status === 'uploading' || i.status === 'processing' || i.status === 'completed' || i.status === 'error').length}枚, ${progress}%)` 
+        >
+          {busy
+            ? `処理中... (${processedCount}/${inputs.filter(i => i.status === 'ready' || i.status === 'uploading' || i.status === 'processing' || i.status === 'completed' || i.status === 'error').length}枚, ${progress}%)`
             : `選択した画像（${inputs.filter(i => i.status === 'ready').length}枚）の背景を透過する`}
-      </button>
+        </PrimaryButton>
       )}
 
       {/* 進捗バー */}

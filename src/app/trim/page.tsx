@@ -5,6 +5,9 @@ import Slider from "@mui/material/Slider";
 import Button from "@mui/material/Button";
 import { getCroppedImg } from "./utils/cropImage";
 import type { Area } from "react-easy-crop";
+import UploadArea from "../../components/UploadArea";
+import PrimaryButton from "../../components/PrimaryButton";
+import RatioButton from "../../components/RatioButton";
 
 const aspectRatios = [
   { label: "1:1（メルカリ/汎用/SNSアイコン）", value: 1 },
@@ -123,17 +126,13 @@ const TrimPage = () => {
       <h1 className="text-3xl font-bold mb-4 text-center">画像トリミングツール</h1>
       <div className="flex flex-wrap gap-2 justify-center mb-4">
         {aspectRatios.map((ratio) => (
-          <button
+          <RatioButton
             key={ratio.label}
+            selected={selectedPreset === ratio.value}
             onClick={() => setSelectedPreset(ratio.value as number | "custom")}
-            className={`px-4 py-2 rounded-lg font-medium border transition-colors duration-150 ${
-              selectedPreset === ratio.value
-                ? "bg-blue-600 text-white border-blue-600 shadow"
-                : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-blue-50"
-            }`}
           >
             {ratio.label}
-          </button>
+          </RatioButton>
         ))}
       </div>
       {selectedPreset === "custom" && (
@@ -157,29 +156,34 @@ const TrimPage = () => {
           />
         </div>
       )}
-      <div
-        onDragEnter={handleDragEnter}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        onClick={() => fileInputRef.current?.click()}
-        className={`p-6 border-2 border-dashed rounded-lg cursor-pointer transition-colors duration-200 ease-in-out mb-4 flex flex-col items-center justify-center space-y-2 text-gray-600 shadow-lg ${
-          isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
-        }`}
-      >
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          onChange={handleFileChange}
-          className="hidden"
-        />
-        <svg className={`w-12 h-12 ${isDragging ? 'text-blue-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-        <p className="text-lg font-medium">
-          {isDragging ? "ここに画像をドロップ" : "クリックまたはドラッグ＆ドロップで画像を選択"}
-        </p>
-        <p className="text-xs text-gray-500">画像ファイル (JPG, PNG, HEIC等) を1枚選択できます</p>
-      </div>
+      <UploadArea
+        onFileSelect={async (file) => {
+          let fileToUse = file;
+          if (
+            file.type.includes("heic") ||
+            file.type.includes("heif") ||
+            /\.(heic|heif)$/i.test(file.name)
+          ) {
+            try {
+              const { default: heic2any } = await import("heic2any");
+              const converted = await heic2any({ blob: file, toType: "image/jpeg" });
+              const blob = Array.isArray(converted) ? converted[0] : converted;
+              fileToUse = new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" });
+            } catch {
+              alert("HEIC/HEIF画像の変換に失敗しました");
+              return;
+            }
+          }
+          const reader = new FileReader();
+          reader.addEventListener("load", () => setImageSrc(reader.result as string));
+          reader.readAsDataURL(fileToUse);
+        }}
+        accept="image/*"
+        label="クリックまたはドラッグ＆ドロップで画像を選択"
+        description="画像ファイル (JPG, PNG, HEIC等) を1枚選択できます"
+        shadow="shadow-2xl"
+        previewImage={imageSrc}
+      />
       {imageSrc && (
         <div style={{ position: "relative", width: "100%", height: 400, marginTop: 16 }} className="rounded-lg overflow-hidden border border-gray-200 shadow-sm">
           <Cropper
@@ -205,9 +209,9 @@ const TrimPage = () => {
               onChange={(_: Event, value: number | number[]) => setZoom(value as number)}
             />
           </div>
-          <Button variant="contained" color="primary" onClick={showCroppedImage} style={{ marginTop: 8 }}>
+          <PrimaryButton onClick={showCroppedImage} className="mt-4">
             トリミング
-          </Button>
+          </PrimaryButton>
         </div>
       )}
       {croppedImage && (
@@ -215,7 +219,7 @@ const TrimPage = () => {
           <h2 className="text-2xl font-semibold mb-4">トリミング結果</h2>
           <img src={croppedImage} alt="cropped" className="max-w-full mx-auto rounded-lg border border-gray-200 shadow" />
           <a href={croppedImage} download="cropped.png">
-            <Button variant="outlined" style={{ marginTop: 8 }}>ダウンロード</Button>
+            <PrimaryButton variant="outline" className="mt-4">ダウンロード</PrimaryButton>
           </a>
         </div>
       )}

@@ -3,6 +3,7 @@
 import BgRemoverMulti from "../components/BgRemover"; // '@/components/...' は src ディレクトリがある場合
 // import BgRemover from "../components/BgRemover"; // src ディレクトリがない場合など
 import type { Metadata } from 'next'; // コメントアウト解除
+import GuideCard from "../components/GuideCard";
 
 const siteName = 'イージーカット';
 const description = '複数の画像を一度にアップロードして、背景を自動で透過できます。iPhoneで撮影した画像（HEIC/HEIF形式）も自動的に変換されます。無料で使えるオンライン背景透過ツールです。'; // コメントアウト解除
@@ -72,61 +73,43 @@ export default function Home() {
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8"> {/* グリッドレイアウトに変更 */}
-          {/* ステップ1 */}
-          <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
-            <div className="flex items-center mb-4">
-              <div className="bg-blue-100 p-3 rounded-full mr-4">
-                <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold">1. 画像をアップロード</h3>
-            </div>
-            <p className="text-gray-700">
-              背景を透過したい画像をアップロードエリアにドラッグ＆ドロップするか、クリックしてファイルを選択します。複数画像の一括アップロードにも対応しています。
-            </p>
-            <div className="mt-4 text-sm text-gray-500">
-              対応形式: JPG, PNG, HEIC/HEIF など
-            </div>
-          </div>
-
-          {/* ステップ2 */}
-          <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
-            <div className="flex items-center mb-4">
-              <div className="bg-green-100 p-3 rounded-full mr-4">
-                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold">2. 処理開始</h3>
-            </div>
-            <p className="text-gray-700">
-              画像をアップロードすると、自動的に背景透過処理が開始されます。
-              画面に処理の進行状況が表示されるので、完了までお待ちください。
-            </p>
-            <div className="mt-4 text-sm text-gray-500">
-              高精度AIが自動で背景を検出して透過します
-            </div>
-          </div>
-
-          {/* ステップ3 */}
-          <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
-            <div className="flex items-center mb-4">
-              <div className="bg-purple-100 p-3 rounded-full mr-4">
-                <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold">3. 結果をダウンロード</h3>
-            </div>
-            <p className="text-gray-700">
-              処理が完了すると、透過された画像が表示されます。ダウンロードボタンをクリックして、透過処理された画像を保存しましょう。
-            </p>
-            <div className="mt-4 text-sm text-gray-500">
-              透過画像はPNG形式で保存されます
-            </div>
-          </div>
+          <GuideCard
+            title="1. 画像をアップロード"
+            icon={
+              <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+            }
+            color="bg-blue-100"
+            footer={<>対応形式: JPG, PNG, HEIC/HEIF など</>}
+          >
+            背景を透過したい画像をアップロードエリアにドラッグ＆ドロップするか、クリックしてファイルを選択します。複数画像の一括アップロードにも対応しています。
+          </GuideCard>
+          <GuideCard
+            title="2. 処理開始"
+            icon={
+              <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            }
+            color="bg-green-100"
+            footer={<>高精度AIが自動で背景を検出して透過します</>}
+          >
+            画像をアップロードすると、自動的に背景透過処理が開始されます。画面に処理の進行状況が表示されるので、完了までお待ちください。
+          </GuideCard>
+          <GuideCard
+            title="3. 結果をダウンロード"
+            icon={
+              <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+              </svg>
+            }
+            color="bg-purple-100"
+            footer={<>透過画像はPNG形式で保存されます</>}
+          >
+            処理が完了すると、透過された画像が表示されます。ダウンロードボタンをクリックして、透過処理された画像を保存しましょう。
+          </GuideCard>
         </div>
 
         {/* 追加機能のセクション */}
