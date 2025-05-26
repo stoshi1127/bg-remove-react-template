@@ -52,15 +52,119 @@ const TrimPage = () => {
   }, [selectedPreset, customWidth, customHeight]);
 
   return (
-    <div className="w-full max-w-3xl mx-auto p-6 space-y-6 bg-white rounded-xl mt-12">
-      <h1 className="text-3xl font-bold mb-4 text-center">イージートリミング</h1>
-      <p className="text-lg text-gray-600 mb-8 text-center max-w-2xl mx-auto">
+    <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-gray-50">
+      <h1 className="text-4xl font-bold mt-8 mb-4 text-center">イージートリミング</h1>
+      <p className="text-lg text-gray-600 mb-8 text-center max-w-2xl">
         画像をかんたん・高精度にトリミングできる無料オンラインツールです。SNSアイコンやヘッダー、メルカリ・Instagram用など多彩な比率プリセットに対応。iPhoneのHEIC画像も自動変換。
       </p>
-      <div className="container mx-auto px-4 py-12 mt-16">
+      <div className="w-full max-w-2xl mx-auto">
+        <UploadArea
+          onFileSelect={async (file) => {
+            let fileToUse = file;
+            if (
+              file.type.includes("heic") ||
+              file.type.includes("heif") ||
+              /\.(heic|heif)$/i.test(file.name)
+            ) {
+              try {
+                const { default: heic2any } = await import("heic2any");
+                const converted = await heic2any({ blob: file, toType: "image/jpeg" });
+                const blob = Array.isArray(converted) ? converted[0] : converted;
+                fileToUse = new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" });
+              } catch {
+                alert("HEIC/HEIF画像の変換に失敗しました");
+                return;
+              }
+            }
+            const reader = new FileReader();
+            reader.addEventListener("load", () => setImageSrc(reader.result as string));
+            reader.readAsDataURL(fileToUse);
+          }}
+          accept="image/*"
+          label="クリックまたはドラッグ＆ドロップで画像を選択"
+          description="画像ファイル (JPG, PNG, HEIC等) を1枚選択できます"
+          shadow="shadow-2xl"
+          previewImage={imageSrc}
+        />
+      </div>
+      <div className="w-full max-w-2xl mx-auto mt-6">
+        <div className="flex flex-wrap gap-2 justify-center mb-4">
+          {aspectRatios.map((ratio) => (
+            <RatioButton
+              key={ratio.label}
+              selected={selectedPreset === ratio.value}
+              onClick={() => setSelectedPreset(ratio.value as number | "custom")}
+            >
+              {ratio.label}
+            </RatioButton>
+          ))}
+        </div>
+        {selectedPreset === "custom" && (
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <label className="text-sm">横</label>
+            <input
+              type="number"
+              min={1}
+              value={customWidth}
+              onChange={e => setCustomWidth(e.target.value)}
+              className="w-16 px-2 py-1 border rounded"
+            />
+            <span className="mx-1 text-gray-500">:</span>
+            <label className="text-sm">縦</label>
+            <input
+              type="number"
+              min={1}
+              value={customHeight}
+              onChange={e => setCustomHeight(e.target.value)}
+              className="w-16 px-2 py-1 border rounded"
+            />
+          </div>
+        )}
+      </div>
+      {imageSrc && (
+        <div style={{ position: "relative", width: "100%", height: 400, marginTop: 16 }} className="rounded-lg overflow-hidden border border-gray-200 shadow-sm max-w-2xl mx-auto">
+          <Cropper
+            image={imageSrc}
+            crop={crop}
+            zoom={zoom}
+            aspect={aspect}
+            onCropChange={setCrop}
+            onZoomChange={setZoom}
+            onCropComplete={onCropComplete}
+          />
+        </div>
+      )}
+      {imageSrc && (
+        <div className="mt-4 flex flex-col items-center">
+          <div className="w-full max-w-xs">
+            <Slider
+              value={zoom}
+              min={1}
+              max={3}
+              step={0.1}
+              aria-labelledby="Zoom"
+              onChange={(_: Event, value: number | number[]) => setZoom(value as number)}
+            />
+          </div>
+          <PrimaryButton onClick={showCroppedImage} className="mt-4">
+            トリミング
+          </PrimaryButton>
+        </div>
+      )}
+      {croppedImage && (
+        <div className="mt-8 text-center">
+          <h2 className="text-2xl font-semibold mb-4">トリミング結果</h2>
+          <img src={croppedImage} alt="cropped" className="max-w-full mx-auto rounded-lg border border-gray-200 shadow" />
+          <a href={croppedImage} download="cropped.png">
+            <PrimaryButton variant="outline" className="mt-4">ダウンロード</PrimaryButton>
+          </a>
+        </div>
+      )}
+      {/* 使い方ガイド */}
+      <section className="w-full max-w-5xl mx-auto mt-20">
         <h2 className="text-3xl font-bold mb-8 text-center">使い方ガイド</h2>
         <p className="mb-12 text-center text-lg text-gray-600 max-w-3xl mx-auto">
-          イージートリミングで画像をトリミングする基本的な手順を分かりやすく説明します。数ステップで簡単にトリミング画像を作成できます。
+          イージートリミングを使って画像をトリミングする基本的な手順を分かりやすく説明します。数ステップで簡単にトリミング画像を作成できます。
         </p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <GuideCard
@@ -101,7 +205,10 @@ const TrimPage = () => {
             「トリミング」ボタンを押すと、指定範囲で画像が切り抜かれます。ダウンロードボタンから保存できます。
           </GuideCard>
         </div>
-        <div className="mt-16 bg-gray-50 p-8 rounded-xl">
+      </section>
+      {/* 便利な機能セクション */}
+      <section className="w-full max-w-3xl mx-auto mt-12 mb-16">
+        <div className="bg-gray-50 p-8 rounded-xl">
           <h3 className="text-2xl font-semibold mb-6 text-center">その他の便利な機能</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="flex items-start">
@@ -128,110 +235,11 @@ const TrimPage = () => {
             </div>
           </div>
         </div>
-        <p className="mt-12 text-center text-gray-600">
-          ご不明な点がありましたら、<a href="/privacy-policy" className="text-blue-600 hover:underline font-medium">プライバシーポリシー</a>をご確認ください。
-        </p>
-      </div>
-      <UploadArea
-        onFileSelect={async (file) => {
-          let fileToUse = file;
-          if (
-            file.type.includes("heic") ||
-            file.type.includes("heif") ||
-            /\.(heic|heif)$/i.test(file.name)
-          ) {
-            try {
-              const { default: heic2any } = await import("heic2any");
-              const converted = await heic2any({ blob: file, toType: "image/jpeg" });
-              const blob = Array.isArray(converted) ? converted[0] : converted;
-              fileToUse = new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" });
-            } catch {
-              alert("HEIC/HEIF画像の変換に失敗しました");
-              return;
-            }
-          }
-          const reader = new FileReader();
-          reader.addEventListener("load", () => setImageSrc(reader.result as string));
-          reader.readAsDataURL(fileToUse);
-        }}
-        accept="image/*"
-        label="クリックまたはドラッグ＆ドロップで画像を選択"
-        description="画像ファイル (JPG, PNG, HEIC等) を1枚選択できます"
-        shadow="shadow-2xl"
-        previewImage={imageSrc}
-      />
-      <div className="flex flex-wrap gap-2 justify-center mb-4">
-        {aspectRatios.map((ratio) => (
-          <RatioButton
-            key={ratio.label}
-            selected={selectedPreset === ratio.value}
-            onClick={() => setSelectedPreset(ratio.value as number | "custom")}
-          >
-            {ratio.label}
-          </RatioButton>
-        ))}
-      </div>
-      {selectedPreset === "custom" && (
-        <div className="flex items-center justify-center gap-2 mb-4">
-          <label className="text-sm">横</label>
-          <input
-            type="number"
-            min={1}
-            value={customWidth}
-            onChange={e => setCustomWidth(e.target.value)}
-            className="w-16 px-2 py-1 border rounded"
-          />
-          <span className="mx-1 text-gray-500">:</span>
-          <label className="text-sm">縦</label>
-          <input
-            type="number"
-            min={1}
-            value={customHeight}
-            onChange={e => setCustomHeight(e.target.value)}
-            className="w-16 px-2 py-1 border rounded"
-          />
-        </div>
-      )}
-      {imageSrc && (
-        <div style={{ position: "relative", width: "100%", height: 400, marginTop: 16 }} className="rounded-lg overflow-hidden border border-gray-200 shadow-sm">
-          <Cropper
-            image={imageSrc}
-            crop={crop}
-            zoom={zoom}
-            aspect={aspect}
-            onCropChange={setCrop}
-            onZoomChange={setZoom}
-            onCropComplete={onCropComplete}
-          />
-        </div>
-      )}
-      {imageSrc && (
-        <div className="mt-4 flex flex-col items-center">
-          <div className="w-full max-w-xs">
-            <Slider
-              value={zoom}
-              min={1}
-              max={3}
-              step={0.1}
-              aria-labelledby="Zoom"
-              onChange={(_: Event, value: number | number[]) => setZoom(value as number)}
-            />
-          </div>
-          <PrimaryButton onClick={showCroppedImage} className="mt-4">
-            トリミング
-          </PrimaryButton>
-        </div>
-      )}
-      {croppedImage && (
-        <div className="mt-8 text-center">
-          <h2 className="text-2xl font-semibold mb-4">トリミング結果</h2>
-          <img src={croppedImage} alt="cropped" className="max-w-full mx-auto rounded-lg border border-gray-200 shadow" />
-          <a href={croppedImage} download="cropped.png">
-            <PrimaryButton variant="outline" className="mt-4">ダウンロード</PrimaryButton>
-          </a>
-        </div>
-      )}
-    </div>
+      </section>
+      <p className="mt-8 text-center text-gray-600">
+        ご不明な点がありましたら、<a href="/privacy-policy" className="text-blue-600 hover:underline font-medium">プライバシーポリシー</a>をご確認ください。
+      </p>
+    </main>
   );
 };
 
