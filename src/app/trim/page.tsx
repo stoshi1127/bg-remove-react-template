@@ -5,7 +5,6 @@ import Slider from "@mui/material/Slider";
 import Button from "@mui/material/Button";
 import { getCroppedImg } from "./utils/cropImage";
 import type { Area } from "react-easy-crop";
-import heic2any from "heic2any";
 
 const aspectRatios = [
   { label: "1:1（メルカリ/汎用/SNSアイコン）", value: 1 },
@@ -37,13 +36,13 @@ const TrimPage = () => {
     if (event.target.files && event.target.files.length > 0) {
       const file = event.target.files[0];
       let fileToUse = file;
-      // HEIC/HEIFの場合は変換
       if (
         file.type.includes("heic") ||
         file.type.includes("heif") ||
         /\.(heic|heif)$/i.test(file.name)
       ) {
         try {
+          const { default: heic2any } = await import("heic2any");
           const converted = await heic2any({ blob: file, toType: "image/jpeg" });
           const blob = Array.isArray(converted) ? converted[0] : converted;
           fileToUse = new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" });
@@ -86,6 +85,7 @@ const TrimPage = () => {
         /\.(heic|heif)$/i.test(file.name)
       ) {
         try {
+          const { default: heic2any } = await import("heic2any");
           const converted = await heic2any({ blob: file, toType: "image/jpeg" });
           const blob = Array.isArray(converted) ? converted[0] : converted;
           fileToUse = new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" });
