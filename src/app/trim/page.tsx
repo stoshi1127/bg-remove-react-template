@@ -7,7 +7,6 @@ import type { Area } from "react-easy-crop";
 import UploadArea from "../../components/UploadArea";
 import PrimaryButton from "../../components/PrimaryButton";
 import RatioButton from "../../components/RatioButton";
-import type { Metadata } from 'next';
 
 const aspectRatios = [
   { label: "1:1（メルカリ/汎用/SNSアイコン）", value: 1 },
