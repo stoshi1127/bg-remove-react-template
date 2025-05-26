@@ -257,110 +257,118 @@ export default function BgRemoverMulti() {
 
   /* ------------ UI --------------- */
   return (
-    <div className="w-full max-w-3xl mx-auto p-6 space-y-6 bg-white rounded-xl shadow-2xl">
-      {/* ファイル入力エリア (ドラッグ＆ドロップ対応) */}
-      <UploadArea
-        onFileSelect={handleFileSelect}
-        accept="image/*,.heic,.heif"
-        label="クリックまたはドラッグ＆ドロップでファイルを選択"
-        description="画像ファイル (JPG, PNG, HEIC等) を複数選択できます"
-        shadow="shadow-2xl"
-        disabled={busy}
-      />
-      
-      {/* 選択されたファイルリスト */}
-      {inputs.length > 0 && (
-        <div className="space-y-3 pt-4">
-          <h3 className="text-lg font-semibold text-gray-800">選択されたファイル:</h3>
-          <ul className="border border-gray-200 rounded-md divide-y divide-gray-200 shadow-sm bg-white">
-            {inputs.map(input => (
-              <li key={input.id} className={`p-3 flex items-start space-x-3 transition-all duration-300 ease-in-out ${
-                input.status === 'completed' ? 'bg-green-50' :
-                input.status === 'error' ? 'bg-red-50' : 'bg-white'
-              }`}>
-                {(input.outputUrl || input.previewUrl) && (
-                  <div className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded overflow-hidden flex items-center justify-center">
-                    <img 
-                      src={input.outputUrl ?? input.previewUrl} 
-                      alt={`プレビュー ${input.name}`}
-                      className="object-contain w-full h-full"
-                    />
-                  </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">{input.name}</p>
-                  <p className={`text-xs font-medium ${
-                    input.status === 'error' ? 'text-red-700' :
-                    input.status === 'completed' ? 'text-green-700' :
-                    input.status === 'processing' || input.status === 'uploading' ? 'text-blue-600' :
-                    'text-gray-500'
-                  }`}>
-                    ステータス: 
-                    {input.status === 'pending' && '待機中'}
-                    {input.status === 'converting' && 'HEIC変換中...'}
-                    {input.status === 'ready' && '準備完了'}
-                    {input.status === 'uploading' && 'アップロード中...'}
-                    {input.status === 'processing' && '背景除去中...'}
-                    {input.status === 'completed' && '完了 🎉'}
-                    {input.status === 'error' && 'エラー'}
-                  </p>
-                  {input.errorMessage && <p className="text-xs text-red-600 mt-0.5">詳細: {input.errorMessage}</p>}
-                </div>
-                <div className="flex-shrink-0 flex flex-col items-end space-y-1">
-                  {input.outputUrl && input.status === 'completed' && (
-                    <a
-                      href={input.outputUrl}
-                      download={input.name.replace(/\\.[^.]+$/, "") + "-bg-removed.png"}
-                      className="px-3 py-1.5 rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700 transition-colors whitespace-nowrap"
-                    >
-                      ダウンロード
-                    </a>
-                  )}
-                  {input.status === 'error' && (
-                    <button 
-                      onClick={() => {
-                          updateInputStatus(input.id, 'ready', undefined);
-                          setMsg(null); 
-                      }}
-                      className="px-3 py-1.5 rounded-md text-sm font-medium text-white bg-yellow-500 hover:bg-yellow-600 transition-colors whitespace-nowrap"
-                      title="このファイルで再試行（エラークリア）"
-                    >
-                      再試行
-                    </button>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* 背景除去ボタン */}
-      {inputs.length > 0 && inputs.some(i => i.status === 'ready' || i.status === 'error') && (
-        <PrimaryButton
-          onClick={handleRemove}
-          disabled={busy || inputs.filter(i => i.status === 'ready').length === 0}
-        >
-          {busy
-            ? `処理中... (${processedCount}/${inputs.filter(i => i.status === 'ready' || i.status === 'uploading' || i.status === 'processing' || i.status === 'completed' || i.status === 'error').length}枚, ${progress}%)`
-            : `選択した画像（${inputs.filter(i => i.status === 'ready').length}枚）の背景を透過する`}
-        </PrimaryButton>
-      )}
-
-      {/* 進捗バー */}
+    <>
       {busy && (
-        <div className="w-full bg-gray-200 rounded-full h-3 dark:bg-gray-700 shadow-inner overflow-hidden">
-          <div 
-            className="bg-gradient-to-r from-blue-500 to-indigo-600 h-3 rounded-full transition-all duration-300 ease-out text-xs text-white text-center leading-none"
-            style={{ width: `${progress}%` }}
-          >
-            {progress > 10 && `${progress}%`}
-            </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500 border-opacity-60"></div>
+          <span className="ml-6 text-lg font-semibold text-white drop-shadow">処理中...</span>
         </div>
       )}
+      <div className="w-full max-w-3xl mx-auto p-6 space-y-6 bg-white rounded-xl shadow-2xl">
+        {/* ファイル入力エリア (ドラッグ＆ドロップ対応) */}
+        <UploadArea
+          onFileSelect={handleFileSelect}
+          accept="image/*,.heic,.heif"
+          label="クリックまたはドラッグ＆ドロップでファイルを選択"
+          description="画像ファイル (JPG, PNG, HEIC等) を複数選択できます"
+          shadow="shadow-2xl"
+          disabled={busy}
+        />
+        
+        {/* 選択されたファイルリスト */}
+        {inputs.length > 0 && (
+          <div className="space-y-3 pt-4">
+            <h3 className="text-lg font-semibold text-gray-800">選択されたファイル:</h3>
+            <ul className="border border-gray-200 rounded-md divide-y divide-gray-200 shadow-sm bg-white">
+              {inputs.map(input => (
+                <li key={input.id} className={`p-3 flex items-start space-x-3 transition-all duration-300 ease-in-out ${
+                  input.status === 'completed' ? 'bg-green-50' :
+                  input.status === 'error' ? 'bg-red-50' : 'bg-white'
+                }`}>
+                  {(input.outputUrl || input.previewUrl) && (
+                    <div className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded overflow-hidden flex items-center justify-center">
+                      <img 
+                        src={input.outputUrl ?? input.previewUrl} 
+                        alt={`プレビュー ${input.name}`}
+                        className="object-contain w-full h-full"
+                      />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">{input.name}</p>
+                    <p className={`text-xs font-medium ${
+                      input.status === 'error' ? 'text-red-700' :
+                      input.status === 'completed' ? 'text-green-700' :
+                      input.status === 'processing' || input.status === 'uploading' ? 'text-blue-600' :
+                      'text-gray-500'
+                    }`}>
+                      ステータス: 
+                      {input.status === 'pending' && '待機中'}
+                      {input.status === 'converting' && 'HEIC変換中...'}
+                      {input.status === 'ready' && '準備完了'}
+                      {input.status === 'uploading' && 'アップロード中...'}
+                      {input.status === 'processing' && '背景除去中...'}
+                      {input.status === 'completed' && '完了 🎉'}
+                      {input.status === 'error' && 'エラー'}
+                    </p>
+                    {input.errorMessage && <p className="text-xs text-red-600 mt-0.5">詳細: {input.errorMessage}</p>}
+                  </div>
+                  <div className="flex-shrink-0 flex flex-col items-end space-y-1">
+                    {input.outputUrl && input.status === 'completed' && (
+                      <a
+                        href={input.outputUrl}
+                        download={input.name.replace(/\\.[^.]+$/, "") + "-bg-removed.png"}
+                        className="px-3 py-1.5 rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700 transition-colors whitespace-nowrap"
+                      >
+                        ダウンロード
+                      </a>
+                    )}
+                    {input.status === 'error' && (
+                      <button 
+                        onClick={() => {
+                            updateInputStatus(input.id, 'ready', undefined);
+                            setMsg(null); 
+                        }}
+                        className="px-3 py-1.5 rounded-md text-sm font-medium text-white bg-yellow-500 hover:bg-yellow-600 transition-colors whitespace-nowrap"
+                        title="このファイルで再試行（エラークリア）"
+                      >
+                        再試行
+                      </button>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
-      {/* 全体メッセージ */}
-      {msg && <p className={`text-sm p-3.5 rounded-md shadow ${inputs.some(i => i.status === 'error') && (msg.includes("エラー") || msg.includes("失敗")) ? 'text-red-800 bg-red-100 border border-red-300' : 'text-gray-800 bg-gray-100 border border-gray-300'}`}>{msg}</p>}
-    </div>
+        {/* 背景除去ボタン */}
+        {inputs.length > 0 && inputs.some(i => i.status === 'ready' || i.status === 'error') && (
+          <PrimaryButton
+            onClick={handleRemove}
+            disabled={busy || inputs.filter(i => i.status === 'ready').length === 0}
+          >
+            {busy
+              ? `処理中... (${processedCount}/${inputs.filter(i => i.status === 'ready' || i.status === 'uploading' || i.status === 'processing' || i.status === 'completed' || i.status === 'error').length}枚, ${progress}%)`
+              : `選択した画像（${inputs.filter(i => i.status === 'ready').length}枚）の背景を透過する`}
+          </PrimaryButton>
+        )}
+
+        {/* 進捗バー */}
+        {busy && (
+          <div className="w-full bg-gray-200 rounded-full h-3 dark:bg-gray-700 shadow-inner overflow-hidden">
+            <div 
+              className="bg-gradient-to-r from-blue-500 to-indigo-600 h-3 rounded-full transition-all duration-300 ease-out text-xs text-white text-center leading-none"
+              style={{ width: `${progress}%` }}
+            >
+              {progress > 10 && `${progress}%`}
+              </div>
+          </div>
+        )}
+
+        {/* 全体メッセージ */}
+        {msg && <p className={`text-sm p-3.5 rounded-md shadow ${inputs.some(i => i.status === 'error') && (msg.includes("エラー") || msg.includes("失敗")) ? 'text-red-800 bg-red-100 border border-red-300' : 'text-gray-800 bg-gray-100 border border-gray-300'}`}>{msg}</p>}
+      </div>
+    </>
   );
 }
