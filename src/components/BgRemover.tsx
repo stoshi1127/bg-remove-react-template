@@ -41,8 +41,8 @@ export default function BgRemoverMulti() {
   const [msg,     setMsg]     = useState<string | null>(null);
   const [progress, setProgress] = useState<number>(0);
   const [processedCount, setProcessedCount] = useState<number>(0);
-  const [isDragging, setIsDragging] = useState(false); // ドラッグ状態
-  const fileInputRef = useRef<HTMLInputElement>(null); // ファイル入力への参照
+  // const [isDragging, setIsDragging] = useState(false); // ドラッグ状態
+  // const fileInputRef = useRef<HTMLInputElement>(null); // ファイル入力への参照
 
   // オブジェクトURLを管理するためのRef
   const objectUrlsRef = useRef<string[]>([]);
@@ -150,12 +150,12 @@ export default function BgRemoverMulti() {
   }, [updateInputStatus, cleanupObjectUrls]); // cleanupObjectUrls を依存配列に追加
 
   /* ------------ ① ファイル選択（複数 OK） --------------- */
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    await processFiles(e.target.files);
-    if (e.target) {
-      e.target.value = '';
-    }
-  };
+  // const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   await processFiles(e.target.files);
+  //   if (e.target) {
+  //     e.target.value = '';
+  //   }
+  // };
   
   // handleFileSelect: UploadArea用
   const handleFileSelect = async (file: File) => {
