@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback } from "react";
 import Cropper from "react-easy-crop";
 import Slider from "@mui/material/Slider";
 import Button from "@mui/material/Button";
@@ -28,8 +28,6 @@ const TrimPage = () => {
   const [customWidth, setCustomWidth] = useState(1);
   const [customHeight, setCustomHeight] = useState(1);
   const [selectedPreset, setSelectedPreset] = useState<number | "custom">(1);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
 
   const onCropComplete = useCallback((_: Area, croppedAreaPixels: Area) => {
     setCroppedAreaPixels(croppedAreaPixels);
@@ -64,12 +62,10 @@ const TrimPage = () => {
   const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsDragging(true);
   };
   const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsDragging(false);
   };
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -78,7 +74,6 @@ const TrimPage = () => {
   const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const file = e.dataTransfer.files[0];
       let fileToUse = file;

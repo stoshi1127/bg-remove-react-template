@@ -152,41 +152,18 @@ export default function BgRemoverMulti() {
   /* ------------ ① ファイル選択（複数 OK） --------------- */
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     await processFiles(e.target.files);
-    // ファイル選択後にinputの値をクリアして同じファイルを選択できるようにする
     if (e.target) {
       e.target.value = '';
-          }
+    }
   };
   
-  // ドラッグアンドドロップハンドラ
-  const handleDragEnter = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(true);
-  }, []);
-
-  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-  }, []);
-
-  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    // 必要であればここでドロップエフェクトを設定 (e.dataTransfer.dropEffect)
-  }, []);
-
-  const handleDrop = useCallback(async (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      await processFiles(e.dataTransfer.files);
-      e.dataTransfer.clearData();
-    }
-  }, [processFiles]);
-
+  // handleFileSelect: UploadArea用
+  const handleFileSelect = async (file: File) => {
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file);
+    await processFiles(dataTransfer.files);
+  };
+  
   /* ------------ ② 背景除去：API経由で順次実行 --------------- */
   const handleRemove = async () => {
     const filesToProcess = inputs.filter(input => input.status === "ready" || input.status === "error");
@@ -283,7 +260,7 @@ export default function BgRemoverMulti() {
     <div className="w-full max-w-3xl mx-auto p-6 space-y-6 bg-white rounded-xl shadow-2xl">
       {/* ファイル入力エリア (ドラッグ＆ドロップ対応) */}
       <UploadArea
-        onFileSelect={file => handleFileChange({ target: { files: [file] } } as any)}
+        onFileSelect={handleFileSelect}
         accept="image/*,.heic,.heif"
         label="クリックまたはドラッグ＆ドロップでファイルを選択"
         description="画像ファイル (JPG, PNG, HEIC等) を複数選択できます"
