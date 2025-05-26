@@ -47,7 +47,7 @@ const TrimPage = () => {
           const converted = await heic2any({ blob: file, toType: "image/jpeg" });
           const blob = Array.isArray(converted) ? converted[0] : converted;
           fileToUse = new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" });
-        } catch (err) {
+        } catch {
           alert("HEIC/HEIF画像の変換に失敗しました");
           return;
         }
@@ -89,7 +89,7 @@ const TrimPage = () => {
           const converted = await heic2any({ blob: file, toType: "image/jpeg" });
           const blob = Array.isArray(converted) ? converted[0] : converted;
           fileToUse = new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" });
-        } catch (err) {
+        } catch {
           alert("HEIC/HEIF画像の変換に失敗しました");
           return;
         }
