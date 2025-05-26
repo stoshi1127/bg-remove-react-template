@@ -2,7 +2,6 @@
 import React, { useState, useCallback } from "react";
 import Cropper from "react-easy-crop";
 import Slider from "@mui/material/Slider";
-import Button from "@mui/material/Button";
 import { getCroppedImg } from "./utils/cropImage";
 import type { Area } from "react-easy-crop";
 import UploadArea from "../../components/UploadArea";
