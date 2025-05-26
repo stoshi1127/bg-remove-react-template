@@ -14,7 +14,7 @@ export default function PrivacyPolicyPage() {
       <p>制定日：2025年5月19日<br />最終改定日：2025年5月19日</p>
 
       <p className="mt-4">
-        QuickTools（以下「当サイト」といいます）は、当サイトが提供するイージーカットサービス（以下「本サービス」といいます）における、ユーザーの個人情報を含む利用者情報の取扱いについて、以下のとおりプライバシーポリシー（以下「本ポリシー」といいます）を定めます。
+        QuickTools（以下「当サイト」といいます）は、当サイトが提供するイージーカットサービスおよびイージートリミングサービス（以下「本サービス」といいます）における、ユーザーの個人情報を含む利用者情報の取扱いについて、以下のとおりプライバシーポリシー（以下「本ポリシー」といいます）を定めます。
       </p>
 
       <h2 className="text-2xl font-semibold mt-6 mb-3">1. 収集する利用者情報及び収集方法</h2>
@@ -29,9 +29,9 @@ export default function PrivacyPolicyPage() {
         <li>ユーザーエージェント情報</li>
         <li>本サービスの利用履歴（アップロードされた画像ファイル、処理結果の画像ファイル、利用日時など）</li>
       </ul>
-      <h3 className="text-xl font-semibold mt-4 mb-2">(2) ユーザーが本サービスで背景除去処理のためにアップロードする画像ファイル</h3>
+      <h3 className="text-xl font-semibold mt-4 mb-2">(2) ユーザーが本サービスで画像処理（背景除去・トリミング等）のためにアップロードする画像ファイル</h3>
       <p>
-        本サービスでは、ユーザーが背景除去のためにアップロードした画像ファイル（以下「アップロード画像」といいます）を、処理のために一時的にサーバー（Replicate社が提供するAPIサーバーを含みます）に送信します。
+        本サービスでは、ユーザーが背景除去やトリミング等の画像処理のためにアップロードした画像ファイル（以下「アップロード画像」といいます）を、処理のために一時的にサーバー（Replicate社が提供するAPIサーバーを含みます）に送信します。
       </p>
 
       <h2 className="text-2xl font-semibold mt-6 mb-3">2. 利用目的</h2>
@@ -54,7 +54,7 @@ export default function PrivacyPolicyPage() {
       <h2 className="text-2xl font-semibold mt-6 mb-3">3. 画像データの取り扱いについて</h2>
       <ul className="list-disc list-inside ml-4">
         <li>
-          アップロード画像は、背景除去処理の目的でのみ利用し、Replicate社が提供するAPIに送信されます。
+          アップロード画像は、背景除去やトリミング等の画像処理目的でのみ利用し、Replicate社が提供するAPIに送信されます。
         </li>
         <li>
           Replicate社へ送信されたアップロード画像及び処理結果の画像データは、Replicate社のシステム上で処理後、同社のプライバシーポリシーに基づき、サービス提供に必要な期間、一時的に保存されることがあります。当サイト（QuickTools）は、Replicateサーバー上での一時保存を除き、ユーザーがアップロードした画像データ及び処理結果の画像データを、当サイト独自のサーバーやストレージに意図的に保存することはありません。Replicate社におけるデータの取り扱いについては、Replicate社のプライバシーポリシー（<a href="https://replicate.com/privacy" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">https://replicate.com/privacy</a>）をご確認ください。
