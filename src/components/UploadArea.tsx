@@ -17,6 +17,7 @@ const UploadArea: React.FC<UploadAreaProps> = ({
   description = "画像ファイル (JPG, PNG, HEIC等) を1枚選択できます",
   disabled = false,
   previewImage = null,
+  shadow = "",
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
