@@ -1,3 +1,4 @@
+"use client";
 import React, { useState, useCallback } from "react";
 import Cropper from "react-easy-crop";
 import Slider from "@mui/material/Slider";
