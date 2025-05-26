@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import Cropper from "react-easy-crop";
 import Slider from "@mui/material/Slider";
 import Button from "@mui/material/Button";
@@ -25,16 +25,44 @@ const TrimPage = () => {
   const [customWidth, setCustomWidth] = useState(1);
   const [customHeight, setCustomHeight] = useState(1);
   const [selectedPreset, setSelectedPreset] = useState<number | "custom">(1);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const onCropComplete = useCallback((_: Area, croppedAreaPixels: Area) => {
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
-  const onSelectFile = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
       const reader = new FileReader();
       reader.addEventListener("load", () => setImageSrc(reader.result as string));
       reader.readAsDataURL(event.target.files[0]);
+    }
+    event.target.value = '';
+  };
+
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const reader = new FileReader();
+      reader.addEventListener("load", () => setImageSrc(reader.result as string));
+      reader.readAsDataURL(e.dataTransfer.files[0]);
     }
   };
 
@@ -48,7 +76,6 @@ const TrimPage = () => {
     }
   }, [imageSrc, croppedAreaPixels]);
 
-  // カスタム比率が選択された場合、aspectを更新
   React.useEffect(() => {
     if (selectedPreset === "custom" && customWidth > 0 && customHeight > 0) {
       setAspect(customWidth / customHeight);
@@ -58,7 +85,7 @@ const TrimPage = () => {
   }, [selectedPreset, customWidth, customHeight]);
 
   return (
-    <div className="w-full max-w-3xl mx-auto p-6 space-y-6 bg-white rounded-xl shadow-2xl mt-12">
+    <div className="w-full max-w-3xl mx-auto p-6 space-y-6 bg-white rounded-xl mt-12">
       <h1 className="text-3xl font-bold mb-4 text-center">画像トリミングツール</h1>
       <div className="flex flex-wrap gap-2 justify-center mb-4">
         {aspectRatios.map((ratio) => (
@@ -96,7 +123,29 @@ const TrimPage = () => {
           />
         </div>
       )}
-      <input type="file" accept="image/*" onChange={onSelectFile} className="mb-4" />
+      <div
+        onDragEnter={handleDragEnter}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        onClick={() => fileInputRef.current?.click()}
+        className={`p-6 border-2 border-dashed rounded-lg cursor-pointer transition-colors duration-200 ease-in-out mb-4 flex flex-col items-center justify-center space-y-2 text-gray-600 shadow-lg ${
+          isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
+        }`}
+      >
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFileChange}
+          className="hidden"
+        />
+        <svg className={`w-12 h-12 ${isDragging ? 'text-blue-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+        <p className="text-lg font-medium">
+          {isDragging ? "ここに画像をドロップ" : "クリックまたはドラッグ＆ドロップで画像を選択"}
+        </p>
+        <p className="text-xs text-gray-500">画像ファイル (JPG, PNG, HEIC等) を1枚選択できます</p>
+      </div>
       {imageSrc && (
         <div style={{ position: "relative", width: "100%", height: 400, marginTop: 16 }} className="rounded-lg overflow-hidden border border-gray-200 shadow-sm">
           <Cropper
