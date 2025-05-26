@@ -15,7 +15,6 @@ const UploadArea: React.FC<UploadAreaProps> = ({
   accept = "image/*",
   label = "クリックまたはドラッグ＆ドロップで画像を選択",
   description = "画像ファイル (JPG, PNG, HEIC等) を1枚選択できます",
-  shadow = "shadow-2xl",
   disabled = false,
   previewImage = null,
 }) => {

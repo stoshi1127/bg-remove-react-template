@@ -7,6 +7,7 @@ import type { Area } from "react-easy-crop";
 import UploadArea from "../../components/UploadArea";
 import PrimaryButton from "../../components/PrimaryButton";
 import RatioButton from "../../components/RatioButton";
+import type { Metadata } from 'next';
 
 const aspectRatios = [
   { label: "1:1（メルカリ/汎用/SNSアイコン）", value: 1 },
@@ -16,6 +17,35 @@ const aspectRatios = [
   { label: "4:5（Instagram投稿）", value: 4 / 5 },
   { label: "カスタム", value: "custom" },
 ];
+
+const siteName = 'イージートリミング';
+const description = 'イージートリミングは、画像をかんたん・高精度にトリミングできる無料オンラインツールです。SNSアイコンやヘッダー、メルカリ・Instagram用など多彩な比率プリセットに対応。HEIC/HEIF画像も自動変換。QuickToolsブランドのトリミングアプリ。';
+
+export async function generateMetadata(): Promise<Metadata> {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000/trim';
+  return {
+    title: `${siteName} - かんたん画像トリミングAIツール` ,
+    description,
+    metadataBase: new URL(siteUrl),
+    alternates: { canonical: '/trim' },
+    openGraph: {
+      title: `${siteName} - かんたん画像トリミングAIツール`,
+      description,
+      url: siteUrl,
+      siteName: 'QuickTools',
+      images: [
+        { url: '/ogp-trim.png', width: 1200, height: 630, alt: `${siteName} OGP画像` },
+      ],
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${siteName} - かんたん画像トリミングAIツール`,
+      description,
+      images: ['/ogp-trim.png'],
+    },
+  };
+}
 
 const TrimPage = () => {
   const [imageSrc, setImageSrc] = useState<string | null>(null);
@@ -52,7 +82,10 @@ const TrimPage = () => {
 
   return (
     <div className="w-full max-w-3xl mx-auto p-6 space-y-6 bg-white rounded-xl mt-12">
-      <h1 className="text-3xl font-bold mb-4 text-center">画像トリミングツール</h1>
+      <h1 className="text-3xl font-bold mb-4 text-center">{siteName}</h1>
+      <p className="text-lg text-gray-600 mb-8 text-center max-w-2xl mx-auto">
+        画像をかんたん・高精度にトリミングできる無料オンラインツールです。SNSアイコンやヘッダー、メルカリ・Instagram用など多彩な比率プリセットに対応。iPhoneのHEIC画像も自動変換。
+      </p>
       <div className="flex flex-wrap gap-2 justify-center mb-4">
         {aspectRatios.map((ratio) => (
           <RatioButton
