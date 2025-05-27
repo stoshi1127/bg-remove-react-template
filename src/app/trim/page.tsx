@@ -89,7 +89,7 @@ const TrimPage = () => {
 
             // バウンディングボックス全体が収まるように小さい方のスケールを採用
             // ただし、ズームは最低1倍から
-            let initialZoom = Math.max(1, Math.min(scaleX, scaleY));
+            const initialZoom = Math.max(1, Math.min(scaleX, scaleY));
 
             // オブジェクトの中心をコンテナの中心に合わせるためのオフセットを計算
             // react-easy-cropは画像の中心を基準とするため、このオフセットを考慮
