@@ -78,29 +78,30 @@ const TrimPage = () => {
             const containerWidth = cropperContainerRef.current?.clientWidth || image.width; // refがなければ画像の幅をフォールバック
             const containerHeight = cropperContainerRef.current?.clientHeight || 400; // refがなければ400をフォールバック
 
-            // バウンディングボックスがコンテナに収まる最小のスケールを計算
-            const scaleX = containerWidth / bbox.width;
-            const scaleY = containerHeight / bbox.height;
+            // バウンディングボックスのサイズとコンテナサイズの比率から適切なズームを計算
+            // バウンディングボックスの全体がコンテナに収まるように調整
+            const widthRatio = containerWidth / bbox.width;
+            const heightRatio = containerHeight / bbox.height;
 
-            // バウンディングボックス全体が収まるように小さい方のスケールを採用
+            // 横方向と縦方向の両方が収まるように小さい方の比率を採用
             // ただし、ズームは最低1倍から
-            const initialZoom = Math.max(1, Math.min(scaleX, scaleY));
+            let initialZoom = Math.max(1, Math.min(widthRatio, heightRatio));
 
-            // アスペクト比はバウンディングボックスのものをそのまま使用
-            const initialAspect = bbox.width / bbox.height;
-            setSelectedPreset(initialAspect); // プリセットもカスタムとして設定
+            // 計算されたズームで表示される画像の中心座標（コンテナの中心にくるべき画像上の点）
+            // これはバウンディングボックスの中心と一致させる必要がある
+            // react-easy-cropのcropは画像左上を基準とした、表示領域の中心にくる画像上の座標らしい
+            const targetCropX = centerX; // バウンディングボックスの中心X座標
+            const targetCropY = centerY; // バウンディングボックスの中心Y座標
 
-            console.log("TrimPage: Bounding Box Data:", bbox);
-            console.log("TrimPage: Image Dimensions:", { width: image.width, height: image.height });
-            console.log("TrimPage: Container Dimensions:", { containerWidth, containerHeight });
-            console.log("TrimPage: Calculated Crop & Zoom:", { x: centerX - image.width / 2, y: centerY - image.height / 2, initialZoom });
-            console.log("TrimPage: Setting Crop, Zoom, Aspect.");
+            // オブジェクトの中心をコンテナの中心に合わせるためのオフセットを計算
+            const offsetX = targetCropX - (image.width / 2);
+            const offsetY = targetCropY - (image.height / 2);
 
             // バウンディングボックスの中心を画像中心基準のオフセットとして設定
             // react-easy-cropはこのオフセットとズームを考慮して表示を調整すると推測
-            setCrop({ x: centerX - image.width / 2, y: centerY - image.height / 2 });
+            setCrop({ x: offsetX, y: offsetY });
             setZoom(initialZoom);
-            setAspect(initialAspect);
+            setAspect(bbox.width / bbox.height);
 
             // localStorageのデータは一度使用したらクリア
             localStorage.removeItem('trimImage');
