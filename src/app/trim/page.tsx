@@ -74,10 +74,6 @@ const TrimPage = () => {
             const centerX = bbox.x + bbox.width / 2;
             const centerY = bbox.y + bbox.height / 2;
 
-            // 画像サイズを考慮してcrop座標を正規化
-            const normalizedCropX = centerX - image.width / 2;
-            const normalizedCropY = centerY - image.height / 2;
-
             // クロッパーコンテナの実際のサイズを取得
             const containerWidth = cropperContainerRef.current?.clientWidth || image.width; // refがなければ画像の幅をフォールバック
             const containerHeight = cropperContainerRef.current?.clientHeight || 400; // refがなければ400をフォールバック
