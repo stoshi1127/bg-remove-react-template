@@ -52,9 +52,15 @@ const TrimPage = () => {
   }, [selectedPreset, customWidth, customHeight]);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-gray-50">
-      <h1 className="text-4xl font-bold mt-8 mb-4 text-center">イージートリミング</h1>
-      <p className="text-lg text-gray-600 mb-8 text-center max-w-2xl">
+    <main className="flex min-h-screen flex-col items-center justify-center p-8">
+      {/* --- 元々あったコード (Next.jsロゴなど) は削除またはコメントアウト --- */}
+      {/* <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
+        ... (元のコード) ...
+      </div> */}
+
+      {/* --- ここにトリミングコンポーネントを配置 --- */}
+      <h1 className="text-4xl font-bold mb-8 text-center">イージートリミング</h1>
+      <p className="text-lg text-gray-600 mb-8 text-center max-w-2xl mx-auto">
         画像をかんたん・高精度にトリミングできる無料オンラインツールです。SNSアイコンやヘッダー、メルカリ・Instagram用など多彩な比率プリセットに対応。iPhoneのHEIC画像も自動変換。
       </p>
       <div className="w-full max-w-2xl mx-auto">
@@ -161,7 +167,7 @@ const TrimPage = () => {
         </div>
       )}
       {/* 使い方ガイド */}
-      <section className="w-full max-w-5xl mx-auto mt-20">
+      <section className="container mx-auto px-4 py-12 mt-16">
         <h2 className="text-3xl font-bold mb-8 text-center">使い方ガイド</h2>
         <p className="mb-12 text-center text-lg text-gray-600 max-w-3xl mx-auto">
           イージートリミングを使って画像をトリミングする基本的な手順を分かりやすく説明します。数ステップで簡単にトリミング画像を作成できます。
@@ -207,8 +213,8 @@ const TrimPage = () => {
         </div>
       </section>
       {/* 便利な機能セクション */}
-      <section className="w-full max-w-3xl mx-auto mt-12 mb-16">
-        <div className="bg-gray-50 p-8 rounded-xl">
+      <section className="container mx-auto px-4 mt-8 mb-16">
+        <div className="bg-gray-50 p-8 rounded-xl max-w-3xl mx-auto">
           <h3 className="text-2xl font-semibold mb-6 text-center">その他の便利な機能</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="flex items-start">
@@ -236,7 +242,7 @@ const TrimPage = () => {
           </div>
         </div>
       </section>
-      <p className="mt-8 text-center text-gray-600">
+      <p className="mt-12 text-center text-gray-600">
         ご不明な点がありましたら、<a href="/privacy-policy" className="text-blue-600 hover:underline font-medium">プライバシーポリシー</a>をご確認ください。
       </p>
     </main>
