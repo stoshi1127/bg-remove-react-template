@@ -35,7 +35,7 @@ import UploadArea from "./UploadArea";
 import PrimaryButton from "./PrimaryButton";
 
 export default function BgRemoverMulti() {
-  const router = useRouter(); // useRouterフックを使用
+  const router = useRouter(); // eslint-disable-next-line @typescript-eslint/no-unused-vars
 
   /* ------------ state --------------- */
   const [inputs,  setInputs]  = useState<InFile[]>([]);
