@@ -52,6 +52,70 @@ const TrimPage = () => {
     }
   }, [selectedPreset, customWidth, customHeight]);
 
+  // localStorageから画像とバウンディングボックスを読み込む
+  React.useEffect(() => {
+    const storedImage = localStorage.getItem('trimImage');
+    const storedBoundingBox = localStorage.getItem('trimBoundingBox');
+
+    if (storedImage) {
+      setImageSrc(storedImage);
+
+      if (storedBoundingBox) {
+        try {
+          const bbox = JSON.parse(storedBoundingBox);
+          // バウンディングボックス情報からクロッパーの初期状態を計算
+          // react-easy-cropのcropは画像の中心に対するトリミングエリアの中心座標
+          // zoomは画像のサイズとトリミングエリアのサイズから調整
+          const image = new Image();
+          image.onload = () => {
+            const centerX = bbox.x + bbox.width / 2;
+            const centerY = bbox.y + bbox.height / 2;
+
+            // 画像サイズを考慮してcrop座標を正規化
+            const normalizedCropX = (centerX - image.width / 2);
+            const normalizedCropY = (centerY - image.height / 2);
+
+            // バウンディングボックスが画像全体に占める割合からzoomを計算
+            // 簡単のため、バウンディングボックスの大きい辺が画像に収まるように調整
+            const zoomX = image.width / bbox.width;
+            const zoomY = image.height / bbox.height;
+            // 完全にバウンディングボックスに合わせるのではなく、調整しやすいように少し大きめに表示するなど検討の余地あり
+            const initialZoom = Math.min(zoomX, zoomY); // バウンディングボックス全体が収まる最小ズーム
+            
+            // アスペクト比はバウンディングボックスのものをそのまま使用
+            const initialAspect = bbox.width / bbox.height;
+            setSelectedPreset(initialAspect); // プリセットもカスタムとして設定
+
+            setCrop({ x: normalizedCropX, y: normalizedCropY });
+            setZoom(initialZoom);
+            setAspect(initialAspect);
+
+            // localStorageのデータは一度使用したらクリア
+            localStorage.removeItem('trimImage');
+            localStorage.removeItem('trimBoundingBox');
+          };
+          image.onerror = (e) => console.error("Error loading image for crop calculation", e);
+          image.src = storedImage;
+
+        } catch (e) {
+          console.error("Failed to parse bounding box from localStorage", e);
+          // エラー時はlocalStorageをクリアして通常モードに
+          localStorage.removeItem('trimImage');
+          localStorage.removeItem('trimBoundingBox');
+        }
+      } else {
+         // 画像はあるがバウンディングボックスがない場合もlocalStorageをクリア
+         localStorage.removeItem('trimImage');
+      }
+    } else {
+       // localStorageに画像データがない場合は何もしない（通常起動）
+       // localStorageにバウンディングボックスだけ残ってしまった場合もクリア
+       if (storedBoundingBox) {
+         localStorage.removeItem('trimBoundingBox');
+       }
+    }
+  }, []); // 依存配列は空で、マウント時に一度だけ実行
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-8">
       {/* --- 元々あったコード (Next.jsロゴなど) は削除またはコメントアウト --- */}

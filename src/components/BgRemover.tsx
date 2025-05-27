@@ -7,6 +7,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 // ortEnv.wasm.proxy = false; // Removed
 
 // heic2any は必要な時だけ動的 import します
+import { useRouter } from 'next/navigation'; // useRouterをインポート
 
 // ファイルステータスの型定義
 type FileStatus = 
@@ -27,12 +28,15 @@ type InFile  = {
   previewUrl?: string; // 追加: 元ファイルのプレビュー用URL
   errorMessage?: string; // エラーメッセージ
   outputUrl?: string;   // 処理後の画像URL (背景除去成功時)
+  boundingBox?: { x: number, y: number, width: number, height: number }; // 追加: 対象物のバウンディングボックス
 };
 
 import UploadArea from "./UploadArea";
 import PrimaryButton from "./PrimaryButton";
 
 export default function BgRemoverMulti() {
+  const router = useRouter(); // useRouterフックを使用
+
   /* ------------ state --------------- */
   const [inputs,  setInputs]  = useState<InFile[]>([]);
   // outputs は inputs の中に outputUrl として統合するため、不要になる。
@@ -74,6 +78,13 @@ export default function BgRemoverMulti() {
             // 新しい outputUrl が設定される場合、古いものがあれば解放候補（ただし現状はcleanupObjectUrlsで一括）
             // もし input.outputUrl が objectUrlsRef にあれば削除する処理も検討可能
             registerObjectUrl(newOutputUrl); // 新しいURLを登録
+            // ここでバウンディングボックス計算をトリガー
+            calculateBoundingBox(newOutputUrl).then(bbox => {
+                setInputs(prev => prev.map(i => i.id === id ? { ...i, boundingBox: bbox } : i));
+            }).catch(err => {
+                console.error("Bounding box calculation failed:", err);
+                // エラーハンドリング：必要に応じてエラーメッセージを表示するなど
+            });
           }
           return { ...input, status: newStatus, errorMessage: newMessage, outputUrl: newOutputUrl ?? input.outputUrl };
         } 
@@ -81,6 +92,58 @@ export default function BgRemoverMulti() {
       })
     );
   }, []);
+
+  // バウンディングボックスを計算する関数
+  const calculateBoundingBox = async (imageUrl: string): Promise<{ x: number, y: number, width: number, height: number } | undefined> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject("Could not get canvas context");
+          return;
+        }
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const pixels = imageData.data;
+
+        let minX = canvas.width;
+        let minY = canvas.height;
+        let maxX = 0;
+        let maxY = 0;
+        let hasTransparent = false;
+
+        for (let y = 0; y < canvas.height; y++) {
+          for (let x = 0; x < canvas.width; x++) {
+            const idx = (y * canvas.width + x) * 4;
+            const alpha = pixels[idx + 3];
+
+            if (alpha > 0) { // 透明でないピクセル
+              minX = Math.min(minX, x);
+              minY = Math.min(minY, y);
+              maxX = Math.max(maxX, x);
+              maxY = Math.max(maxY, y);
+            } else {
+              hasTransparent = true;
+            }
+          }
+        }
+
+        // 透明な部分が全くない画像の場合は画像全体を返す
+        if (!hasTransparent || (minX > maxX || minY > maxY)) {
+             resolve({ x: 0, y: 0, width: canvas.width, height: canvas.height });
+        } else {
+             resolve({ x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 });
+        }
+      };
+      img.onerror = (e) => reject("Image loading error for bounding box calculation" + e);
+      img.src = imageUrl;
+    });
+  };
 
   const processFiles = useCallback(async (files: FileList | null) => {
     if (!files || files.length === 0) return;
