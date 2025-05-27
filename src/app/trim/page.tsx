@@ -94,7 +94,8 @@ const TrimPage = () => {
             const initialAspect = bbox.width / bbox.height;
             setSelectedPreset(initialAspect); // プリセットもカスタムとして設定
 
-            setCrop({ x: normalizedCropX, y: normalizedCropY });
+            // バウンディングボックスの中心をクロッパーの中心に合わせる
+            setCrop({ x: centerX, y: centerY });
             setZoom(initialZoom);
             setAspect(initialAspect);
 
