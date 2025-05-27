@@ -90,6 +90,12 @@ const TrimPage = () => {
             const initialAspect = bbox.width / bbox.height;
             setSelectedPreset(initialAspect); // プリセットもカスタムとして設定
 
+            console.log("TrimPage: Bounding Box Data:", bbox);
+            console.log("TrimPage: Image Dimensions:", { width: image.width, height: image.height });
+            console.log("TrimPage: Container Dimensions:", { containerWidth, containerHeight });
+            console.log("TrimPage: Calculated Crop & Zoom:", { x: centerX - image.width / 2, y: centerY - image.height / 2, initialZoom });
+            console.log("TrimPage: Setting Crop, Zoom, Aspect.");
+
             // バウンディングボックスの中心を画像中心基準のオフセットとして設定
             // react-easy-cropはこのオフセットとズームを考慮して表示を調整すると推測
             setCrop({ x: centerX - image.width / 2, y: centerY - image.height / 2 });
@@ -120,6 +126,7 @@ const TrimPage = () => {
          localStorage.removeItem('trimBoundingBox');
        }
     }
+    console.log("TrimPage: localStorage data loaded.", { storedImage: !!storedImage, storedBoundingBox: !!storedBoundingBox });
   }, []); // 依存配列は空で、マウント時に一度だけ実行
 
   return (
