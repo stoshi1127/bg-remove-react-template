@@ -67,10 +67,22 @@ const TrimPage = () => {
       if (storedBoundingBox) {
         try {
           const bbox = JSON.parse(storedBoundingBox);
-          // バウンディングボックス情報からクロッパーの初期状態を計算
+          // バウンディングボックス情報からクロッパーの初期状態とアスペクト比を計算
           // initialCroppedAreaPixels を使用して初期トリミング領域を設定
           // react-easy-crop がこの情報から適切な crop と zoom を計算すると期待
           setInitialCroppedAreaPixels(bbox);
+
+          // バウンディングボックスのアスペクト比を計算して設定
+          if (bbox.width > 0 && bbox.height > 0) {
+            const bboxAspect = bbox.width / bbox.height;
+            setAspect(bboxAspect);
+            // プリセット選択も「カスタム」に変更
+            setSelectedPreset("custom");
+          } else {
+             // 無効なバウンディングボックスの場合はデフォルトの1:1に
+             setAspect(1);
+             setSelectedPreset(1);
+          }
 
           // localStorageのデータは一度使用したらクリア
           localStorage.removeItem('trimImage');
