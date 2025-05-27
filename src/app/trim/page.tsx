@@ -85,7 +85,7 @@ const TrimPage = () => {
 
             // 横方向と縦方向の両方が収まるように小さい方の比率を採用
             // ただし、ズームは最低1倍から
-            let initialZoom = Math.max(1, Math.min(widthRatio, heightRatio));
+            const initialZoom = Math.max(1, Math.min(widthRatio, heightRatio));
 
             // 計算されたズームで表示される画像の中心座標（コンテナの中心にくるべき画像上の点）
             // これはバウンディングボックスの中心と一致させる必要がある
