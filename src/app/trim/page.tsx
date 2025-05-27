@@ -72,16 +72,28 @@ const TrimPage = () => {
             const centerY = bbox.y + bbox.height / 2;
 
             // 画像サイズを考慮してcrop座標を正規化
-            const normalizedCropX = (centerX - image.width / 2);
-            const normalizedCropY = (centerY - image.height / 2);
+            // react-easy-cropは中心座標なので、画像の中心(0,0)からのオフセットを計算
+            const normalizedCropX = centerX - image.width / 2;
+            const normalizedCropY = centerY - image.height / 2;
 
-            // バウンディングボックスが画像全体に占める割合からzoomを計算
-            // 簡単のため、バウンディングボックスの大きい辺が画像に収まるように調整
-            const zoomX = image.width / bbox.width;
-            const zoomY = image.height / bbox.height;
-            // 完全にバウンディングボックスに合わせるのではなく、調整しやすいように少し大きめに表示するなど検討の余地あり
-            const initialZoom = Math.min(zoomX, zoomY); // バウンディングボックス全体が収まる最小ズーム
-            
+            // バウンディングボックス全体がクロッパー表示エリアに収まるようなズームレベルを計算
+            // クロッパーの表示エリアのアスペクト比も考慮する必要があるが、ここでは簡単化のため
+            // バウンディングボックスの縦横比に合わせてアスペクト比を設定し、
+            // バウンディングボックスの最も長い辺がクロッパー表示エリアに収まるようにズームを調整する。
+            // 400はクロッパーの固定高さとして仮定 (style={{ height: 400 }})。
+            // 実際にはクロッパーが表示されるコンテナのサイズを取得するのがより正確だが、シンプルさ優先。
+            const containerWidth = image.width; // ここはトリミングページ側のクロッパーコンテナの幅に依存するが、画像幅を使う
+            const containerHeight = 400; // layout.tsxのmainのflex-growやクロッパー親divの高さに依存
+
+            const scaleX = containerWidth / bbox.width;
+            const scaleY = containerHeight / bbox.height;
+
+            // バウンディングボックス全体が収まるように小さい方のスケールを採用
+            let initialZoom = Math.min(scaleX, scaleY);
+
+            // ズームが1未満になる場合は1に設定（これ以上縮小しない）
+            initialZoom = Math.max(1, initialZoom);
+
             // アスペクト比はバウンディングボックスのものをそのまま使用
             const initialAspect = bbox.width / bbox.height;
             setSelectedPreset(initialAspect); // プリセットもカスタムとして設定

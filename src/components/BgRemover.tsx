@@ -411,6 +411,8 @@ export default function BgRemoverMulti() {
                                   // ページ遷移はLinkコンポーネントが行う
                               }}
                               passHref // Next.js 13/14のLinkで子要素がインタラクティブな場合に使用が推奨
+                              target="_blank" // ここで新しいタブで開く設定を追加
+                              rel="noopener noreferrer" // セキュリティのために追加
                           >
                               <PrimaryButton size="sm">
                                   イージートリミングで編集
