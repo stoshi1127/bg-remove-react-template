@@ -30,6 +30,9 @@ const TrimPage = () => {
   const [customHeight, setCustomHeight] = useState<string>("1");
   const [selectedPreset, setSelectedPreset] = useState<number | "custom">(1);
 
+  // Cropperコンテナへの参照
+  const cropperContainerRef = React.useRef<HTMLDivElement>(null);
+
   const onCropComplete = useCallback((_: Area, croppedAreaPixels: Area) => {
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
@@ -76,23 +79,24 @@ const TrimPage = () => {
             const normalizedCropX = centerX - image.width / 2;
             const normalizedCropY = centerY - image.height / 2;
 
-            // バウンディングボックス全体がクロッパー表示エリアに収まるようなズームレベルを計算
-            // クロッパーの表示エリアのアスペクト比も考慮する必要があるが、ここでは簡単化のため
-            // バウンディングボックスの縦横比に合わせてアスペクト比を設定し、
-            // バウンディングボックスの最も長い辺がクロッパー表示エリアに収まるようにズームを調整する。
-            // 400はクロッパーの固定高さとして仮定 (style={{ height: 400 }})。
-            // 実際にはクロッパーが表示されるコンテナのサイズを取得するのがより正確だが、シンプルさ優先。
-            const containerWidth = image.width; // ここはトリミングページ側のクロッパーコンテナの幅に依存するが、画像幅を使う
-            const containerHeight = 400; // layout.tsxのmainのflex-growやクロッパー親divの高さに依存
+            // クロッパーコンテナの実際のサイズを取得
+            const containerWidth = cropperContainerRef.current?.clientWidth || image.width; // refがなければ画像の幅をフォールバック
+            const containerHeight = cropperContainerRef.current?.clientHeight || 400; // refがなければ400をフォールバック
 
+            // バウンディングボックスがコンテナに収まる最小のスケールを計算
             const scaleX = containerWidth / bbox.width;
             const scaleY = containerHeight / bbox.height;
 
             // バウンディングボックス全体が収まるように小さい方のスケールを採用
-            let initialZoom = Math.min(scaleX, scaleY);
+            // ただし、ズームは最低1倍から
+            let initialZoom = Math.max(1, Math.min(scaleX, scaleY));
 
-            // ズームが1未満になる場合は1に設定（これ以上縮小しない）
-            initialZoom = Math.max(1, initialZoom);
+            // オブジェクトの中心をコンテナの中心に合わせるためのオフセットを計算
+            // react-easy-cropは画像の中心を基準とするため、このオフセットを考慮
+            // const offsetX = (containerWidth / 2 - centerX) * initialZoom / image.width ;
+            // const offsetY = (containerHeight / 2 - centerY) * initialZoom / image.height ;
+            // react-easy-cropのcropは正規化されていないピクセル単位のオフセットらしい？
+            // 前回の normalizedCropX/Y (画像の中心からのオフセット) をそのまま使うのが正しいか要確認
 
             // アスペクト比はバウンディングボックスのものをそのまま使用
             const initialAspect = bbox.width / bbox.height;
@@ -205,7 +209,7 @@ const TrimPage = () => {
         )}
       </div>
       {imageSrc && (
-        <div style={{ position: "relative", width: "100%", height: 400, marginTop: 16 }} className="rounded-lg overflow-hidden border border-gray-200 shadow-sm max-w-2xl mx-auto">
+        <div ref={cropperContainerRef} style={{ position: "relative", width: "100%", height: 400, marginTop: 16 }} className="rounded-lg overflow-hidden border border-gray-200 shadow-sm max-w-2xl mx-auto">
           <Cropper
             image={imageSrc}
             crop={crop}
