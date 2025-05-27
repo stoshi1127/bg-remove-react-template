@@ -1,11 +1,6 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
-// import { removeBackground } from "@imgly/background-removal"; // Removed
-// import { env as ortEnv } from "onnxruntime-web"; // Removed
-// ortEnv.wasm.simd = false; // Removed
-// ortEnv.wasm.proxy = false; // Removed
-
 // heic2any は必要な時だけ動的 import します
 import Link from "next/link";
 
@@ -35,18 +30,15 @@ import UploadArea from "./UploadArea";
 import PrimaryButton from "./PrimaryButton";
 
 export default function BgRemoverMulti() {
-  // const router = useRouter(); // 不要になったため削除
-
+  
   /* ------------ state --------------- */
   const [inputs,  setInputs]  = useState<InFile[]>([]);
-  // outputs は inputs の中に outputUrl として統合するため、不要になる。
-  // const [outputs, setOutputs] = useState<OutFile[]>([]); 
+  
   const [busy,    setBusy]    = useState(false);
   const [msg,     setMsg]     = useState<string | null>(null);
   const [progress, setProgress] = useState<number>(0);
   const [processedCount, setProcessedCount] = useState<number>(0);
-  // const [isDragging, setIsDragging] = useState(false); // ドラッグ状態
-  // const fileInputRef = useRef<HTMLInputElement>(null); // ファイル入力への参照
+  
 
   // オブジェクトURLを管理するためのRef
   const objectUrlsRef = useRef<string[]>([]);
@@ -213,13 +205,6 @@ export default function BgRemoverMulti() {
   }, [updateInputStatus, cleanupObjectUrls]); // cleanupObjectUrls を依存配列に追加
 
   /* ------------ ① ファイル選択（複数 OK） --------------- */
-  // const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   await processFiles(e.target.files);
-  //   if (e.target) {
-  //     e.target.value = '';
-  //   }
-  // };
-  
   // handleFileSelect: UploadArea用
   const handleFileSelect = async (file: File) => {
     const dataTransfer = new DataTransfer();

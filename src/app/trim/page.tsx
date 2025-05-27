@@ -115,11 +115,6 @@ const TrimPage = () => {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-8">
-      {/* --- 元々あったコード (Next.jsロゴなど) は削除またはコメントアウト --- */}
-      {/* <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        ... (元のコード) ...
-      </div> */}
-
       {/* --- ここにトリミングコンポーネントを配置 --- */}
       <h1 className="text-4xl font-bold mb-8 text-center">イージートリミング</h1>
       <p className="text-lg text-gray-600 mb-8 text-center max-w-2xl mx-auto">
