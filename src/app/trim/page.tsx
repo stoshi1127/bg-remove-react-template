@@ -90,8 +90,9 @@ const TrimPage = () => {
             const initialAspect = bbox.width / bbox.height;
             setSelectedPreset(initialAspect); // プリセットもカスタムとして設定
 
-            // バウンディングボックスの中心をクロッパーの中心に合わせる
-            setCrop({ x: centerX, y: centerY });
+            // バウンディングボックスの中心を画像中心基準のオフセットとして設定
+            // react-easy-cropはこのオフセットとズームを考慮して表示を調整すると推測
+            setCrop({ x: centerX - image.width / 2, y: centerY - image.height / 2 });
             setZoom(initialZoom);
             setAspect(initialAspect);
 
