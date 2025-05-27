@@ -76,12 +76,16 @@ const TrimPage = () => {
           if (bbox.width > 0 && bbox.height > 0) {
             const bboxAspect = bbox.width / bbox.height;
             setAspect(bboxAspect);
-            // プリセット選択も「カスタム」に変更
+            // プリセット選択を「カスタム」に変更し、カスタム幅/高さを設定
             setSelectedPreset("custom");
+            setCustomWidth(bbox.width.toString());
+            setCustomHeight(bbox.height.toString());
           } else {
              // 無効なバウンディングボックスの場合はデフォルトの1:1に
              setAspect(1);
              setSelectedPreset(1);
+             setCustomWidth("1"); // デフォルト値に戻す
+             setCustomHeight("1"); // デフォルト値に戻す
           }
 
           // localStorageのデータは一度使用したらクリア
