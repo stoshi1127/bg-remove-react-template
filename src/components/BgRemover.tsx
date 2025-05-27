@@ -8,6 +8,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 
 // heic2any は必要な時だけ動的 import します
 import { useRouter } from 'next/navigation'; // useRouterをインポート
+import Link from "next/link";
 
 // ファイルステータスの型定義
 type FileStatus = 
@@ -35,7 +36,7 @@ import UploadArea from "./UploadArea";
 import PrimaryButton from "./PrimaryButton";
 
 export default function BgRemoverMulti() {
-  const router = useRouter(); // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const router = useRouter(); // ESLint回避コメントも削除
 
   /* ------------ state --------------- */
   const [inputs,  setInputs]  = useState<InFile[]>([]);
@@ -377,13 +378,32 @@ export default function BgRemoverMulti() {
                 </div>
                 <div className="flex-shrink-0 flex flex-col items-end space-y-1">
                   {input.outputUrl && input.status === 'completed' && (
-                    <a
-                      href={input.outputUrl}
-                      download={input.name.replace(/\\.[^.]+$/, "") + "-bg-removed.png"}
-                      className="px-3 py-1.5 rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700 transition-colors whitespace-nowrap"
-                    >
-                      ダウンロード
-                    </a>
+                    <div className="flex justify-center space-x-4 mt-2">
+                      {/* ダウンロードボタン */}
+                      <a href={input.outputUrl} download={`processed_${input.name.replace(/\.[^.]+$/, ".png")}`}>
+                        <PrimaryButton variant="outline" size="sm">
+                          ダウンロード
+                        </PrimaryButton>
+                      </a>
+                      {/* イージートリミングで編集ボタン - Linkを使用 */}
+                      {input.boundingBox && input.outputUrl && (
+                          <Link 
+                              href="/trim"
+                              onClick={() => {
+                                  // localStorageに画像URLとバウンディングボックスを保存
+                                  // Linkのデフォルトの遷移を妨げないようpreventDefaultは不要
+                                  localStorage.setItem('trimImage', input.outputUrl || '');
+                                  localStorage.setItem('trimBoundingBox', JSON.stringify(input.boundingBox));
+                                  // ページ遷移はLinkコンポーネントが行う
+                              }}
+                              passHref // Next.js 13/14のLinkで子要素がインタラクティブな場合に使用が推奨
+                          >
+                              <PrimaryButton size="sm">
+                                  イージートリミングで編集
+                              </PrimaryButton>
+                          </Link>
+                      )}
+                    </div>
                   )}
                   {input.status === 'error' && (
                     <button 
