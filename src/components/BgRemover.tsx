@@ -7,7 +7,6 @@ import { useState, useCallback, useRef, useEffect } from "react";
 // ortEnv.wasm.proxy = false; // Removed
 
 // heic2any は必要な時だけ動的 import します
-import { useRouter } from 'next/navigation'; // useRouterをインポート
 import Link from "next/link";
 
 // ファイルステータスの型定義
@@ -36,7 +35,7 @@ import UploadArea from "./UploadArea";
 import PrimaryButton from "./PrimaryButton";
 
 export default function BgRemoverMulti() {
-  const router = useRouter(); // ESLint回避コメントも削除
+  // const router = useRouter(); // 不要になったため削除
 
   /* ------------ state --------------- */
   const [inputs,  setInputs]  = useState<InFile[]>([]);
