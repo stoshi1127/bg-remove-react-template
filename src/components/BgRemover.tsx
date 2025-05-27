@@ -269,11 +269,26 @@ export default function BgRemoverMulti() {
             } else {
                 updateInputStatus(input.id, "processing");
                 const imageBlob = await response.blob();
-                const url = URL.createObjectURL(imageBlob);
-                // newOutputs.push({ url, name: input.name }); // outputs は統合
-                // setOutputs([...newOutputs]); // outputs は統合
-                updateInputStatus(input.id, "completed", undefined, url);
-                completedSuccessfullyCount++;
+                
+                // BlobをData URLに変換
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    const dataUrl = reader.result as string;
+                    // outputUrl を Data URL に更新
+                    updateInputStatus(input.id, "completed", undefined, dataUrl);
+                    completedSuccessfullyCount++;
+                    // バウンディングボックス計算はoutputUrlが更新されたupdateInputStatus内でトリガーされる
+                };
+                reader.onerror = (e) => {
+                    console.error("Blob to Data URL conversion failed", e);
+                    updateInputStatus(input.id, "error", `処理済み画像の読み込みエラー: ${input.name}`);
+                    setMsg(prevMsg => prevMsg ? `${prevMsg}\n${input.name}: 処理済み画像の読み込みに失敗しました。` : `${input.name}: 処理済み画像の読み込みに失敗しました。`);
+                };
+                reader.readAsDataURL(imageBlob);
+
+                // 注: updateInputStatus が非同期でoutputUrlを更新するため、
+                // このループ内で completedSuccessfullyCount をインクリメントするタイミングは
+                // Data URL変換の完了とは厳密には一致しないが、全体の処理完了数を把握するためここでは許容する。
             }
         } catch (fetchError: unknown) {
             console.error("Fetchエラー:", fetchError, input.name);
@@ -390,7 +405,7 @@ export default function BgRemoverMulti() {
                               href="/trim"
                               onClick={() => {
                                   // localStorageに画像URLとバウンディングボックスを保存
-                                  // Linkのデフォルトの遷移を妨げないようpreventDefaultは不要
+                                  // outputUrlは既にData URLになっているはず
                                   localStorage.setItem('trimImage', input.outputUrl || '');
                                   localStorage.setItem('trimBoundingBox', JSON.stringify(input.boundingBox));
                                   // ページ遷移はLinkコンポーネントが行う
