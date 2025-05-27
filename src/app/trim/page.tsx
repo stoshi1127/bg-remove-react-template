@@ -29,6 +29,7 @@ const TrimPage = () => {
   const [customWidth, setCustomWidth] = useState<string>("1");
   const [customHeight, setCustomHeight] = useState<string>("1");
   const [selectedPreset, setSelectedPreset] = useState<number | "custom">(1);
+  const [initialCroppedAreaPixels, setInitialCroppedAreaPixels] = useState<Area | undefined>(undefined);
 
   // Cropperコンテナへの参照
   const cropperContainerRef = React.useRef<HTMLDivElement>(null);
@@ -67,58 +68,24 @@ const TrimPage = () => {
         try {
           const bbox = JSON.parse(storedBoundingBox);
           // バウンディングボックス情報からクロッパーの初期状態を計算
-          // react-easy-cropのcropは画像の中心に対するトリミングエリアの中心座標
-          // zoomは画像のサイズとトリミングエリアのサイズから調整
-          const image = new Image();
-          image.onload = () => {
-            const centerX = bbox.x + bbox.width / 2;
-            const centerY = bbox.y + bbox.height / 2;
+          // initialCroppedAreaPixels を使用して初期トリミング領域を設定
+          // react-easy-crop がこの情報から適切な crop と zoom を計算すると期待
+          setInitialCroppedAreaPixels(bbox);
 
-            // クロッパーコンテナの実際のサイズを取得
-            const containerWidth = cropperContainerRef.current?.clientWidth || image.width; // refがなければ画像の幅をフォールバック
-            const containerHeight = cropperContainerRef.current?.clientHeight || 400; // refがなければ400をフォールバック
-
-            // バウンディングボックスのサイズとコンテナサイズの比率から適切なズームを計算
-            // バウンディングボックスの全体がコンテナに収まるように調整
-            const widthRatio = containerWidth / bbox.width;
-            const heightRatio = containerHeight / bbox.height;
-
-            // 横方向と縦方向の両方が収まるように小さい方の比率を採用
-            // ただし、ズームは最低1倍から
-            const initialZoom = Math.max(1, Math.min(widthRatio, heightRatio));
-
-            // 計算されたズームで表示される画像の中心座標（コンテナの中心にくるべき画像上の点）
-            // これはバウンディングボックスの中心と一致させる必要がある
-            // react-easy-cropのcropは画像左上を基準とした、表示領域の中心にくる画像上の座標らしい
-            const targetCropX = centerX; // バウンディングボックスの中心X座標
-            const targetCropY = centerY; // バウンディングボックスの中心Y座標
-
-            // オブジェクトの中心をコンテナの中心に合わせるためのオフセットを計算
-            const offsetX = targetCropX - (image.width / 2);
-            const offsetY = targetCropY - (image.height / 2);
-
-            // バウンディングボックスの中心を画像中心基準のオフセットとして設定
-            // react-easy-cropはこのオフセットとズームを考慮して表示を調整すると推測
-            setCrop({ x: offsetX, y: offsetY });
-            setZoom(initialZoom);
-            setAspect(bbox.width / bbox.height);
-
-            // localStorageのデータは一度使用したらクリア
-            localStorage.removeItem('trimImage');
-            localStorage.removeItem('trimBoundingBox');
-          };
-          image.onerror = (e) => console.error("Error loading image for crop calculation", e);
-          image.src = storedImage;
-
+          // localStorageのデータは一度使用したらクリア
+          localStorage.removeItem('trimImage');
+          localStorage.removeItem('trimBoundingBox');
         } catch (e) {
           console.error("Failed to parse bounding box from localStorage", e);
           // エラー時はlocalStorageをクリアして通常モードに
           localStorage.removeItem('trimImage');
           localStorage.removeItem('trimBoundingBox');
+          setInitialCroppedAreaPixels(undefined);
         }
       } else {
          // 画像はあるがバウンディングボックスがない場合もlocalStorageをクリア
          localStorage.removeItem('trimImage');
+         setInitialCroppedAreaPixels(undefined);
       }
     } else {
        // localStorageに画像データがない場合は何もしない（通常起動）
@@ -216,6 +183,7 @@ const TrimPage = () => {
             onCropChange={setCrop}
             onZoomChange={setZoom}
             onCropComplete={onCropComplete}
+            initialCroppedAreaPixels={initialCroppedAreaPixels}
           />
         </div>
       )}
