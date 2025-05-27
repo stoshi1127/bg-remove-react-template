@@ -75,7 +75,6 @@ const TrimPage = () => {
             const centerY = bbox.y + bbox.height / 2;
 
             // 画像サイズを考慮してcrop座標を正規化
-            // react-easy-cropは中心座標なので、画像の中心(0,0)からのオフセットを計算
             const normalizedCropX = centerX - image.width / 2;
             const normalizedCropY = centerY - image.height / 2;
 
@@ -92,11 +91,15 @@ const TrimPage = () => {
             const initialZoom = Math.max(1, Math.min(scaleX, scaleY));
 
             // オブジェクトの中心をコンテナの中心に合わせるためのオフセットを計算
-            // react-easy-cropは画像の中心を基準とするため、このオフセットを考慮
-            // const offsetX = (containerWidth / 2 - centerX) * initialZoom / image.width ;
-            // const offsetY = (containerHeight / 2 - centerY) * initialZoom / image.height ;
-            // react-easy-cropのcropは正規化されていないピクセル単位のオフセットらしい？
-            // 前回の normalizedCropX/Y (画像の中心からのオフセット) をそのまま使うのが正しいか要確認
+            // react-easy-cropのcropは、画像の中心(0,0)を基準とした、表示されている領域の中心座標
+            // バウンディングボックスの中心がコンテナの中心に来るようにcrop座標を調整
+            // 計算の根拠: (bboxの中心) - (画像中心) = react-easy-cropのcrop座標
+            // つまり crop.x = centerX - image.width / 2, crop.y = centerY - image.height / 2
+            // この計算は前回の normalizedCropX/Y と同じですが、ズームとコンテナサイズを考慮する必要がある。
+            // react-easy-crop の内部的な座標変換を考慮し、以下のように調整
+            // オブジェクト中心(centerX, centerY) が画像中心(image.width/2, image.height/2) からどれだけ離れているか
+            const offsetX = centerX - image.width / 2;
+            const offsetY = centerY - image.height / 2;
 
             // アスペクト比はバウンディングボックスのものをそのまま使用
             const initialAspect = bbox.width / bbox.height;
