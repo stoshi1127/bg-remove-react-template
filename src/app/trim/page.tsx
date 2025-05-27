@@ -8,6 +8,7 @@ import UploadArea from "../../components/UploadArea";
 import PrimaryButton from "../../components/PrimaryButton";
 import RatioButton from "../../components/RatioButton";
 import GuideCard from "../../components/GuideCard";
+import Link from "next/link";
 
 const aspectRatios = [
   { label: "1:1（メルカリ/汎用/SNSアイコン）", value: 1 },
@@ -242,6 +243,17 @@ const TrimPage = () => {
           </div>
         </div>
       </section>
+      {/* 背景透過機能への誘導セクション */}
+      <div className="container mx-auto px-4 mt-12 mb-16 text-center">
+        <p className="text-lg text-gray-700 mb-4">
+          画像の背景透過をしたい場合は、こちらのツールをご利用ください。
+        </p>
+        <Link href="/">
+          <button className="bg-green-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-green-700 transition duration-300">
+            イージーカットを使ってみる
+          </button>
+        </Link>
+      </div>
       <p className="mt-12 text-center text-gray-600">
         ご不明な点がありましたら、<a href="/privacy-policy" className="text-blue-600 hover:underline font-medium">プライバシーポリシー</a>をご確認ください。
       </p>

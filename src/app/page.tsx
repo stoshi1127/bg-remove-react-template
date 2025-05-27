@@ -4,6 +4,7 @@ import BgRemoverMulti from "../components/BgRemover"; // '@/components/...' は 
 // import BgRemover from "../components/BgRemover"; // src ディレクトリがない場合など
 import type { Metadata } from 'next'; // コメントアウト解除
 import GuideCard from "../components/GuideCard";
+import Link from "next/link";
 
 const siteName = 'イージーカット';
 const description = '複数の画像を一度にアップロードして、背景を自動で透過できます。iPhoneで撮影した画像（HEIC/HEIF形式）も自動的に変換されます。無料で使えるオンライン背景透過ツールです。'; // コメントアウト解除
@@ -141,6 +142,18 @@ export default function Home() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* トリミング機能への誘導セクション */}
+        <div className="container mx-auto px-4 mt-12 text-center">
+          <p className="text-lg text-gray-700 mb-4">
+            背景透過だけでなく、画像のトリミングも簡単に行えます。
+          </p>
+          <Link href="/trim">
+            <button className="bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition duration-300">
+              イージートリミングを使ってみる
+            </button>
+          </Link>
         </div>
 
         <p className="mt-12 text-center text-gray-600">
