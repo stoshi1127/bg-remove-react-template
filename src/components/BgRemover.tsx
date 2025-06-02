@@ -229,11 +229,10 @@ export default function BgRemoverMulti() {
 
     setBusy(true);
     setMsg(null);
-    // setOutputs([]); // outputs は統合
     setProgress(0);
     setProcessedCount(0);
-    // const newOutputs: OutFile[] = []; // outputs は統合
-    let completedSuccessfullyCount = 0; // 正常完了したファイル数
+
+    const processPromises: Promise<void>[] = [];
 
     try {
       for (let i = 0; i < filesToProcess.length; i++) {
@@ -260,25 +259,24 @@ export default function BgRemoverMulti() {
                 updateInputStatus(input.id, "processing");
                 const imageBlob = await response.blob();
                 
-                // BlobをData URLに変換
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                    const dataUrl = reader.result as string;
-                    // outputUrl を Data URL に更新
-                    updateInputStatus(input.id, "completed", undefined, dataUrl);
-                    completedSuccessfullyCount++;
-                    // バウンディングボックス計算はoutputUrlが更新されたupdateInputStatus内でトリガーされる
-                };
-                reader.onerror = (e) => {
-                    console.error("Blob to Data URL conversion failed", e);
-                    updateInputStatus(input.id, "error", `処理済み画像の読み込みエラー: ${input.name}`);
-                    setMsg(prevMsg => prevMsg ? `${prevMsg}\n${input.name}: 処理済み画像の読み込みに失敗しました。` : `${input.name}: 処理済み画像の読み込みに失敗しました。`);
-                };
-                reader.readAsDataURL(imageBlob);
-
-                // 注: updateInputStatus が非同期でoutputUrlを更新するため、
-                // このループ内で completedSuccessfullyCount をインクリメントするタイミングは
-                // Data URL変換の完了とは厳密には一致しないが、全体の処理完了数を把握するためここでは許容する。
+                // BlobをData URLに変換するPromiseを作成
+                const dataUrlPromise = new Promise<void>((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        const dataUrl = reader.result as string;
+                        updateInputStatus(input.id, "completed", undefined, dataUrl);
+                        resolve();
+                    };
+                    reader.onerror = (e) => {
+                        console.error("Blob to Data URL conversion failed", e);
+                        updateInputStatus(input.id, "error", `処理済み画像の読み込みエラー: ${input.name}`);
+                        setMsg(prevMsg => prevMsg ? `${prevMsg}\n${input.name}: 処理済み画像の読み込みに失敗しました。` : `${input.name}: 処理済み画像の読み込みに失敗しました。`);
+                        reject(e);
+                    };
+                    reader.readAsDataURL(imageBlob);
+                });
+                
+                processPromises.push(dataUrlPromise);
             }
         } catch (fetchError: unknown) {
             console.error("Fetchエラー:", fetchError, input.name);
@@ -292,7 +290,11 @@ export default function BgRemoverMulti() {
         setProcessedCount(prev => prev + 1);
         const currentProgress = Math.round(((i + 1) / filesToProcess.length) * 100);
         setProgress(currentProgress);
-      }      
+      }
+      
+      // 全ての非同期処理の完了を待機
+      await Promise.allSettled(processPromises);
+      
     } catch (err: unknown) {
       console.error("全体的な処理エラー:", err);
       const generalErrorMessage = typeof err === 'object' && err !== null && 'message' in err && typeof err.message === 'string'
@@ -304,22 +306,43 @@ export default function BgRemoverMulti() {
       }
     } finally {
       setBusy(false);
-      const totalProcessed = filesToProcess.length;
-      const anyErrors = inputs.some(input => input.status === "error");
+      
+      // 少し待ってから状態を確認（React の状態更新が完了するまで）
+      setTimeout(() => {
+        setInputs(currentInputs => {
+          const totalProcessed = filesToProcess.length;
+          const actualCompletedCount = currentInputs.filter(input => input.status === "completed").length;
+          const actualErrorCount = currentInputs.filter(input => input.status === "error").length;
+          const anyErrors = actualErrorCount > 0;
 
-      if (totalProcessed > 0) {
-        if (anyErrors) {
-            setMsg(prev => prev ? prev + "\n一部ファイルでエラーが発生しました。" : "一部のファイルでエラーが発生しました。詳細は各ファイルを確認してください。");
-        } else if (completedSuccessfullyCount === totalProcessed) {
-            setMsg("すべてのファイルの処理が正常に完了しました。");
-        } else {
-            // 全て成功でもなく、明確なエラーが記録されていないが、成功数と処理対象数が一致しない場合
-            setMsg("一部ファイルの処理状況が不明です。リストを確認してください。");
-        }
-      } else if (inputs.length > 0 && totalProcessed === 0) {
-        // msgがセットされていなければ（例えばHEIC変換待ちなどで処理対象が0だった場合）
-        if (!msg) setMsg("処理対象となるファイルがありません。");
-      }
+          if (totalProcessed > 0) {
+            if (anyErrors && actualCompletedCount > 0) {
+                // 一部成功、一部エラー
+                setMsg(`処理完了: ${actualCompletedCount}枚成功、${actualErrorCount}枚エラー。詳細は各ファイルを確認してください。`);
+            } else if (anyErrors && actualCompletedCount === 0) {
+                // 全てエラー
+                setMsg("すべてのファイルでエラーが発生しました。詳細は各ファイルを確認してください。");
+            } else if (actualCompletedCount === totalProcessed) {
+                // 全て成功
+                setMsg(`すべてのファイル（${actualCompletedCount}枚）の処理が正常に完了しました。`);
+            } else {
+                // 処理中や準備完了状態のファイルがある場合
+                const processingCount = currentInputs.filter(input => 
+                  input.status === "processing" || input.status === "uploading"
+                ).length;
+                if (processingCount > 0) {
+                  setMsg(`処理中のファイルがあります。完了: ${actualCompletedCount}枚、処理中: ${processingCount}枚。`);
+                } else {
+                  setMsg(`処理完了: ${actualCompletedCount}枚。残りのファイルの状況を確認してください。`);
+                }
+            }
+          } else if (currentInputs.length > 0 && totalProcessed === 0) {
+            setMsg("処理対象となるファイルがありません。");
+          }
+          
+          return currentInputs; // 状態は変更せず、メッセージのみ更新
+        });
+      }, 100);
     }
   };
 
