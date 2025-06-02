@@ -1,2 +1,6 @@
 User-agent: *
-Allow: / 
+Allow: /
+Disallow: /api/
+Disallow: /_next/
+
+Sitemap: https://bg.quicktools.jp/sitemap.xml 
