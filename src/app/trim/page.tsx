@@ -113,15 +113,15 @@ const TrimPage = () => {
             </h1>
             <p className="text-responsive-md text-gray-600 mb-8 leading-relaxed max-w-2xl mx-auto">
               画像をかんたん・高精度にトリミングできる無料オンラインツールです。<br />
-              <span className="font-semibold text-blue-600">SNSアイコンやヘッダー、メルカリ・Instagram用</span>など多彩な比率プリセットに対応。
+              <span className="font-semibold text-purple-600">SNSアイコンやヘッダー、メルカリ・Instagram用</span>など多彩な比率プリセットに対応。
             </p>
           </div>
           
           {/* CTAセクション */}
           <div className="animate-fade-in-up mb-12" style={{animationDelay: '0.1s'}}>
-            <div className="bg-blue-50 border border-blue-100 p-6 rounded-2xl mb-8">
+            <div className="bg-purple-50 border border-purple-100 p-6 rounded-2xl mb-8">
               <div className="flex items-center justify-center mb-4">
-                <div className="bg-blue-600 p-2 rounded-lg mr-3">
+                <div className="bg-purple-600 p-2 rounded-lg mr-3">
                   <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <rect x="4" y="4" width="16" height="16" rx="2" strokeWidth="2" stroke="currentColor" fill="none" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h8M12 8v8" />
@@ -139,7 +139,7 @@ const TrimPage = () => {
                   </svg>
                   完全無料
                 </span>
-                <span className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                <span className="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium">
                   <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2H4zm3 4a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1zm0 4a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1z" clipRule="evenodd"></path>
                   </svg>
@@ -161,7 +161,7 @@ const TrimPage = () => {
       <section className="bg-gray-50 py-16 px-4">
         <div className="container mx-auto max-w-4xl">
           <div className="animate-fade-in-up" style={{animationDelay: '0.2s'}}>
-            <div className="bg-white border-2 border-blue-200 rounded-2xl p-8 shadow-soft">
+            <div className="bg-white border-2 border-purple-200 rounded-2xl p-8 shadow-soft">
               <UploadArea
                 onFileSelect={async (file) => {
                   let fileToUse = file;
@@ -208,6 +208,7 @@ const TrimPage = () => {
                     key={ratio.label}
                     selected={selectedPreset === ratio.value}
                     onClick={() => setSelectedPreset(ratio.value as number | "custom")}
+                    colorVariant="purple"
                   >
                     {ratio.label}
                   </RatioButton>
@@ -221,7 +222,7 @@ const TrimPage = () => {
                     min={1}
                     value={customWidth}
                     onChange={e => setCustomWidth(e.target.value)}
-                    className="w-16 px-2 py-1 border border-gray-300 rounded-lg text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-16 px-2 py-1 border border-gray-300 rounded-lg text-center focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                   />
                   <span className="mx-1 text-gray-500">:</span>
                   <label className="text-sm font-medium text-gray-700">縦</label>
@@ -230,7 +231,7 @@ const TrimPage = () => {
                     min={1}
                     value={customHeight}
                     onChange={e => setCustomHeight(e.target.value)}
-                    className="w-16 px-2 py-1 border border-gray-300 rounded-lg text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-16 px-2 py-1 border border-gray-300 rounded-lg text-center focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                   />
                 </div>
               )}
@@ -263,12 +264,12 @@ const TrimPage = () => {
                     aria-labelledby="Zoom"
                     onChange={(_: Event, value: number | number[]) => setZoom(value as number)}
                     sx={{
-                      color: '#3b82f6',
+                      color: '#7c3aed',
                       '& .MuiSlider-thumb': {
-                        backgroundColor: '#3b82f6',
+                        backgroundColor: '#7c3aed',
                       },
                       '& .MuiSlider-track': {
-                        backgroundColor: '#3b82f6',
+                        backgroundColor: '#7c3aed',
                       },
                       '& .MuiSlider-rail': {
                         backgroundColor: '#e5e7eb',
@@ -318,13 +319,13 @@ const TrimPage = () => {
             <GuideCard
               title="1. 画像をアップロード"
               icon={
-                <div className="bg-blue-600 p-3 rounded-xl">
+                <div className="bg-purple-600 p-3 rounded-xl">
                   <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                   </svg>
                 </div>
               }
-              footer={<span className="text-blue-600 font-medium">対応形式: JPG, PNG, HEIC/HEIF など</span>}
+              footer={<span className="text-purple-600 font-medium">対応形式: JPG, PNG, HEIC/HEIF など</span>}
             >
               トリミングしたい画像をアップロードエリアにドラッグ＆ドロップするか、クリックしてファイルを選択します。
             </GuideCard>
@@ -345,13 +346,13 @@ const TrimPage = () => {
             <GuideCard
               title="3. トリミング＆ダウンロード"
               icon={
-                <div className="bg-purple-600 p-3 rounded-xl">
+                <div className="bg-indigo-600 p-3 rounded-xl">
                   <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                   </svg>
                 </div>
               }
-              footer={<span className="text-purple-600 font-medium">トリミング画像はPNG形式で保存</span>}
+              footer={<span className="text-indigo-600 font-medium">トリミング画像はPNG形式で保存</span>}
             >
               「トリミング実行」ボタンを押すと、指定範囲で画像が切り抜かれます。ダウンロードボタンから保存できます。
             </GuideCard>
