@@ -122,7 +122,7 @@ const TrimPage = () => {
             <div className="bg-purple-50 border border-purple-100 p-6 rounded-2xl mb-8">
               <div className="flex items-center justify-center mb-4">
                 <div className="bg-purple-600 p-2 rounded-lg mr-3">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="トリミングアイコン">
                     <rect x="4" y="4" width="16" height="16" rx="2" strokeWidth="2" stroke="currentColor" fill="none" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h8M12 8v8" />
                   </svg>

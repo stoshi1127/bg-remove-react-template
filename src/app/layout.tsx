@@ -16,9 +16,13 @@ export const metadata = {
   },
   robots: 'index,follow',
   language: 'ja',
-  other: {
-    'google-site-verification': '-SgV6VIRvfRUUP3Qp7ejZw4HCjo8hRLeis0upVAPsSU'
-  }
+  openGraph: {
+    title: 'イージーカット | 無料AI背景透過・画像編集ツール',
+    description: '複数画像の一括背景透過、HEIC変換、画像トリミングが無料で使える日本語AIツール。iPhone画像対応、高精度AI処理、商用利用OK。',
+    locale: 'ja_JP',
+    type: 'website',
+    siteName: 'QuickTools',
+  },
 };
 
 export default function RootLayout({
@@ -38,6 +42,34 @@ export default function RootLayout({
           function gtag(){dataLayer.push(arguments);}
           gtag('js', new Date());
           gtag('config', 'G-YT0ZDBKL81');
+        `}
+      </Script>
+      
+      {/* 構造化データ: Organization */}
+      <Script id="organization-structured-data" type="application/ld+json" strategy="afterInteractive">
+        {`
+          {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "QuickTools",
+            "url": "https://bg.quicktools.jp",
+            "logo": "https://bg.quicktools.jp/icon.png",
+            "description": "無料AI画像編集ツール。背景透過・HEIC変換・画像トリミングがすべて無料でご利用いただけます。",
+            "sameAs": [],
+            "contactPoint": {
+              "@type": "ContactPoint",
+              "contactType": "customer service",
+              "availableLanguage": "Japanese"
+            },
+            "foundingDate": "2025",
+            "areaServed": "JP",
+            "serviceType": [
+              "背景透過",
+              "画像編集", 
+              "HEIC変換",
+              "画像トリミング"
+            ]
+          }
         `}
       </Script>
       <body className={`${inter.className} bg-gray-50`}>

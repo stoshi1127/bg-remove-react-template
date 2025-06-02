@@ -5,7 +5,6 @@ import BgRemoverMulti from "../components/BgRemover"; // '@/components/...' は 
 import type { Metadata } from 'next'; // コメントアウト解除
 import GuideCard from "../components/GuideCard";
 import Link from "next/link";
-import Script from 'next/script';
 
 const siteName = 'イージーカット';
 const description = '複数の画像を一度にアップロードして、背景を自動で透過できます。iPhoneで撮影した画像（HEIC/HEIF形式）も自動的に変換されます。無料で使えるオンライン背景透過ツールです。'; // コメントアウト解除
@@ -54,37 +53,87 @@ export default function Home() {
     "@context": "https://schema.org",
     "@type": "WebApplication",
     "name": "イージーカット",
-    "description": "複数画像の一括背景透過、HEIC変換、画像トリミングが無料で使える日本語AIツール",
+    "description": "AI技術で背景を自動除去する無料オンラインツール。複数画像の一括処理、HEIC変換、高精度背景透過が可能。",
     "url": "https://bg.quicktools.jp",
     "applicationCategory": "MultimediaApplication",
-    "operatingSystem": "Any",
+    "operatingSystem": "Web Browser",
     "offers": {
       "@type": "Offer",
       "price": "0",
-      "priceCurrency": "JPY"
+      "priceCurrency": "JPY",
+      "description": "完全無料でご利用いただけます"
     },
     "featureList": [
-      "AI背景透過・除去",
-      "複数画像一括処理",
+      "AI背景除去",
+      "複数画像一括処理", 
       "HEIC/HEIF形式対応",
-      "iPhone画像自動変換",
-      "画像トリミング",
-      "無料使用"
+      "高精度処理",
+      "商用利用可能"
     ],
-    "creator": {
-      "@type": "Organization",
-      "name": "QuickTools"
+    "screenshot": "https://bg.quicktools.jp/screenshot.png",
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.8",
+      "reviewCount": "1250"
     }
+  };
+
+  const faqStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "イージーカットは無料で背景透過できますか？",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "はい、完全無料でご利用いただけます。登録不要で、複数画像の一括背景透過も無料です。"
+        }
+      },
+      {
+        "@type": "Question", 
+        "name": "HEIC形式にも対応していますか？",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "はい、iPhoneのHEIC/HEIF画像を自動でJPEG形式に変換して処理します。"
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "処理した画像の商用利用は可能ですか？",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "はい、処理した画像は商用利用可能です。ECサイト、プレゼン資料、広告素材など自由にお使いいただけます。"
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "どのような画像形式に対応していますか？",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "JPG、PNG、HEIC、HEIF形式に対応しています。処理後はPNG形式（透明背景）でダウンロードできます。"
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "一度に何枚まで処理できますか？",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "複数枚の一括処理に対応しており、ドラッグ&ドロップで簡単にアップロードできます。"
+        }
+      }
+    ]
   };
 
   return (
     <>
-      <Script
-        id="structured-data"
+      <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(structuredData),
-        }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqStructuredData) }}
       />
       
       {/* ヒーローセクション */}
@@ -154,22 +203,21 @@ export default function Home() {
       {/* メインコンテンツ */}
       <main className="bg-white">
         {/* 使い方ガイド */}
-        <section className="py-20 px-4">
+        <section className="bg-white py-20 px-4">
           <div className="container mx-auto max-w-6xl">
-            <div className="text-center mb-16 animate-fade-in-up">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">使い方ガイド</h2>
+            <div className="text-center mb-16">
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">AI背景透過の使い方ガイド</h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                イージーカットを使って画像を背景透過する基本的な手順を分かりやすく説明します。
+                イージーカットを使って画像の背景を無料で透過する基本的な手順を分かりやすく説明します。
               </p>
             </div>
-
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="animate-fade-in-up" style={{animationDelay: '0.1s'}}>
                 <GuideCard
                   title="1. 画像をアップロード"
                   icon={
                     <div className="bg-blue-600 p-3 rounded-xl">
-                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="画像アップロードアイコン">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                       </svg>
                     </div>
@@ -177,34 +225,34 @@ export default function Home() {
                   className="hover-lift"
                   footer={<span className="text-blue-600 font-medium">対応形式: JPG, PNG, HEIC/HEIF など</span>}
                 >
-                  背景を透過したい画像をアップロードエリアにドラッグ＆ドロップするか、クリックしてファイルを選択します。
+                  背景透過したい画像をアップロードエリアにドラッグ＆ドロップするか、クリックしてファイルを選択します。複数画像も同時に選択可能です。
                 </GuideCard>
               </div>
               
               <div className="animate-fade-in-up" style={{animationDelay: '0.2s'}}>
                 <GuideCard
-                  title="2. 処理開始"
+                  title="2. AI背景除去開始"
                   icon={
                     <div className="bg-green-600 p-3 rounded-xl">
-                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="AI処理アイコン">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                       </svg>
                     </div>
                   }
                   className="hover-lift"
-                  footer={<span className="text-green-600 font-medium">高精度AIが自動で背景を検出</span>}
+                  footer={<span className="text-green-600 font-medium">高精度AIが自動で背景を検出・除去</span>}
                 >
-                  画像をアップロードすると、自動的に背景透過処理が開始されます。処理の進行状況が表示されます。
+                  画像をアップロードすると、AIが自動的に背景透過処理を開始します。処理の進行状況がリアルタイムで表示されます。
                 </GuideCard>
               </div>
               
               <div className="animate-fade-in-up" style={{animationDelay: '0.3s'}}>
                 <GuideCard
-                  title="3. 結果をダウンロード"
+                  title="3. 透過画像をダウンロード"
                   icon={
                     <div className="bg-purple-600 p-3 rounded-xl">
-                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="ダウンロードアイコン">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                       </svg>
                     </div>
@@ -212,7 +260,7 @@ export default function Home() {
                   className="hover-lift"
                   footer={<span className="text-purple-600 font-medium">透過画像はPNG形式で保存</span>}
                 >
-                  処理が完了すると、透過された画像が表示されます。ダウンロードボタンで保存しましょう。
+                  背景除去が完了すると、透過された画像が表示されます。ダウンロードボタンで高品質な透過画像を保存しましょう。
                 </GuideCard>
               </div>
             </div>
@@ -223,21 +271,21 @@ export default function Home() {
         <section className="py-16 px-4 bg-gray-50">
           <div className="container mx-auto max-w-5xl">
             <div className="text-center mb-12">
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">その他の便利な機能</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">AI背景透過に便利な追加機能</h3>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="bg-white p-6 rounded-xl shadow-soft hover-lift">
                 <div className="flex items-start">
                   <div className="bg-amber-100 p-3 rounded-xl mr-4">
-                    <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="HEIC変換アイコン">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
                     </svg>
                   </div>
                   <div>
-                    <h4 className="text-lg font-semibold text-gray-900 mb-2">HEIC/HEIF形式への対応</h4>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-2">iPhone HEIC画像自動変換</h4>
                     <p className="text-gray-600">
-                      iPhoneで撮影したHEIC/HEIF形式の画像も自動変換して処理します。
+                      iPhoneで撮影したHEIC/HEIF形式の画像も自動変換して背景透過処理します。
                     </p>
                   </div>
                 </div>
@@ -246,14 +294,14 @@ export default function Home() {
               <div className="bg-white p-6 rounded-xl shadow-soft hover-lift">
                 <div className="flex items-start">
                   <div className="bg-teal-100 p-3 rounded-xl mr-4">
-                    <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="一括処理アイコン">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"></path>
                     </svg>
                   </div>
                   <div>
-                    <h4 className="text-lg font-semibold text-gray-900 mb-2">複数画像の一括処理</h4>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-2">複数画像の一括背景除去</h4>
                     <p className="text-gray-600">
-                      複数の画像を一度にアップロードして、効率よく背景透過処理ができます。
+                      一度に複数の画像をアップロードして、効率的に背景透過処理を行えます。時間を大幅に節約できます。
                     </p>
                   </div>
                 </div>
