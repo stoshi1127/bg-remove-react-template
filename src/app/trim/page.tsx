@@ -7,7 +7,6 @@ import type { Area } from "react-easy-crop";
 import UploadArea from "../../components/UploadArea";
 import PrimaryButton from "../../components/PrimaryButton";
 import RatioButton from "../../components/RatioButton";
-import GuideCard from "../../components/GuideCard";
 import Link from "next/link";
 import Script from 'next/script';
 
@@ -141,49 +140,49 @@ const TrimPage = () => {
       />
 
       {/* ヒーローセクション */}
-      <section className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 flex flex-col items-center justify-center relative overflow-hidden py-12">
+      <section className="min-h-screen bg-gradient-to-br from-emerald-50 to-green-100 flex flex-col items-center justify-center relative overflow-hidden">
         {/* 背景装飾 */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-emerald-100/30 rounded-full blur-3xl"></div>
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-green-100/30 rounded-full blur-3xl"></div>
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/20 rounded-full blur-3xl"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-emerald-200/30 rounded-full blur-3xl"></div>
         </div>
 
         {/* メインコンテンツ */}
-        <div className="relative z-10 w-full max-w-6xl mx-auto px-6 lg:px-12 text-center">
+        <div className="relative z-10 w-full max-w-5xl mx-auto px-8 text-center">
           {/* タイトルセクション */}
           <div className="mb-16">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-8 bg-gradient-to-r from-slate-900 via-emerald-900 to-slate-900 bg-clip-text text-transparent">
+            <h1 className="text-5xl lg:text-7xl font-black mb-8 text-slate-800 tracking-tight">
               イージートリミング
             </h1>
-            <p className="text-lg sm:text-xl lg:text-2xl text-slate-700 mb-12 max-w-4xl mx-auto leading-relaxed">
+            <p className="text-xl lg:text-2xl text-slate-600 mb-16 max-w-3xl mx-auto leading-relaxed font-medium">
               高精度な画像トリミングツール。SNSアイコンやヘッダー、メルカリ・Instagram用など
-              <span className="font-semibold text-emerald-700">多彩な比率プリセット</span>で簡単作成
+              <span className="text-emerald-600 font-bold">多彩な比率プリセット</span>で簡単作成
             </p>
             
             {/* 特徴バッジ */}
-            <div className="flex flex-wrap justify-center gap-4 mb-12">
-              <span className="bg-white/80 backdrop-blur-sm px-6 py-3 rounded-full text-slate-700 font-medium shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
+            <div className="flex flex-wrap justify-center gap-4 mb-20">
+              <span className="bg-white/90 backdrop-blur-sm px-8 py-4 rounded-full text-slate-700 font-semibold shadow-lg border border-white/50 hover:shadow-xl transition-all duration-300 hover:scale-105">
                 完全無料
               </span>
-              <span className="bg-white/80 backdrop-blur-sm px-6 py-3 rounded-full text-slate-700 font-medium shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
+              <span className="bg-white/90 backdrop-blur-sm px-8 py-4 rounded-full text-slate-700 font-semibold shadow-lg border border-white/50 hover:shadow-xl transition-all duration-300 hover:scale-105">
                 比率プリセット
               </span>
-              <span className="bg-white/80 backdrop-blur-sm px-6 py-3 rounded-full text-slate-700 font-medium shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
+              <span className="bg-white/90 backdrop-blur-sm px-8 py-4 rounded-full text-slate-700 font-semibold shadow-lg border border-white/50 hover:shadow-xl transition-all duration-300 hover:scale-105">
                 高精度
               </span>
-              <span className="bg-white/80 backdrop-blur-sm px-6 py-3 rounded-full text-slate-700 font-medium shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
+              <span className="bg-white/90 backdrop-blur-sm px-8 py-4 rounded-full text-slate-700 font-semibold shadow-lg border border-white/50 hover:shadow-xl transition-all duration-300 hover:scale-105">
                 iPhone対応
               </span>
             </div>
           </div>
 
           {/* アップロードエリア */}
-          <div className="max-w-4xl mx-auto mb-8">
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 lg:p-12 shadow-xl border border-white/50">
-              <h2 className="text-2xl lg:text-3xl font-semibold mb-6 text-slate-800">
+          <div className="max-w-4xl mx-auto mb-12">
+            <div className="bg-white rounded-3xl p-12 lg:p-16 shadow-2xl border border-white/20">
+              <h2 className="text-3xl lg:text-4xl font-bold mb-8 text-slate-800">
                 今すぐ無料でトリミング
               </h2>
-              <p className="text-slate-600 mb-8 text-lg">
+              <p className="text-slate-600 mb-12 text-xl leading-relaxed">
                 登録不要・高精度・多彩な比率プリセットで理想のサイズに
               </p>
               <UploadArea
@@ -218,10 +217,10 @@ const TrimPage = () => {
           </div>
 
           {/* 比率選択ボタン */}
-          <div className="max-w-4xl mx-auto mb-8">
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-white/50">
-              <h3 className="text-lg font-semibold mb-6 text-slate-800">比率を選択</h3>
-              <div className="flex flex-wrap gap-3 justify-center mb-6">
+          <div className="max-w-4xl mx-auto mb-12">
+            <div className="bg-white rounded-3xl p-12 shadow-2xl border border-white/20">
+              <h3 className="text-2xl font-bold mb-8 text-slate-800">比率を選択</h3>
+              <div className="flex flex-wrap gap-4 justify-center mb-8">
                 {aspectRatios.map((ratio) => (
                   <RatioButton
                     key={ratio.label}
@@ -233,23 +232,23 @@ const TrimPage = () => {
                 ))}
               </div>
               {selectedPreset === "custom" && (
-                <div className="flex items-center justify-center gap-4 p-6 bg-slate-50 rounded-xl">
-                  <label className="text-sm font-medium text-slate-700">横</label>
+                <div className="flex items-center justify-center gap-6 p-8 bg-slate-50 rounded-2xl">
+                  <label className="text-lg font-semibold text-slate-700">横</label>
                   <input
                     type="number"
                     min={1}
                     value={customWidth}
                     onChange={e => setCustomWidth(e.target.value)}
-                    className="w-20 px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className="w-24 px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-center text-lg font-semibold"
                   />
-                  <span className="mx-2 text-slate-500 font-bold">:</span>
-                  <label className="text-sm font-medium text-slate-700">縦</label>
+                  <span className="mx-4 text-slate-500 font-bold text-2xl">:</span>
+                  <label className="text-lg font-semibold text-slate-700">縦</label>
                   <input
                     type="number"
                     min={1}
                     value={customHeight}
                     onChange={e => setCustomHeight(e.target.value)}
-                    className="w-20 px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className="w-24 px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-center text-lg font-semibold"
                   />
                 </div>
               )}
@@ -258,8 +257,8 @@ const TrimPage = () => {
 
           {/* クロッパー */}
           {imageSrc && (
-            <div className="max-w-4xl mx-auto mb-8">
-              <div ref={cropperContainerRef} style={{ position: "relative", width: "100%", height: 400 }} className="rounded-2xl overflow-hidden border-4 border-white shadow-xl bg-white">
+            <div className="max-w-4xl mx-auto mb-12">
+              <div ref={cropperContainerRef} style={{ position: "relative", width: "100%", height: 400 }} className="rounded-3xl overflow-hidden border-8 border-white shadow-2xl bg-white">
                 <Cropper
                   image={imageSrc}
                   crop={crop}
@@ -276,10 +275,10 @@ const TrimPage = () => {
 
           {/* ズームスライダーとトリミングボタン */}
           {imageSrc && (
-            <div className="max-w-3xl mx-auto mb-8">
-              <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-white/50">
-                <div className="mb-8">
-                  <label className="block text-sm font-medium text-slate-700 mb-4">ズーム調整</label>
+            <div className="max-w-3xl mx-auto mb-12">
+              <div className="bg-white rounded-3xl p-12 shadow-2xl border border-white/20">
+                <div className="mb-12">
+                  <label className="block text-xl font-bold text-slate-800 mb-6">ズーム調整</label>
                   <Slider
                     value={zoom}
                     min={1}
@@ -289,8 +288,11 @@ const TrimPage = () => {
                     onChange={(_: Event, value: number | number[]) => setZoom(value as number)}
                     sx={{
                       color: '#10b981',
+                      height: 8,
                       '& .MuiSlider-thumb': {
                         backgroundColor: '#10b981',
+                        width: 28,
+                        height: 28,
                       },
                       '& .MuiSlider-track': {
                         backgroundColor: '#10b981',
@@ -301,7 +303,7 @@ const TrimPage = () => {
                     }}
                   />
                 </div>
-                <PrimaryButton onClick={showCroppedImage} className="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700">
+                <PrimaryButton onClick={showCroppedImage} className="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 py-4 text-xl font-bold">
                   トリミング実行
                 </PrimaryButton>
               </div>
@@ -310,14 +312,14 @@ const TrimPage = () => {
 
           {/* トリミング結果 */}
           {croppedImage && (
-            <div className="max-w-4xl mx-auto mb-12">
-              <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 lg:p-12 shadow-xl border border-white/50">
-                <h2 className="text-2xl lg:text-3xl font-semibold mb-8 text-slate-800">
+            <div className="max-w-4xl mx-auto mb-16">
+              <div className="bg-white rounded-3xl p-12 lg:p-16 shadow-2xl border border-white/20">
+                <h2 className="text-3xl lg:text-4xl font-bold mb-12 text-slate-800">
                   トリミング結果
                 </h2>
-                <img src={croppedImage} alt="cropped" className="max-w-full mx-auto rounded-xl border border-slate-200 shadow-lg mb-8" />
+                <img src={croppedImage} alt="cropped" className="max-w-full mx-auto rounded-2xl border border-slate-200 shadow-xl mb-12" />
                 <a href={croppedImage} download="cropped.png">
-                  <PrimaryButton variant="outline" className="border-emerald-500 text-emerald-600 hover:bg-emerald-50">
+                  <PrimaryButton variant="outline" className="border-emerald-500 text-emerald-600 hover:bg-emerald-50 py-4 px-8 text-xl font-bold">
                     ダウンロード
                   </PrimaryButton>
                 </a>
@@ -328,90 +330,106 @@ const TrimPage = () => {
       </section>
 
       {/* 使い方ガイド */}
-      <section className="py-24 bg-white">
-        <div className="max-w-6xl mx-auto px-6 lg:px-12">
-          <div className="text-center mb-20">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-8 text-slate-900">
+      <section className="py-32 bg-white">
+        <div className="max-w-6xl mx-auto px-8">
+          <div className="text-center mb-24">
+            <h2 className="text-4xl lg:text-6xl font-bold mb-8 text-slate-800">
               使い方ガイド
             </h2>
-            <p className="text-lg sm:text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
               イージートリミングを使って画像をトリミングする基本的な手順を分かりやすく説明します。
               数ステップで簡単にトリミング画像を作成できます。
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
-            <GuideCard
-              title="1. 画像をアップロード"
-              icon={
-                <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl p-10 hover:shadow-xl transition-all duration-300 hover:scale-105 group">
+              <div className="bg-blue-100 w-20 h-20 rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300">
+                <svg className="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                 </svg>
-              }
-              color="bg-blue-50"
-              footer={<>対応形式: JPG, PNG, HEIC/HEIF など</>}
-            >
-              トリミングしたい画像をアップロードエリアにドラッグ＆ドロップするか、クリックしてファイルを選択します。HEIC/HEIF画像も自動変換されます。
-            </GuideCard>
-            <GuideCard
-              title="2. トリミング範囲を調整"
-              icon={
-                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              </div>
+              <h3 className="text-2xl font-bold mb-6 text-slate-800">1. 画像をアップロード</h3>
+              <p className="text-slate-600 leading-relaxed mb-8">
+                トリミングしたい画像をアップロードエリアにドラッグ＆ドロップするか、クリックしてファイルを選択します。HEIC/HEIF画像も自動変換されます。
+              </p>
+              <div className="text-sm text-blue-600 font-semibold bg-blue-100 px-4 py-2 rounded-lg inline-block">
+                対応形式: JPG, PNG, HEIC/HEIF など
+              </div>
+            </div>
+            
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-3xl p-10 hover:shadow-xl transition-all duration-300 hover:scale-105 group">
+              <div className="bg-green-100 w-20 h-20 rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300">
+                <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <rect x="4" y="4" width="16" height="16" rx="2" strokeWidth="2" stroke="currentColor" fill="none" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h8M12 8v8" />
                 </svg>
-              }
-              color="bg-green-50"
-              footer={<>比率プリセットやカスタム比率も選択可能</>}
-            >
-              画像が表示されたら、トリミングしたい範囲をドラッグして調整します。SNSアイコンやヘッダー用など、用途に合わせて比率プリセットも選べます。
-            </GuideCard>
-            <GuideCard
-              title="3. トリミング＆ダウンロード"
-              icon={
-                <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              </div>
+              <h3 className="text-2xl font-bold mb-6 text-slate-800">2. トリミング範囲を調整</h3>
+              <p className="text-slate-600 leading-relaxed mb-8">
+                画像が表示されたら、トリミングしたい範囲をドラッグして調整します。SNSアイコンやヘッダー用など、用途に合わせて比率プリセットも選べます。
+              </p>
+              <div className="text-sm text-green-600 font-semibold bg-green-100 px-4 py-2 rounded-lg inline-block">
+                比率プリセットやカスタム比率も選択可能
+              </div>
+            </div>
+            
+            <div className="bg-gradient-to-br from-purple-50 to-violet-50 rounded-3xl p-10 hover:shadow-xl transition-all duration-300 hover:scale-105 group">
+              <div className="bg-purple-100 w-20 h-20 rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300">
+                <svg className="w-10 h-10 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                 </svg>
-              }
-              color="bg-purple-50"
-              footer={<>トリミング画像はPNG形式で保存されます</>}
-            >
-              「トリミング」ボタンを押すと、指定範囲で画像が切り抜かれます。ダウンロードボタンから保存できます。
-            </GuideCard>
+              </div>
+              <h3 className="text-2xl font-bold mb-6 text-slate-800">3. トリミング＆ダウンロード</h3>
+              <p className="text-slate-600 leading-relaxed mb-8">
+                「トリミング」ボタンを押すと、指定範囲で画像が切り抜かれます。ダウンロードボタンから保存できます。
+              </p>
+              <div className="text-sm text-purple-600 font-semibold bg-purple-100 px-4 py-2 rounded-lg inline-block">
+                トリミング画像はPNG形式で保存されます
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* 便利な機能セクション */}
-      <section className="py-16 sm:py-20 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-3xl p-8 sm:p-12 shadow-lg max-w-6xl mx-auto">
-            <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-8 text-center text-slate-900">
+      <section className="py-32 bg-slate-50">
+        <div className="max-w-6xl mx-auto px-8">
+          <div className="text-center mb-20">
+            <h3 className="text-4xl lg:text-5xl font-bold mb-8 text-slate-800">
               その他の便利な機能
             </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
-              <div className="flex items-start p-4 sm:p-6 bg-amber-50 rounded-2xl">
-                <div className="bg-amber-100 p-3 rounded-xl mr-4 sm:mr-6 mt-1">
-                  <svg className="w-6 sm:w-8 h-6 sm:h-8 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            <div className="bg-white rounded-3xl p-12 shadow-xl hover:shadow-2xl transition-all duration-300">
+              <div className="flex items-start">
+                <div className="bg-orange-100 p-6 rounded-2xl mr-8 flex-shrink-0">
+                  <svg className="w-12 h-12 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
                   </svg>
                 </div>
                 <div>
-                  <h4 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3 text-slate-800">HEIC/HEIF形式への対応</h4>
-                  <p className="text-sm sm:text-base text-slate-700 leading-relaxed">iPhoneで撮影したHEIC/HEIF形式の画像も自動変換して処理します。特別な事前変換は不要です。</p>
+                  <h4 className="text-2xl font-bold mb-6 text-slate-800">HEIC/HEIF形式への対応</h4>
+                  <p className="text-slate-600 leading-relaxed text-lg">
+                    iPhoneで撮影したHEIC/HEIF形式の画像も自動変換して処理します。特別な事前変換は不要です。
+                  </p>
                 </div>
               </div>
-              
-              <div className="flex items-start p-4 sm:p-6 bg-emerald-50 rounded-2xl">
-                <div className="bg-emerald-100 p-3 rounded-xl mr-4 sm:mr-6 mt-1">
-                  <svg className="w-6 sm:w-8 h-6 sm:h-8 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            </div>
+            
+            <div className="bg-white rounded-3xl p-12 shadow-xl hover:shadow-2xl transition-all duration-300">
+              <div className="flex items-start">
+                <div className="bg-emerald-100 p-6 rounded-2xl mr-8 flex-shrink-0">
+                  <svg className="w-12 h-12 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"></path>
                   </svg>
                 </div>
                 <div>
-                  <h4 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3 text-slate-800">比率プリセット・カスタム比率</h4>
-                  <p className="text-sm sm:text-base text-slate-700 leading-relaxed">SNSアイコンやXヘッダー、Instagram投稿など用途に合わせた比率プリセットや、自由なカスタム比率でトリミングできます。</p>
+                  <h4 className="text-2xl font-bold mb-6 text-slate-800">比率プリセット・カスタム比率</h4>
+                  <p className="text-slate-600 leading-relaxed text-lg">
+                    SNSアイコンやXヘッダー、Instagram投稿など用途に合わせた比率プリセットや、自由なカスタム比率でトリミングできます。
+                  </p>
                 </div>
               </div>
             </div>
@@ -420,17 +438,17 @@ const TrimPage = () => {
       </section>
 
       {/* 背景透過機能への誘導セクション */}
-      <section className="py-16 sm:py-20 bg-gradient-to-r from-emerald-600 to-green-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-6 text-white">
+      <section className="py-32 bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600">
+        <div className="max-w-6xl mx-auto px-8 text-center">
+          <h3 className="text-4xl lg:text-5xl font-bold mb-8 text-white">
             画像の背景透過も簡単に
           </h3>
-          <p className="text-lg sm:text-xl text-emerald-100 mb-8 max-w-3xl mx-auto">
+          <p className="text-2xl text-emerald-100 mb-16 max-w-4xl mx-auto leading-relaxed">
             画像の背景透過をしたい場合は、イージーカットをご利用ください。
             AI技術で高精度な背景除去処理が可能です。
           </p>
           <Link href="/">
-            <button className="bg-white text-emerald-600 font-semibold py-3 sm:py-4 px-6 sm:px-8 rounded-xl hover:bg-emerald-50 transition duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 text-base sm:text-lg">
+            <button className="bg-white text-emerald-600 font-bold py-6 px-12 rounded-2xl hover:bg-emerald-50 transition duration-300 shadow-2xl hover:shadow-3xl transform hover:scale-105 text-xl">
               イージーカットを使ってみる
             </button>
           </Link>
@@ -438,64 +456,65 @@ const TrimPage = () => {
       </section>
 
       {/* SEO強化：FAQ・よくある質問セクション */}
-      <section className="py-16 sm:py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-6xl mx-auto">
-            <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-8 sm:mb-12 text-center text-slate-900">
+      <section className="py-32 bg-white">
+        <div className="max-w-6xl mx-auto px-8">
+          <div className="text-center mb-20">
+            <h3 className="text-4xl lg:text-5xl font-bold mb-8 text-slate-800">
               よくある質問（FAQ）
             </h3>
-            <div className="space-y-4 sm:space-y-6 max-w-4xl mx-auto">
-              <div className="border-l-4 border-emerald-500 pl-4 sm:pl-6 py-3 sm:py-4 bg-emerald-50 rounded-r-lg">
-                <h4 className="text-base sm:text-lg font-semibold mb-2 text-slate-800">無料で画像トリミングできますか？</h4>
-                <p className="text-sm sm:text-base text-slate-700">はい、イージートリミングは完全無料で画像トリミング処理ができます。登録も不要で、すぐにご利用いただけます。</p>
-              </div>
-              <div className="border-l-4 border-green-500 pl-4 sm:pl-6 py-3 sm:py-4 bg-green-50 rounded-r-lg">
-                <h4 className="text-base sm:text-lg font-semibold mb-2 text-slate-800">iPhone（HEIC形式）の画像もトリミングできますか？</h4>
-                <p className="text-sm sm:text-base text-slate-700">はい、iPhoneで撮影したHEIC/HEIF形式の画像も自動的にJPEG/PNG形式に変換してトリミングします。事前変換は不要です。</p>
-              </div>
-              <div className="border-l-4 border-blue-500 pl-4 sm:pl-6 py-3 sm:py-4 bg-blue-50 rounded-r-lg">
-                <h4 className="text-base sm:text-lg font-semibold mb-2 text-slate-800">SNS用の比率でトリミングできますか？</h4>
-                <p className="text-sm sm:text-base text-slate-700">はい、Instagram投稿（4:5）、Xヘッダー（3:1）、SNSアイコン（1:1）など、SNS用の比率プリセットを多数ご用意しています。</p>
-              </div>
-              <div className="border-l-4 border-orange-500 pl-4 sm:pl-6 py-3 sm:py-4 bg-orange-50 rounded-r-lg">
-                <h4 className="text-base sm:text-lg font-semibold mb-2 text-slate-800">カスタム比率でトリミングできますか？</h4>
-                <p className="text-sm sm:text-base text-slate-700">はい、カスタム比率設定で自由な縦横比でトリミングできます。用途に合わせて柔軟に調整可能です。</p>
-              </div>
-              <div className="border-l-4 border-purple-500 pl-4 sm:pl-6 py-3 sm:py-4 bg-purple-50 rounded-r-lg">
-                <h4 className="text-base sm:text-lg font-semibold mb-2 text-slate-800">商用利用は可能ですか？</h4>
-                <p className="text-sm sm:text-base text-slate-700">はい、商用利用も可能です。ECサイトの商品画像、SNS投稿、デザイン制作など、幅広い用途でご活用ください。</p>
-              </div>
+          </div>
+          
+          <div className="space-y-8 max-w-4xl mx-auto">
+            <div className="bg-emerald-50 border-l-8 border-emerald-500 rounded-r-2xl p-8 hover:shadow-lg transition-shadow duration-300">
+              <h4 className="text-xl font-bold mb-4 text-slate-800">無料で画像トリミングできますか？</h4>
+              <p className="text-slate-700 leading-relaxed text-lg">はい、イージートリミングは完全無料で画像トリミング処理ができます。登録も不要で、すぐにご利用いただけます。</p>
+            </div>
+            <div className="bg-green-50 border-l-8 border-green-500 rounded-r-2xl p-8 hover:shadow-lg transition-shadow duration-300">
+              <h4 className="text-xl font-bold mb-4 text-slate-800">iPhone（HEIC形式）の画像もトリミングできますか？</h4>
+              <p className="text-slate-700 leading-relaxed text-lg">はい、iPhoneで撮影したHEIC/HEIF形式の画像も自動的にJPEG/PNG形式に変換してトリミングします。事前変換は不要です。</p>
+            </div>
+            <div className="bg-blue-50 border-l-8 border-blue-500 rounded-r-2xl p-8 hover:shadow-lg transition-shadow duration-300">
+              <h4 className="text-xl font-bold mb-4 text-slate-800">SNS用の比率でトリミングできますか？</h4>
+              <p className="text-slate-700 leading-relaxed text-lg">はい、Instagram投稿（4:5）、Xヘッダー（3:1）、SNSアイコン（1:1）など、SNS用の比率プリセットを多数ご用意しています。</p>
+            </div>
+            <div className="bg-orange-50 border-l-8 border-orange-500 rounded-r-2xl p-8 hover:shadow-lg transition-shadow duration-300">
+              <h4 className="text-xl font-bold mb-4 text-slate-800">カスタム比率でトリミングできますか？</h4>
+              <p className="text-slate-700 leading-relaxed text-lg">はい、カスタム比率設定で自由な縦横比でトリミングできます。用途に合わせて柔軟に調整可能です。</p>
+            </div>
+            <div className="bg-purple-50 border-l-8 border-purple-500 rounded-r-2xl p-8 hover:shadow-lg transition-shadow duration-300">
+              <h4 className="text-xl font-bold mb-4 text-slate-800">商用利用は可能ですか？</h4>
+              <p className="text-slate-700 leading-relaxed text-lg">はい、商用利用も可能です。ECサイトの商品画像、SNS投稿、デザイン制作など、幅広い用途でご活用ください。</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* SEO強化：活用事例セクション */}
-      <section className="py-16 sm:py-20 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 sm:mb-16">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-6 text-slate-900">
+      <section className="py-32 bg-slate-50">
+        <div className="max-w-6xl mx-auto px-8">
+          <div className="text-center mb-20">
+            <h2 className="text-4xl lg:text-5xl font-bold mb-8 text-slate-800">
               イージートリミングの活用事例
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
             <div className="text-center">
-              <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm mb-4 hover:shadow-md transition-shadow">
-                <h4 className="text-base sm:text-lg font-semibold mb-2 text-slate-800">SNS・ソーシャルメディア</h4>
-                <p className="text-xs sm:text-sm text-slate-600">Instagram投稿、Xヘッダー、プロフィール画像、ストーリー用画像作成</p>
+              <div className="bg-white p-12 rounded-3xl shadow-xl mb-8 hover:shadow-2xl transition-all duration-300 hover:scale-105">
+                <h4 className="text-2xl font-bold mb-6 text-slate-800">SNS・ソーシャルメディア</h4>
+                <p className="text-slate-600 text-lg leading-relaxed">Instagram投稿、Xヘッダー、プロフィール画像、ストーリー用画像作成</p>
               </div>
             </div>
             <div className="text-center">
-              <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm mb-4 hover:shadow-md transition-shadow">
-                <h4 className="text-base sm:text-lg font-semibold mb-2 text-slate-800">ビジネス・ECサイト</h4>
-                <p className="text-xs sm:text-sm text-slate-600">商品画像の統一、メルカリ出品画像、バナー制作、プレゼン資料</p>
+              <div className="bg-white p-12 rounded-3xl shadow-xl mb-8 hover:shadow-2xl transition-all duration-300 hover:scale-105">
+                <h4 className="text-2xl font-bold mb-6 text-slate-800">ビジネス・ECサイト</h4>
+                <p className="text-slate-600 text-lg leading-relaxed">商品画像の統一、メルカリ出品画像、バナー制作、プレゼン資料</p>
               </div>
             </div>
             <div className="text-center">
-              <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm mb-4 hover:shadow-md transition-shadow">
-                <h4 className="text-base sm:text-lg font-semibold mb-2 text-slate-800">デザイン・クリエイティブ</h4>
-                <p className="text-xs sm:text-sm text-slate-600">ロゴ作成、アイコンデザイン、Webサイト用画像、印刷物制作</p>
+              <div className="bg-white p-12 rounded-3xl shadow-xl mb-8 hover:shadow-2xl transition-all duration-300 hover:scale-105">
+                <h4 className="text-2xl font-bold mb-6 text-slate-800">デザイン・クリエイティブ</h4>
+                <p className="text-slate-600 text-lg leading-relaxed">ロゴ作成、アイコンデザイン、Webサイト用画像、印刷物制作</p>
               </div>
             </div>
           </div>
@@ -503,23 +522,23 @@ const TrimPage = () => {
       </section>
 
       {/* キーワード密度向上のための関連ツール紹介 */}
-      <section className="py-16 sm:py-20 bg-white text-center">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold mb-4 text-slate-900">その他の画像編集ツール</h2>
-          <p className="text-sm sm:text-base text-slate-600 mb-8 max-w-3xl mx-auto">
+      <section className="py-32 bg-white text-center">
+        <div className="max-w-6xl mx-auto px-8">
+          <h2 className="text-4xl lg:text-5xl font-bold mb-8 text-slate-800">その他の画像編集ツール</h2>
+          <p className="text-slate-600 mb-12 max-w-4xl mx-auto text-xl leading-relaxed">
             画像トリミング以外にも、背景透過、HEIC変換、画像リサイズなど、様々な画像編集・画像加工機能をご提供しています。
             すべて無料でご利用いただけるオンライン画像処理ツールです。
           </p>
         </div>
       </section>
 
-      <div className="py-6 sm:py-8 text-center bg-slate-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <p className="text-sm sm:text-base text-slate-600">
-            ご不明な点がありましたら、<a href="/privacy-policy" className="text-blue-600 hover:underline font-medium">プライバシーポリシー</a>をご確認ください。
+      <footer className="py-16 text-center bg-slate-800">
+        <div className="max-w-6xl mx-auto px-8">
+          <p className="text-slate-300 text-lg">
+            ご不明な点がありましたら、<a href="/privacy-policy" className="text-blue-400 hover:text-blue-300 font-medium transition-colors">プライバシーポリシー</a>をご確認ください。
           </p>
         </div>
-      </div>
+      </footer>
     </>
   );
 };
