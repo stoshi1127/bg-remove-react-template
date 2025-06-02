@@ -141,7 +141,7 @@ const TrimPage = () => {
       />
 
       {/* ヒーローセクション */}
-      <section className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 flex flex-col items-center justify-center relative overflow-hidden">
+      <section className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 flex flex-col items-center justify-center relative overflow-hidden py-12">
         {/* 背景装飾 */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute -top-40 -right-40 w-80 h-80 bg-emerald-100/30 rounded-full blur-3xl"></div>
@@ -149,41 +149,41 @@ const TrimPage = () => {
         </div>
 
         {/* メインコンテンツ */}
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div className="relative z-10 w-full max-w-6xl mx-auto px-6 lg:px-12 text-center">
           {/* タイトルセクション */}
           <div className="mb-16">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-slate-900 via-emerald-900 to-slate-900 bg-clip-text text-transparent">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-8 bg-gradient-to-r from-slate-900 via-emerald-900 to-slate-900 bg-clip-text text-transparent">
               イージートリミング
             </h1>
-            <p className="text-lg sm:text-xl md:text-2xl text-slate-700 mb-12 max-w-4xl mx-auto leading-relaxed px-4">
+            <p className="text-lg sm:text-xl lg:text-2xl text-slate-700 mb-12 max-w-4xl mx-auto leading-relaxed">
               高精度な画像トリミングツール。SNSアイコンやヘッダー、メルカリ・Instagram用など
               <span className="font-semibold text-emerald-700">多彩な比率プリセット</span>で簡単作成
             </p>
             
             {/* 特徴バッジ */}
-            <div className="flex flex-wrap justify-center gap-3 sm:gap-4 mb-12 px-4">
-              <span className="bg-white/80 backdrop-blur-sm px-4 sm:px-6 py-2 sm:py-3 rounded-full text-slate-700 font-medium shadow-sm border border-slate-200 hover:shadow-md transition-shadow text-sm sm:text-base">
+            <div className="flex flex-wrap justify-center gap-4 mb-12">
+              <span className="bg-white/80 backdrop-blur-sm px-6 py-3 rounded-full text-slate-700 font-medium shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
                 完全無料
               </span>
-              <span className="bg-white/80 backdrop-blur-sm px-4 sm:px-6 py-2 sm:py-3 rounded-full text-slate-700 font-medium shadow-sm border border-slate-200 hover:shadow-md transition-shadow text-sm sm:text-base">
+              <span className="bg-white/80 backdrop-blur-sm px-6 py-3 rounded-full text-slate-700 font-medium shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
                 比率プリセット
               </span>
-              <span className="bg-white/80 backdrop-blur-sm px-4 sm:px-6 py-2 sm:py-3 rounded-full text-slate-700 font-medium shadow-sm border border-slate-200 hover:shadow-md transition-shadow text-sm sm:text-base">
+              <span className="bg-white/80 backdrop-blur-sm px-6 py-3 rounded-full text-slate-700 font-medium shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
                 高精度
               </span>
-              <span className="bg-white/80 backdrop-blur-sm px-4 sm:px-6 py-2 sm:py-3 rounded-full text-slate-700 font-medium shadow-sm border border-slate-200 hover:shadow-md transition-shadow text-sm sm:text-base">
+              <span className="bg-white/80 backdrop-blur-sm px-6 py-3 rounded-full text-slate-700 font-medium shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
                 iPhone対応
               </span>
             </div>
           </div>
 
           {/* アップロードエリア */}
-          <div className="max-w-4xl mx-auto mb-8 px-4">
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 sm:p-8 shadow-xl border border-white/50">
-              <h2 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 text-slate-800">
+          <div className="max-w-4xl mx-auto mb-8">
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 lg:p-12 shadow-xl border border-white/50">
+              <h2 className="text-2xl lg:text-3xl font-semibold mb-6 text-slate-800">
                 今すぐ無料でトリミング
               </h2>
-              <p className="text-slate-600 mb-6 sm:mb-8">
+              <p className="text-slate-600 mb-8 text-lg">
                 登録不要・高精度・多彩な比率プリセットで理想のサイズに
               </p>
               <UploadArea
@@ -218,10 +218,10 @@ const TrimPage = () => {
           </div>
 
           {/* 比率選択ボタン */}
-          <div className="max-w-4xl mx-auto mb-8 px-4">
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-xl border border-white/50">
-              <h3 className="text-lg font-semibold mb-4 text-slate-800">比率を選択</h3>
-              <div className="flex flex-wrap gap-2 justify-center mb-4">
+          <div className="max-w-4xl mx-auto mb-8">
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-white/50">
+              <h3 className="text-lg font-semibold mb-6 text-slate-800">比率を選択</h3>
+              <div className="flex flex-wrap gap-3 justify-center mb-6">
                 {aspectRatios.map((ratio) => (
                   <RatioButton
                     key={ratio.label}
@@ -233,7 +233,7 @@ const TrimPage = () => {
                 ))}
               </div>
               {selectedPreset === "custom" && (
-                <div className="flex items-center justify-center gap-4 p-4 bg-slate-50 rounded-xl">
+                <div className="flex items-center justify-center gap-4 p-6 bg-slate-50 rounded-xl">
                   <label className="text-sm font-medium text-slate-700">横</label>
                   <input
                     type="number"
@@ -258,7 +258,7 @@ const TrimPage = () => {
 
           {/* クロッパー */}
           {imageSrc && (
-            <div className="max-w-4xl mx-auto mb-8 px-4">
+            <div className="max-w-4xl mx-auto mb-8">
               <div ref={cropperContainerRef} style={{ position: "relative", width: "100%", height: 400 }} className="rounded-2xl overflow-hidden border-4 border-white shadow-xl bg-white">
                 <Cropper
                   image={imageSrc}
@@ -276,10 +276,10 @@ const TrimPage = () => {
 
           {/* ズームスライダーとトリミングボタン */}
           {imageSrc && (
-            <div className="max-w-2xl mx-auto mb-8 px-4">
-              <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-xl border border-white/50">
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-slate-700 mb-2">ズーム調整</label>
+            <div className="max-w-3xl mx-auto mb-8">
+              <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-white/50">
+                <div className="mb-8">
+                  <label className="block text-sm font-medium text-slate-700 mb-4">ズーム調整</label>
                   <Slider
                     value={zoom}
                     min={1}
@@ -310,12 +310,12 @@ const TrimPage = () => {
 
           {/* トリミング結果 */}
           {croppedImage && (
-            <div className="max-w-4xl mx-auto mb-12 px-4">
-              <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 sm:p-8 shadow-xl border border-white/50">
-                <h2 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 text-slate-800">
+            <div className="max-w-4xl mx-auto mb-12">
+              <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 lg:p-12 shadow-xl border border-white/50">
+                <h2 className="text-2xl lg:text-3xl font-semibold mb-8 text-slate-800">
                   トリミング結果
                 </h2>
-                <img src={croppedImage} alt="cropped" className="max-w-full mx-auto rounded-xl border border-slate-200 shadow-lg mb-6" />
+                <img src={croppedImage} alt="cropped" className="max-w-full mx-auto rounded-xl border border-slate-200 shadow-lg mb-8" />
                 <a href={croppedImage} download="cropped.png">
                   <PrimaryButton variant="outline" className="border-emerald-500 text-emerald-600 hover:bg-emerald-50">
                     ダウンロード
@@ -328,10 +328,10 @@ const TrimPage = () => {
       </section>
 
       {/* 使い方ガイド */}
-      <section className="py-16 sm:py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 sm:mb-16">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 text-slate-900">
+      <section className="py-24 bg-white">
+        <div className="max-w-6xl mx-auto px-6 lg:px-12">
+          <div className="text-center mb-20">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-8 text-slate-900">
               使い方ガイド
             </h2>
             <p className="text-lg sm:text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
@@ -340,7 +340,7 @@ const TrimPage = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
             <GuideCard
               title="1. 画像をアップロード"
               icon={
