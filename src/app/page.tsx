@@ -86,42 +86,87 @@ export default function Home() {
           __html: JSON.stringify(structuredData),
         }}
       />
-      <main className="flex min-h-screen flex-col items-center justify-center p-8"> {/* スタイルは適宜調整 */}
-        {/* --- 元々あったコード (Next.jsロゴなど) は削除またはコメントアウト --- */}
-        {/* <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-          ... (元のコード) ...
-        </div> */}
+      
+      {/* ヒーローセクション */}
+      <section className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex flex-col items-center justify-center p-8 relative overflow-hidden">
+        {/* 背景装飾 */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-100 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-pulse"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-100 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-pulse delay-1000"></div>
+          <div className="absolute top-40 left-1/2 w-60 h-60 bg-purple-100 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-pulse delay-500"></div>
+        </div>
 
-        {/* --- ここに背景除去コンポーネントを配置 --- */}
-        <h1 className="text-4xl font-bold mb-8">{siteName}</h1>
-        <p className="text-lg text-gray-600 mb-8 text-center max-w-2xl">
-          複数の画像を一度にアップロードして、背景を自動で透過できます。
-          iPhoneで撮影した画像（HEIC/HEIF形式）も自動的に変換されます。
-        </p>
-        
-        {/* CTAセクション追加 */}
-        <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-6 rounded-xl mb-8 text-center max-w-3xl mx-auto">
-          <h2 className="text-2xl font-bold mb-4">🎉 今すぐ無料で背景透過！</h2>
-          <p className="mb-4">登録不要・制限なし・高速処理でプロ品質の仕上がり</p>
-          <div className="flex justify-center space-x-4">
-            <span className="bg-white/20 px-3 py-1 rounded-full text-sm">✅ 完全無料</span>
-            <span className="bg-white/20 px-3 py-1 rounded-full text-sm">⚡ 高速処理</span>
-            <span className="bg-white/20 px-3 py-1 rounded-full text-sm">🔒 安全・安心</span>
+        {/* メインコンテンツ */}
+        <div className="relative z-10 w-full max-w-6xl mx-auto text-center">
+          {/* タイトルセクション */}
+          <div className="mb-12 animate-fade-in">
+            <h1 className="text-6xl md:text-7xl font-black mb-6 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+              {siteName}
+            </h1>
+            <p className="text-xl md:text-2xl text-gray-700 mb-8 max-w-4xl mx-auto leading-relaxed">
+              AI技術で画像の背景を瞬時に透過。複数画像の一括処理、HEIC自動変換で
+              <span className="font-bold text-blue-600">プロ品質の仕上がり</span>を実現
+            </p>
+            
+            {/* 特徴バッジ */}
+            <div className="flex flex-wrap justify-center gap-4 mb-8">
+              <span className="bg-white/80 backdrop-blur-sm px-6 py-3 rounded-full text-blue-700 font-semibold shadow-lg border border-blue-100 hover:scale-105 transition-transform">
+                ✨ 完全無料
+              </span>
+              <span className="bg-white/80 backdrop-blur-sm px-6 py-3 rounded-full text-green-700 font-semibold shadow-lg border border-green-100 hover:scale-105 transition-transform">
+                ⚡ 高速処理
+              </span>
+              <span className="bg-white/80 backdrop-blur-sm px-6 py-3 rounded-full text-purple-700 font-semibold shadow-lg border border-purple-100 hover:scale-105 transition-transform">
+                🔒 安全・安心
+              </span>
+              <span className="bg-white/80 backdrop-blur-sm px-6 py-3 rounded-full text-orange-700 font-semibold shadow-lg border border-orange-100 hover:scale-105 transition-transform">
+                📱 iPhone対応
+              </span>
+            </div>
+          </div>
+
+          {/* CTAセクション */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 mb-12 shadow-2xl border border-white/50 max-w-4xl mx-auto">
+            <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              🎉 今すぐ無料で背景透過！
+            </h2>
+            <p className="text-lg text-gray-700 mb-6">
+              登録不要・制限なし・高速処理でプロ品質の仕上がり
+            </p>
+            <div className="flex flex-wrap justify-center gap-4 mb-8">
+              <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg">
+                ✅ 複数画像対応
+              </div>
+              <div className="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg">
+                ⚡ 瞬時に処理
+              </div>
+              <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg">
+                🔒 データ保護
+              </div>
+            </div>
+          </div>
+
+          {/* アップロードエリア */}
+          <div className="max-w-4xl mx-auto">
+            <BgRemoverMulti />
           </div>
         </div>
-        
-        <BgRemoverMulti />
+      </section>
 
-        {/* --- ここに使い方ガイドを追加 --- */}
-        <div className="container mx-auto px-4 py-12 mt-16"> {/* マージンを増やす */}
-          <h2 className="text-3xl font-bold mb-8 text-center">使い方ガイド</h2>
+      {/* 使い方ガイド */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+              使い方ガイド
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+              イージーカットを使って画像を背景透過する基本的な手順を分かりやすく説明します。
+              数ステップで簡単に透過画像を作成できます。
+            </p>
+          </div>
 
-          <p className="mb-12 text-center text-lg text-gray-600 max-w-3xl mx-auto">
-            イージーカットを使って画像を背景透過する基本的な手順を分かりやすく説明します。
-            数ステップで簡単に透過画像を作成できます。
-          </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8"> {/* グリッドレイアウトに変更 */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             <GuideCard
               title="1. 画像をアップロード"
               icon={
@@ -160,53 +205,71 @@ export default function Home() {
               処理が完了すると、透過された画像が表示されます。ダウンロードボタンをクリックして、透過処理された画像を保存しましょう。
             </GuideCard>
           </div>
+        </div>
+      </section>
 
-          {/* 追加機能のセクション */}
-          <div className="mt-16 bg-gray-50 p-8 rounded-xl">
-            <h3 className="text-2xl font-semibold mb-6 text-center">その他の便利な機能</h3>
+      {/* 追加機能セクション */}
+      <section className="py-20 bg-gradient-to-br from-gray-50 to-blue-50">
+        <div className="container mx-auto px-4">
+          <div className="bg-white/80 backdrop-blur-sm p-12 rounded-3xl shadow-2xl border border-white/50 max-w-6xl mx-auto">
+            <h3 className="text-3xl md:text-4xl font-bold mb-8 text-center bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+              その他の便利な機能
+            </h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="flex items-start">
-                <div className="bg-amber-100 p-2 rounded-full mr-4 mt-1">
-                  <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="flex items-start p-6 bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl border border-amber-100">
+                <div className="bg-gradient-to-br from-amber-400 to-orange-500 p-3 rounded-2xl mr-6 mt-1">
+                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
                   </svg>
                 </div>
                 <div>
-                  <h4 className="text-lg font-medium mb-2">HEIC/HEIF形式への対応</h4>
-                  <p className="text-gray-700">iPhoneで撮影したHEIC/HEIF形式の画像も自動変換して処理します。特別な事前変換は不要です。</p>
+                  <h4 className="text-xl font-bold mb-3 text-gray-800">HEIC/HEIF形式への対応</h4>
+                  <p className="text-gray-700 leading-relaxed">iPhoneで撮影したHEIC/HEIF形式の画像も自動変換して処理します。特別な事前変換は不要です。</p>
                 </div>
               </div>
               
-              <div className="flex items-start">
-                <div className="bg-teal-100 p-2 rounded-full mr-4 mt-1">
-                  <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <div className="flex items-start p-6 bg-gradient-to-br from-teal-50 to-cyan-50 rounded-2xl border border-teal-100">
+                <div className="bg-gradient-to-br from-teal-400 to-cyan-500 p-3 rounded-2xl mr-6 mt-1">
+                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"></path>
                   </svg>
                 </div>
                 <div>
-                  <h4 className="text-lg font-medium mb-2">複数画像の一括処理</h4>
-                  <p className="text-gray-700">複数の画像を一度にアップロードして、効率よく背景透過処理ができます。時間の節約に最適です。</p>
+                  <h4 className="text-xl font-bold mb-3 text-gray-800">複数画像の一括処理</h4>
+                  <p className="text-gray-700 leading-relaxed">複数の画像を一度にアップロードして、効率よく背景透過処理ができます。時間の節約に最適です。</p>
                 </div>
               </div>
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* トリミング機能への誘導セクション */}
-          <div className="container mx-auto px-4 mt-12 text-center">
-            <p className="text-lg text-gray-700 mb-4">
-              背景透過だけでなく、画像のトリミングも簡単に行えます。
-            </p>
-            <Link href="/trim">
-              <button className="bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition duration-300">
-                イージートリミングを使ってみる
-              </button>
-            </Link>
-          </div>
+      {/* トリミング機能への誘導セクション */}
+      <section className="py-20 bg-gradient-to-br from-blue-500 to-indigo-600">
+        <div className="container mx-auto px-4 text-center">
+          <h3 className="text-3xl md:text-4xl font-bold mb-6 text-white">
+            画像トリミングも簡単に
+          </h3>
+          <p className="text-xl text-blue-100 mb-8 max-w-3xl mx-auto">
+            背景透過だけでなく、画像のトリミングも簡単に行えます。
+            SNSアイコンやヘッダー画像の作成に最適です。
+          </p>
+          <Link href="/trim">
+            <button className="bg-white text-blue-600 font-bold py-4 px-8 rounded-2xl hover:bg-blue-50 transition duration-300 shadow-2xl hover:scale-105 transform text-lg">
+              イージートリミングを使ってみる →
+            </button>
+          </Link>
+        </div>
+      </section>
 
-          {/* SEO強化：FAQ・よくある質問セクション */}
-          <div className="mt-16 bg-white p-8 rounded-xl shadow-lg">
-            <h3 className="text-2xl font-semibold mb-6 text-center">よくある質問（FAQ）</h3>
+      {/* SEO強化：FAQ・よくある質問セクション */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="bg-white/80 backdrop-blur-sm p-12 rounded-3xl shadow-2xl border border-white/50 max-w-6xl mx-auto">
+            <h3 className="text-3xl md:text-4xl font-bold mb-8 text-center bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+              よくある質問（FAQ）
+            </h3>
             <div className="space-y-6 max-w-4xl mx-auto">
               <div className="border-l-4 border-blue-500 pl-4">
                 <h4 className="text-lg font-medium mb-2">無料で背景透過できますか？</h4>
@@ -230,51 +293,55 @@ export default function Home() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* SEO強化：活用事例セクション */}
-          <div className="mt-16 bg-gradient-to-r from-blue-50 to-indigo-50 p-8 rounded-xl">
-            <h3 className="text-2xl font-semibold mb-6 text-center">イージーカットの活用事例</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-              <div className="text-center">
-                <div className="bg-white p-4 rounded-lg shadow-md mb-4">
-                  <h4 className="text-lg font-medium mb-2">💼 ビジネス・ECサイト</h4>
-                  <p className="text-gray-700 text-sm">商品画像の背景除去、カタログ制作、プレゼン資料作成</p>
-                </div>
+      {/* SEO強化：活用事例セクション */}
+      <section className="py-20 bg-gradient-to-br from-blue-50 to-indigo-50">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+              イージーカットの活用事例
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            <div className="text-center">
+              <div className="bg-white p-4 rounded-lg shadow-md mb-4">
+                <h4 className="text-lg font-medium mb-2">💼 ビジネス・ECサイト</h4>
+                <p className="text-gray-700 text-sm">商品画像の背景除去、カタログ制作、プレゼン資料作成</p>
               </div>
-              <div className="text-center">
-                <div className="bg-white p-4 rounded-lg shadow-md mb-4">
-                  <h4 className="text-lg font-medium mb-2">📱 SNS・個人利用</h4>
-                  <p className="text-gray-700 text-sm">Instagram投稿、LINE着せ替え、プロフィール画像作成</p>
-                </div>
+            </div>
+            <div className="text-center">
+              <div className="bg-white p-4 rounded-lg shadow-md mb-4">
+                <h4 className="text-lg font-medium mb-2">📱 SNS・個人利用</h4>
+                <p className="text-gray-700 text-sm">Instagram投稿、LINE着せ替え、プロフィール画像作成</p>
               </div>
-              <div className="text-center">
-                <div className="bg-white p-4 rounded-lg shadow-md mb-4">
-                  <h4 className="text-lg font-medium mb-2">🎨 デザイン・クリエイティブ</h4>
-                  <p className="text-gray-700 text-sm">グラフィックデザイン、ポスター制作、Webデザイン</p>
-                </div>
+            </div>
+            <div className="text-center">
+              <div className="bg-white p-4 rounded-lg shadow-md mb-4">
+                <h4 className="text-lg font-medium mb-2">�� デザイン・クリエイティブ</h4>
+                <p className="text-gray-700 text-sm">グラフィックデザイン、ポスター制作、Webデザイン</p>
               </div>
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* キーワード密度向上のための関連ツール紹介 */}
-          <div className="mt-16 text-center">
-            <h3 className="text-2xl font-semibold mb-4">その他の画像編集ツール</h3>
-            <p className="text-gray-600 mb-8 max-w-3xl mx-auto">
-              背景透過以外にも、画像トリミング、HEIC変換、画像リサイズなど、様々な画像編集・画像加工機能をご提供しています。
-              すべて無料でご利用いただけるオンライン画像処理ツールです。
-            </p>
-          </div>
-
-          <p className="mt-12 text-center text-gray-600">
-            ご不明な点がありましたら、<a href="/privacy-policy" className="text-blue-600 hover:underline font-medium">プライバシーポリシー</a>をご確認ください。
+      {/* キーワード密度向上のための関連ツール紹介 */}
+      <section className="py-20 text-center">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-semibold mb-4">その他の画像編集ツール</h2>
+          <p className="text-gray-600 mb-8 max-w-3xl mx-auto">
+            背景透過以外にも、画像トリミング、HEIC変換、画像リサイズなど、様々な画像編集・画像加工機能をご提供しています。
+            すべて無料でご利用いただけるオンライン画像処理ツールです。
           </p>
         </div>
+      </section>
 
-        {/* --- 元々あったコード (Vercelロゴなど) は削除またはコメントアウト --- */}
-        {/* <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
-          ... (元のコード) ...
-        </div> */}
-      </main>
+      <p className="mt-12 text-center text-gray-600">
+        ご不明な点がありましたら、<a href="/privacy-policy" className="text-blue-600 hover:underline font-medium">プライバシーポリシー</a>をご確認ください。
+      </p>
     </>
   );
 }
