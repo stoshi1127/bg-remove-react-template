@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 
 const siteName = 'イージートリミング';
-const description = 'イージートリミングは、画像をかんたん・高精度にトリミングできる無料オンラインツールです。SNSアイコンやヘッダー、メルカリ・Instagram用など多彩な比率プリセットに対応。HEIC/HEIF画像も自動変換。QuickToolsブランドのトリミングアプリ。';
 
 export async function generateMetadata(): Promise<Metadata> {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bg.quicktools.jp';
