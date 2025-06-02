@@ -205,11 +205,16 @@ export default function BgRemoverMulti() {
   }, [updateInputStatus, cleanupObjectUrls]); // cleanupObjectUrls を依存配列に追加
 
   /* ------------ ① ファイル選択（複数 OK） --------------- */
-  // handleFileSelect: UploadArea用
+  // handleFileSelect: UploadArea用（単一ファイル向け、後方互換性のため残す）
   const handleFileSelect = async (file: File) => {
     const dataTransfer = new DataTransfer();
     dataTransfer.items.add(file);
     await processFiles(dataTransfer.files);
+  };
+
+  // handleFilesSelect: UploadArea用（複数ファイル向け）
+  const handleFilesSelect = async (files: FileList) => {
+    await processFiles(files);
   };
   
   /* ------------ ② 背景除去：API経由で順次実行 --------------- */
@@ -330,6 +335,8 @@ export default function BgRemoverMulti() {
       {/* ファイル入力エリア (ドラッグ＆ドロップ対応) */}
       <UploadArea
         onFileSelect={handleFileSelect}
+        onFilesSelect={handleFilesSelect}
+        multiple={true}
         accept="image/*,.heic,.heif"
         label="クリックまたはドラッグ＆ドロップでファイルを選択"
         description="画像ファイル (JPG, PNG, HEIC等) を複数選択できます"

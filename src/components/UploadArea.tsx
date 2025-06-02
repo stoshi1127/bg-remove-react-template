@@ -1,30 +1,39 @@
 import React, { useRef, useState } from "react";
 
 type UploadAreaProps = {
-  onFileSelect: (file: File) => void;
+  onFileSelect?: (file: File) => void;  // 既存の単一ファイル用（後方互換性）
+  onFilesSelect?: (files: FileList) => void;  // 新規の複数ファイル用
   accept?: string;
   label?: string;
   description?: string;
   shadow?: string;
   disabled?: boolean;
   previewImage?: string | null;
+  multiple?: boolean;  // 複数ファイル選択の可否
 };
 
 const UploadArea: React.FC<UploadAreaProps> = ({
   onFileSelect,
+  onFilesSelect,
   accept = "image/*",
   label = "クリックまたはドラッグ＆ドロップで画像を選択",
   description = "画像ファイル (JPG, PNG, HEIC等) を1枚選択できます",
   disabled = false,
   previewImage = null,
   shadow = "",
+  multiple = false,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files.length > 0) {
-      onFileSelect(event.target.files[0]);
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      if (multiple && onFilesSelect) {
+        onFilesSelect(files);
+      } else if (onFileSelect) {
+        onFileSelect(files[0]);
+      }
     }
     event.target.value = '';
   };
@@ -47,8 +56,13 @@ const UploadArea: React.FC<UploadAreaProps> = ({
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      onFileSelect(e.dataTransfer.files[0]);
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      if (multiple && onFilesSelect) {
+        onFilesSelect(files);
+      } else if (onFileSelect) {
+        onFileSelect(files[0]);
+      }
     }
   };
 
@@ -71,10 +85,11 @@ const UploadArea: React.FC<UploadAreaProps> = ({
         onChange={handleFileChange}
         className="hidden"
         disabled={disabled}
+        multiple={multiple}
       />
       <svg className={`w-12 h-12 ${isDragging ? 'text-blue-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
       <p className="text-lg font-medium">
-        {isDragging ? "ここに画像をドロップ" : label}
+        {isDragging ? `ここに画像を${multiple ? '複数' : ''}ドロップ` : label}
       </p>
       <p className="text-xs text-gray-500">{description}</p>
       {previewImage && (
