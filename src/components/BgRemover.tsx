@@ -214,11 +214,11 @@ export default function BgRemoverMulti() {
                   ctx.drawImage(templateImg, sx, sy, sWidth, sHeight, 0, 0, targetWidth, targetHeight);
                   drawFinalImage();
               };
-              templateImg.onerror = (e) => reject(new Error("Template image loading failed"));
+              templateImg.onerror = () => reject(new Error("Template image loading failed"));
               templateImg.src = templateUrl;
           }
         }
-        originalImg.onerror = (e) => reject(new Error("Original image loading failed"));
+        originalImg.onerror = () => reject(new Error("Original image loading failed"));
         originalImg.src = originalImageUrl;
     });
   };

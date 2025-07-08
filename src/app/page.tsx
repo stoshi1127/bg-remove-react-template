@@ -9,7 +9,6 @@ import { promises as fs } from 'fs';
 import path from 'path';
 
 const siteName = 'イージーカット';
-const description = '複数の画像を一度にアップロードして、背景を自動で透過できます。iPhoneで撮影した画像（HEIC/HEIF形式）も自動的に変換されます。無料で使えるオンライン背景透過ツールです。'; // コメントアウト解除
 
 // メタデータ定義を generateMetadata 関数を使用して動的に生成
 export async function generateMetadata(): Promise<Metadata> {
@@ -51,10 +50,6 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Home() {
-  const imageDir = path.join(process.cwd(), 'public/templates');
-  const imageFilenames = await fs.readdir(imageDir);
-  const imagePaths = imageFilenames.map(name => `/templates/${name}`);
-
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
