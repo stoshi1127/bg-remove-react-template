@@ -5,6 +5,8 @@ import BgRemoverMulti from "../components/BgRemover"; // '@/components/...' は 
 import type { Metadata } from 'next'; // コメントアウト解除
 import GuideCard from "../components/GuideCard";
 import Link from "next/link";
+import { promises as fs } from 'fs';
+import path from 'path';
 
 const siteName = 'イージーカット';
 const description = '複数の画像を一度にアップロードして、背景を自動で透過できます。iPhoneで撮影した画像（HEIC/HEIF形式）も自動的に変換されます。無料で使えるオンライン背景透過ツールです。'; // コメントアウト解除
@@ -14,15 +16,15 @@ export async function generateMetadata(): Promise<Metadata> {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'; // コメントアウト解除
 
   return {
-    title: `${siteName} - 簡単背景透過AIツール`,
-    description: description,
+    title: "画像の背景を無料で透過・変更 | カラーピッカーで好きな背景色に",
+    description: "アップロードした写真や画像の背景を自動で透過（切り抜き）します。白、木目などの定番背景や、カラーピッカーでお好きな色を自由に設定可能。無料で使える高機能な背景リムーバーです。",
     metadataBase: new URL(siteUrl), // 有効化
     alternates: {
       canonical: '/', // metadataBaseがあるので絶対パスになる
     },
     openGraph: {
-      title: `${siteName} - 簡単背景透過AIツール`,
-      description: description,
+      title: "画像の背景を無料で透過・変更 | カラーピッカーで好きな背景色に",
+      description: "アップロードした写真や画像の背景を自動で透過（切り抜き）します。白、木目などの定番背景や、カラーピッカーでお好きな色を自由に設定可能。無料で使える高機能な背景リムーバーです。",
       url: siteUrl, // 有効化
       siteName: 'QuickTools',
       images: [
@@ -37,8 +39,8 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${siteName} - 簡単背景透過AIツール`,
-      description: description,
+      title: "画像の背景を無料で透過・変更 | カラーピッカーで好きな背景色に",
+      description: "アップロードした写真や画像の背景を自動で透過（切り抜き）します。白、木目などの定番背景や、カラーピッカーでお好きな色を自由に設定可能。無料で使える高機能な背景リムーバーです。",
       images: ['/ogp.png'], // metadataBaseからの相対パス
       // site: '@yourtwitterhandle', 
       // creator: '@yourtwitterhandle', 
@@ -48,7 +50,11 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function Home() {
+export default async function Home() {
+  const imageDir = path.join(process.cwd(), 'public/templates');
+  const imageFilenames = await fs.readdir(imageDir);
+  const imagePaths = imageFilenames.map(name => `/templates/${name}`);
+
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
@@ -145,8 +151,7 @@ export default function Home() {
               {siteName}
             </h1>
             <p className="text-responsive-md text-gray-600 mb-8 leading-relaxed max-w-2xl mx-auto">
-              複数の画像を一度にアップロードして、<span className="font-semibold text-blue-600">AIが自動で背景を透過</span>できます。<br />
-              iPhoneで撮影した画像（HEIC/HEIF形式）も自動的に変換されます。
+              AIが画像の背景を自動で切り抜き、多彩な背景（グラデーション、レンガなど）や好きな色に合成します。さらに「16:9」や「被写体にフィット」など豊富なアスペクト比を選び、ZIPで一括ダウンロードも可能。
             </p>
           </div>
           
@@ -231,25 +236,24 @@ export default function Home() {
               
               <div className="animate-fade-in-up" style={{animationDelay: '0.2s'}}>
                 <GuideCard
-                  title="2. AI背景除去開始"
+                  title="2. 背景をカスタマイズ"
                   icon={
                     <div className="bg-green-600 p-3 rounded-xl">
-                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="AI処理アイコン">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="カスタマイズアイコン">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536L16.732 3.732z"></path>
                       </svg>
                     </div>
                   }
                   className="hover-lift"
-                  footer={<span className="text-green-600 font-medium">高精度AIが自動で背景を検出・除去</span>}
+                  footer={<span className="text-green-600 font-medium">サイズと背景を自由に設定</span>}
                 >
-                  画像をアップロードすると、AIが自動的に背景透過処理を開始します。処理の進行状況がリアルタイムで表示されます。
+                  出力サイズを「16:9」や「被写体にフィット」などから選択。次に「背景なし」、多彩なテンプレート、またはカラーピッカーでお好みの背景に仕上げます。
                 </GuideCard>
               </div>
               
               <div className="animate-fade-in-up" style={{animationDelay: '0.3s'}}>
                 <GuideCard
-                  title="3. 透過画像をダウンロード"
+                  title="3. 加工画像をダウンロード"
                   icon={
                     <div className="bg-purple-600 p-3 rounded-xl">
                       <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="ダウンロードアイコン">
@@ -258,9 +262,9 @@ export default function Home() {
                     </div>
                   }
                   className="hover-lift"
-                  footer={<span className="text-purple-600 font-medium">透過画像はPNG形式で保存</span>}
+                  footer={<span className="text-purple-600 font-medium">個別・一括ダウンロードに対応</span>}
                 >
-                  背景除去が完了すると、透過された画像が表示されます。ダウンロードボタンで高品質な透過画像を保存しましょう。
+                  プレビューで仕上がりを確認し、個別またはZIPで一括ダウンロード。複数枚の処理もスムーズです。
                 </GuideCard>
               </div>
             </div>
@@ -295,13 +299,46 @@ export default function Home() {
                 <div className="flex items-start">
                   <div className="bg-teal-100 p-3 rounded-xl mr-4">
                     <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="一括処理アイコン">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"></path>
+                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
                     </svg>
                   </div>
                   <div>
-                    <h4 className="text-lg font-semibold text-gray-900 mb-2">複数画像の一括背景除去</h4>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-2">複数画像を効率的に処理</h4>
                     <p className="text-gray-600">
-                      一度に複数の画像をアップロードして、効率的に背景透過処理を行えます。時間を大幅に節約できます。
+                      一度に複数の画像をアップロードして背景をまとめて除去。完了後はZIPファイルで一括ダウンロードでき、作業時間を大幅に節約できます。
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-xl shadow-soft hover-lift">
+                <div className="flex items-start">
+                  <div className="bg-rose-100 p-3 rounded-xl mr-4">
+                    <svg className="w-6 h-6 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="背景カスタマイズアイコン">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path>
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-2">多彩な背景カスタマイズ</h4>
+                    <p className="text-gray-600">
+                      白や木目に加え、グラデーションやレンガ壁、ボケなどの新しい背景を追加。カラーピッカーと合わせて、より表現豊かな画像を作成できます。
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-xl shadow-soft hover-lift">
+                <div className="flex items-start">
+                  <div className="bg-cyan-100 p-3 rounded-xl mr-4">
+                    <svg className="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="アスペクト比設定アイコン">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 8V4h4m12 4V4h-4M4 16v4h4m12-4v4h-4"></path>
+                      <rect x="7" y="7" width="10" height="10" rx="1"></rect>
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-2">豊富な出力サイズ設定</h4>
+                    <p className="text-gray-600">
+                      「16:9」や「4:3」などの定番比率に加え、「元画像に合わせる」「被写体にフィット」など、用途に応じた柔軟なサイズ調整が可能です。
                     </p>
                   </div>
                 </div>
@@ -348,11 +385,19 @@ export default function Home() {
               </div>
               <div className="bg-white p-6 rounded-xl shadow-soft">
                 <h4 className="text-lg font-semibold text-gray-900 mb-2">複数の画像を一度に処理できますか？</h4>
-                <p className="text-gray-600">はい、複数の画像を一括でアップロードして同時に背景透過処理ができます。効率的な作業が可能です。</p>
+                <p className="text-gray-600">はい、複数の画像を一括でアップロードして同時に背景透過処理ができます。完了した画像が2枚以上ある場合は「すべてダウンロード」ボタンからZIP形式で一括保存が可能です。</p>
+              </div>
+              <div className="bg-white p-6 rounded-xl shadow-soft">
+                <h4 className="text-lg font-semibold text-gray-900 mb-2">どのような出力サイズが選べますか？</h4>
+                <p className="text-gray-600">「1:1」「16:9」「4:3」といった定番の比率のほか、元画像の比率を保つ「元画像に合わせる」、被写体の形にぴったり合わせる「被写体にフィット」が選択可能です。</p>
               </div>
               <div className="bg-white p-6 rounded-xl shadow-soft">
                 <h4 className="text-lg font-semibold text-gray-900 mb-2">処理した画像のセキュリティは大丈夫ですか？</h4>
                 <p className="text-gray-600">処理済み画像は60分以内に自動削除され、第三者がアクセスすることはありません。安全にご利用いただけます。</p>
+              </div>
+              <div className="bg-white p-6 rounded-xl shadow-soft">
+                <h4 className="text-lg font-semibold text-gray-900 mb-2">背景を自由な色に変更できますか？</h4>
+                <p className="text-gray-600">はい、背景透過後に表示される「背景をカスタマイズ」セクションで、カラーピッカーを使ってお好きな色を自由に設定できます。白や木目といった定番の背景テンプレートもご用意しています。</p>
               </div>
               <div className="bg-white p-6 rounded-xl shadow-soft">
                 <h4 className="text-lg font-semibold text-gray-900 mb-2">商用利用は可能ですか？</h4>

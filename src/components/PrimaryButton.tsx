@@ -6,7 +6,7 @@ type PrimaryButtonProps = {
   disabled?: boolean;
   type?: "button" | "submit" | "reset";
   className?: string;
-  variant?: "primary" | "outline";
+  variant?: "primary" | "outline" | "secondary";
   size?: "sm" | "md" | "lg";
   colorVariant?: 'blue' | 'purple';
 };
@@ -28,13 +28,15 @@ const PrimaryButton: React.FC<PrimaryButtonProps> = ({
     if (colorVariant === 'purple') {
       return {
         primary: "text-white bg-gradient-to-r from-purple-500 to-violet-600 hover:from-purple-600 hover:to-violet-700 focus:ring-purple-500 disabled:opacity-60 disabled:cursor-not-allowed",
-        outline: "border border-purple-600 text-purple-600 bg-white hover:bg-purple-50 focus:ring-purple-500 disabled:opacity-60 disabled:cursor-not-allowed"
+        outline: "border border-purple-600 text-purple-600 bg-white hover:bg-purple-50 focus:ring-purple-500 disabled:opacity-60 disabled:cursor-not-allowed",
+        secondary: "bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500 shadow"
       };
     }
     // デフォルトはブルー系
     return {
       primary: "text-white bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed",
-      outline: "border border-blue-600 text-blue-600 bg-white hover:bg-blue-50 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
+      outline: "border border-blue-600 text-blue-600 bg-white hover:bg-blue-50 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed",
+      secondary: "bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500 shadow"
     };
   };
 
@@ -46,7 +48,7 @@ const PrimaryButton: React.FC<PrimaryButtonProps> = ({
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`${base} ${variant === "primary" ? variantClasses.primary : variantClasses.outline} ${sizeClasses} ${className}`}
+      className={`${base} ${variantClasses[variant]} ${sizeClasses} ${className}`}
     >
       {children}
     </button>

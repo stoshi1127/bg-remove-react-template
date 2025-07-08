@@ -1,8 +1,10 @@
-"use client";
+'use client'
 
 import { useState, useCallback, useRef, useEffect } from "react";
 // heic2any は必要な時だけ動的 import します
 import Link from "next/link";
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
 
 // ファイルステータスの型定義
 type FileStatus = 
@@ -28,11 +30,33 @@ type InFile  = {
 
 import UploadArea from "./UploadArea";
 import PrimaryButton from "./PrimaryButton";
+import RatioButton from "./RatioButton";
+
+// 背景テンプレートの定義
+const templates = [
+  { name: "白", src: "#FFFFFF" },
+  { name: "グラデーション", src: "/templates/gradient-blue-purple.svg" },
+  { name: "レンガ", src: "/templates/brick-wall.jpg" },
+  { name: "ボケ", src: "/templates/bokeh-lights.jpg" },
+  { name: "木目", src: "/templates/wood.jpg" },
+  { name: "壁紙", src: "/templates/wallpaper.jpg" },
+];
+
+const aspectRatios = [
+  { key: '1:1', label: '1:1 (正方形)' },
+  { key: '16:9', label: '16:9 (ワイド)' },
+  { key: '4:3', label: '4:3 (標準)' },
+  { key: 'original', label: '元画像に合わせる' },
+  { key: 'fit-subject', label: '被写体にフィット' }
+];
 
 export default function BgRemoverMulti() {
   
   /* ------------ state --------------- */
   const [inputs,  setInputs]  = useState<InFile[]>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+  const [customColor, setCustomColor] = useState<string>('#FFFFFF');
+  const [selectedRatio, setSelectedRatio] = useState<string>('1:1');
   
   const [busy,    setBusy]    = useState(false);
   const [msg,     setMsg]     = useState<string | null>(null);
@@ -84,6 +108,120 @@ export default function BgRemoverMulti() {
       })
     );
   }, []);
+
+  // 画像合成関数
+  const applyTemplate = async (
+    originalImageUrl: string, 
+    templateUrl: string, 
+    ratio: string, 
+    bbox: { x: number, y: number, width: number, height: number } | undefined
+  ): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+            return reject(new Error('Could not get canvas context'));
+        }
+
+        const originalImg = new Image();
+        originalImg.crossOrigin = "anonymous";
+        originalImg.onload = () => {
+          const baseWidth = 1200;
+          let targetWidth = baseWidth;
+          let targetHeight = baseWidth;
+
+          if (ratio === 'fit-subject') {
+            if (bbox && bbox.width > 0 && bbox.height > 0) {
+              targetWidth = bbox.width;
+              targetHeight = bbox.height;
+            } else {
+              // フォールバック
+              targetWidth = originalImg.naturalWidth;
+              targetHeight = originalImg.naturalHeight;
+            }
+          } else if (ratio === 'original') {
+            targetWidth = originalImg.naturalWidth;
+            targetHeight = originalImg.naturalHeight;
+          } else if (ratio === '16:9') {
+            targetWidth = baseWidth; // 幅は固定
+            targetHeight = Math.round(baseWidth * 9 / 16);
+          } else if (ratio === '4:3') {
+            targetWidth = baseWidth; // 幅は固定
+            targetHeight = Math.round(baseWidth * 3 / 4);
+          }
+          // '1:1' はデフォルトの baseWidth x baseWidth
+
+          canvas.width = targetWidth;
+          canvas.height = targetHeight;
+
+          const drawFinalImage = () => {
+            if (ratio === 'fit-subject' && bbox && bbox.width > 0) {
+              // 被写体のバウンディングボックスを使って元画像から切り出して描画
+              ctx.drawImage(
+                originalImg,
+                bbox.x,
+                bbox.y,
+                bbox.width,
+                bbox.height,
+                0,
+                0,
+                targetWidth,
+                targetHeight
+              );
+            } else {
+              // それ以外の比率では、中央に余白をもって描画
+              // 「元画像に合わせる」場合はパディングなし
+              const padding = ratio === 'original' ? 0 : 100;
+              const maxW = targetWidth - padding;
+              const maxH = targetHeight - padding;
+              const scale = Math.min(maxW / originalImg.width, maxH / originalImg.height);
+              const w = originalImg.width * scale;
+              const h = originalImg.height * scale;
+              const x = (targetWidth - w) / 2;
+              const y = (targetHeight - h) / 2;
+              ctx.drawImage(originalImg, x, y, w, h);
+            }
+            resolve(canvas.toDataURL('image/png'));
+          };
+
+          // テンプレートが透明か、色か、画像かで処理を分岐
+          if (templateUrl === 'transparent') {
+            drawFinalImage();
+          } else if (templateUrl.startsWith('#')) {
+              ctx.fillStyle = templateUrl;
+              ctx.fillRect(0, 0, targetWidth, targetHeight);
+              drawFinalImage();
+          } else { 
+              const templateImg = new Image();
+              templateImg.crossOrigin = "anonymous";
+              templateImg.onload = () => {
+                  // テンプレート画像を中央に描画（アスペクト比を維持して全体をカバー）
+                  const templateAspectRatio = templateImg.width / templateImg.height;
+                  const canvasAspectRatio = targetWidth / targetHeight;
+                  let sx, sy, sWidth, sHeight;
+
+                  if (templateAspectRatio > canvasAspectRatio) {
+                      sHeight = templateImg.height;
+                      sWidth = sHeight * canvasAspectRatio;
+                      sx = (templateImg.width - sWidth) / 2;
+                      sy = 0;
+                  } else {
+                      sWidth = templateImg.width;
+                      sHeight = sWidth / canvasAspectRatio;
+                      sx = 0;
+                      sy = (templateImg.height - sHeight) / 2;
+                  }
+                  ctx.drawImage(templateImg, sx, sy, sWidth, sHeight, 0, 0, targetWidth, targetHeight);
+                  drawFinalImage();
+              };
+              templateImg.onerror = (e) => reject(new Error("Template image loading failed"));
+              templateImg.src = templateUrl;
+          }
+        }
+        originalImg.onerror = (e) => reject(new Error("Original image loading failed"));
+        originalImg.src = originalImageUrl;
+    });
+  };
 
   // バウンディングボックスを計算する関数
   const calculateBoundingBox = async (imageUrl: string): Promise<{ x: number, y: number, width: number, height: number } | undefined> => {
@@ -153,8 +291,8 @@ export default function BgRemoverMulti() {
       const file = files[i];
       const id = crypto.randomUUID();
       const isHeic = file.type.includes("heic")
-        || /\\.(heic|heif)$/i.test(file.name)
-        || (file.type === "" && /\\.(heic|heif)$/i.test(file.name));
+        || /\.(heic|heif)$/i.test(file.name)
+        || (file.type === "" && /\.(heic|heif)$/i.test(file.name));
 
       let previewUrl: string | undefined = undefined;
       if (file.type.startsWith("image/")) {
@@ -180,7 +318,7 @@ export default function BgRemoverMulti() {
           const { default: heic2any } = await import("heic2any");
           const convertedBlob = await heic2any({ blob: input.originalFile, toType: "image/jpeg" });
           const finalBlob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
-          const newName = input.originalFile.name.replace(/\\.[^.]+$/, ".jpg");
+          const newName = input.originalFile.name.replace(/\.[^.]+$/, ".jpg");
           
           // HEIC変換後のblobで新しいプレビューURLを生成するか検討
           // ここでは元のプレビューを維持し、変換後のblobは処理に使用
@@ -254,18 +392,39 @@ export default function BgRemoverMulti() {
                 const errorData = await response.json().catch(() => ({ error: "不明なサーバーエラー" }));
                 const errorMessage = `背景除去エラー: ${errorData.error || response.statusText}`;
                 updateInputStatus(input.id, "error", errorMessage);
-                setMsg(prevMsg => prevMsg ? `${prevMsg}\\n${input.name}: ${errorMessage}` : `${input.name}: ${errorMessage}`);
+                setMsg(prevMsg => prevMsg ? `${prevMsg}\n${input.name}: ${errorMessage}` : `${input.name}: ${errorMessage}`);
             } else {
                 updateInputStatus(input.id, "processing");
                 const imageBlob = await response.blob();
                 
-                // BlobをData URLに変換するPromiseを作成
+                // BlobをData URLに変換し、必要であればテンプレートを適用するPromiseを作成
                 const dataUrlPromise = new Promise<void>((resolve, reject) => {
                     const reader = new FileReader();
-                    reader.onloadend = () => {
-                        const dataUrl = reader.result as string;
-                        updateInputStatus(input.id, "completed", undefined, dataUrl);
-                        resolve();
+                    reader.onloadend = async () => {
+                        try {
+                            const removedBgUrl = reader.result as string;
+                            
+                            // 背景除去後の画像から、まず被写体のバウンディングボックスを計算する
+                            const subjectBbox = await calculateBoundingBox(removedBgUrl);
+
+                            let finalUrl = removedBgUrl;
+                            
+                            // アスペクト比がデフォルトでない場合、またはテンプレートが選択されている場合は常に画像処理を行う
+                            if (selectedRatio !== '1:1' || selectedTemplate) {
+                              const templateUrl = selectedTemplate ?? 'transparent';
+                              // 計算したバウンディングボックスをテンプレート適用関数に渡す
+                              finalUrl = await applyTemplate(removedBgUrl, templateUrl, selectedRatio, subjectBbox);
+                            }
+
+                            updateInputStatus(input.id, "completed", undefined, finalUrl);
+                            resolve();
+                        } catch (e) {
+                            console.error("Template application failed", e);
+                            const errorMessage = e instanceof Error ? e.message : "不明なエラー";
+                            updateInputStatus(input.id, "error", `テンプレート適用エラー: ${errorMessage}`);
+                            setMsg(prev => prev ? `${prev}\n${input.name}: テンプレート適用エラー` : `${input.name}: テンプレート適用エラー`);
+                            reject(e);
+                        }
                     };
                     reader.onerror = (e) => {
                         console.error("Blob to Data URL conversion failed", e);
@@ -284,7 +443,7 @@ export default function BgRemoverMulti() {
               ? `ネットワークエラーまたはサーバー接続不可: ${fetchError.message}`
               : "ネットワークエラーまたはサーバー接続不可（詳細不明）";
             updateInputStatus(input.id, "error", errorMessage);
-            setMsg(prevMsg => prevMsg ? `${prevMsg}\\n${input.name}: ${errorMessage}` : `${input.name}: ${errorMessage}`);
+            setMsg(prevMsg => prevMsg ? `${prevMsg}\n${input.name}: ${errorMessage}` : `${input.name}: ${errorMessage}`);
         }
         
         setProcessedCount(prev => prev + 1);
@@ -346,9 +505,53 @@ export default function BgRemoverMulti() {
     }
   };
 
+  /* ------------ ③ 全てダウンロード --------------- */
+  const handleDownloadAll = async () => {
+    const zip = new JSZip();
+    const completedFiles = inputs.filter(input => input.status === 'completed' && input.outputUrl);
+
+    if (completedFiles.length === 0) {
+      setMsg("ダウンロード対象のファイルがありません。");
+      return;
+    }
+
+    setMsg("ZIPファイルを準備中です...");
+    setBusy(true);
+
+    try {
+      for (const input of completedFiles) {
+        if (input.outputUrl) {
+          // Data URLからBlobを生成
+          const response = await fetch(input.outputUrl);
+          const blob = await response.blob();
+          // オリジナルのファイル名から拡張子を取り、.pngを付与
+          const fileName = `processed_${input.name.replace(/\.[^.]+$/, ".png")}`;
+          zip.file(fileName, blob);
+        }
+      }
+
+      zip.generateAsync({ type: "blob" })
+        .then(content => {
+          saveAs(content, "processed_images.zip");
+          setMsg("ZIPファイルのダウンロードが開始されました。");
+        })
+        .catch(err => {
+          console.error("ZIP生成エラー:", err);
+          setMsg(`ZIPファイルの生成に失敗しました: ${err.message}`);
+        });
+
+    } catch (err) {
+      console.error("一括ダウンロード処理エラー:", err);
+      const errorMessage = err instanceof Error ? err.message : "不明なエラー";
+      setMsg(`エラーが発生しました: ${errorMessage}`);
+    } finally {
+      setBusy(false);
+    }
+  };
+
   /* ------------ UI --------------- */
   return (
-    <div className="w-full max-w-3xl mx-auto p-6 space-y-6 bg-white rounded-xl shadow-2xl">
+    <div className="w-full max-w-3xl mx-auto p-6 space-y-6 bg-white rounded-xl">
       {busy && (
         <div className="flex items-center justify-center my-4">
           <div className="animate-spin rounded-full h-6 w-6 border-t-4 border-blue-500 border-opacity-60"></div>
@@ -362,10 +565,80 @@ export default function BgRemoverMulti() {
         multiple={true}
         accept="image/*,.heic,.heif"
         label="クリックまたはドラッグ＆ドロップでファイルを選択"
-        description="画像ファイル (JPG, PNG, HEIC等) を複数選択できます"
+        description="背景を切り抜きたい画像 (JPG, PNG, HEIC等) を選択してください"
         shadow="shadow-2xl"
         disabled={busy}
       />
+
+      {/* アスペクト比選択エリア */}
+      {inputs.length > 0 && (
+        <div className="space-y-3 pt-4">
+          <h3 className="text-lg font-semibold text-gray-800">出力サイズを選択:</h3>
+          <div className="flex flex-wrap gap-3">
+            {aspectRatios.map(ratio => (
+              <RatioButton
+                key={ratio.key}
+                label={ratio.label}
+                isActive={selectedRatio === ratio.key}
+                onClick={() => setSelectedRatio(ratio.key)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 背景テンプレート選択エリア */}
+      {inputs.length > 0 && (
+        <div className="space-y-3 pt-4">
+          <h3 className="text-lg font-semibold text-gray-800">背景をカスタマイズ (オプション):</h3>
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
+            {/* 「背景なし」オプション */}
+            <div
+              onClick={() => setSelectedTemplate(null)}
+              className={`cursor-pointer rounded-lg border-2 ${!selectedTemplate ? 'border-blue-500 ring-2 ring-blue-300' : 'border-gray-200 hover:border-blue-400'} overflow-hidden relative aspect-square flex items-center justify-center bg-gray-100 transition-all`}
+            >
+              <div className="absolute inset-0" style={{backgroundImage: 'linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)', backgroundSize: '20px 20px', backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px' }}></div>
+              <span className="relative z-10 text-sm font-medium text-gray-600 bg-white bg-opacity-75 px-2 py-1 rounded">なし</span>
+            </div>
+            {/* カラーピッカー */}
+            <div
+              onClick={() => setSelectedTemplate(customColor)}
+              className={`cursor-pointer rounded-lg border-2 ${selectedTemplate === customColor ? 'border-blue-500 ring-2 ring-blue-300' : 'border-gray-200 hover:border-blue-400'} overflow-hidden relative aspect-square flex items-center justify-center transition-all`}
+              style={{ backgroundColor: customColor }}
+            >
+              <input
+                type="color"
+                value={customColor}
+                onChange={(e) => {
+                  setCustomColor(e.target.value);
+                  setSelectedTemplate(e.target.value);
+                }}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                id="color-picker"
+                title="色を選択"
+              />
+              <label htmlFor="color-picker" className="relative z-10 text-sm font-medium text-black mix-blend-difference bg-white bg-opacity-75 px-2 py-1 rounded cursor-pointer">
+                カスタム
+              </label>
+            </div>
+            {/* テンプレート画像 */}
+            {templates.map((template) => (
+              <div
+                key={template.src}
+                onClick={() => setSelectedTemplate(template.src)}
+                className={`cursor-pointer rounded-lg border-2 ${selectedTemplate === template.src ? 'border-blue-500 ring-2 ring-blue-300' : 'border-transparent hover:border-blue-400'} overflow-hidden relative aspect-square transition-all`}
+              >
+                {template.src.startsWith('#') ? (
+                  <div style={{ backgroundColor: template.src }} className="w-full h-full"></div>
+                ) : (
+                  <img src={template.src} alt={template.name} className="w-full h-full object-cover" />
+                )}
+                <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs text-center py-0.5 font-semibold">{template.name}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       
       {/* 選択されたファイルリスト */}
       {inputs.length > 0 && (
@@ -455,17 +728,24 @@ export default function BgRemoverMulti() {
         </div>
       )}
 
-      {/* 背景除去ボタン */}
-      {inputs.length > 0 && inputs.some(i => i.status === 'ready' || i.status === 'error') && (
-        <PrimaryButton
-          onClick={handleRemove}
-          disabled={busy || inputs.filter(i => i.status === 'ready').length === 0}
-        >
-          {busy
-            ? `処理中... (${processedCount}/${inputs.filter(i => i.status === 'ready' || i.status === 'uploading' || i.status === 'processing' || i.status === 'completed' || i.status === 'error').length}枚, ${progress}%)`
-            : `選択した画像（${inputs.filter(i => i.status === 'ready').length}枚）の背景を透過する`}
-        </PrimaryButton>
-      )}
+      {/* 背景除去・一括ダウンロードボタン */}
+      <div className="flex flex-wrap items-center justify-center gap-4">
+        {inputs.length > 0 && inputs.some(i => i.status === 'ready' || i.status === 'error') && (
+          <PrimaryButton
+            onClick={handleRemove}
+            disabled={busy || inputs.filter(i => i.status === 'ready').length === 0}
+          >
+            {busy
+              ? `処理中... (${processedCount}/${inputs.filter(i => i.status === 'ready' || i.status === 'uploading' || i.status === 'processing' || i.status === 'completed' || i.status === 'error').length}枚, ${progress}%)`
+              : `選択した画像（${inputs.filter(i => i.status === 'ready').length}枚）の背景を透過する`}
+          </PrimaryButton>
+        )}
+        {inputs.filter(input => input.status === 'completed').length > 1 && (
+          <PrimaryButton onClick={handleDownloadAll} disabled={busy} variant="secondary">
+            すべてダウンロード (.zip)
+          </PrimaryButton>
+        )}
+      </div>
 
       {/* 進捗バー */}
       {busy && (

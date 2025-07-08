@@ -206,12 +206,10 @@ const TrimPage = () => {
                 {aspectRatios.map((ratio) => (
                   <RatioButton
                     key={ratio.label}
-                    selected={selectedPreset === ratio.value}
+                    isActive={selectedPreset === ratio.value}
                     onClick={() => setSelectedPreset(ratio.value as number | "custom")}
-                    colorVariant="purple"
-                  >
-                    {ratio.label}
-                  </RatioButton>
+                    label={ratio.label}
+                  />
                 ))}
               </div>
               {selectedPreset === "custom" && (
