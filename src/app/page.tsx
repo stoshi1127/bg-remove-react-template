@@ -5,8 +5,6 @@ import BgRemoverMulti from "../components/BgRemover"; // '@/components/...' は 
 import type { Metadata } from 'next'; // コメントアウト解除
 import GuideCard from "../components/GuideCard";
 import Link from "next/link";
-import { promises as fs } from 'fs';
-import path from 'path';
 
 const siteName = 'イージーカット';
 
