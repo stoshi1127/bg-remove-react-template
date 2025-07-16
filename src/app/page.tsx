@@ -13,14 +13,14 @@ export async function generateMetadata(): Promise<Metadata> {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'; // コメントアウト解除
 
   return {
-    title: "画像の背景を無料で透過・変更 | カラーピッカーで好きな背景色に",
+    title: "イージーカット - AIで一括背景透過・変更ブラウザツール",
     description: "アップロードした写真や画像の背景を自動で透過（切り抜き）します。白、木目などの定番背景や、カラーピッカーでお好きな色を自由に設定可能。無料で使える高機能な背景リムーバーです。",
     metadataBase: new URL(siteUrl), // 有効化
     alternates: {
       canonical: '/', // metadataBaseがあるので絶対パスになる
     },
     openGraph: {
-      title: "画像の背景を無料で透過・変更 | カラーピッカーで好きな背景色に",
+      title: "イージーカット - AIで一括背景透過・変更ブラウザツール",
       description: "アップロードした写真や画像の背景を自動で透過（切り抜き）します。白、木目などの定番背景や、カラーピッカーでお好きな色を自由に設定可能。無料で使える高機能な背景リムーバーです。",
       url: siteUrl, // 有効化
       siteName: 'QuickTools',
@@ -36,7 +36,7 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     twitter: {
       card: 'summary_large_image',
-      title: "画像の背景を無料で透過・変更 | カラーピッカーで好きな背景色に",
+      title: "イージーカット - AIで一括背景透過・変更ブラウザツール",
       description: "アップロードした写真や画像の背景を自動で透過（切り抜き）します。白、木目などの定番背景や、カラーピッカーでお好きな色を自由に設定可能。無料で使える高機能な背景リムーバーです。",
       images: ['/ogp.png'], // metadataBaseからの相対パス
       // site: '@yourtwitterhandle', 
@@ -331,7 +331,7 @@ export default async function Home() {
                   <div>
                     <h4 className="text-lg font-semibold text-gray-900 mb-2">豊富な出力サイズ設定</h4>
                     <p className="text-gray-600">
-                      「16:9」や「4:3」などの定番比率に加え、「元画像に合わせる」「被写体にフィット」など、用途に応じた柔軟なサイズ調整が可能です。
+                      「16:9」や「4:3」などの定番比率に加え、元画像の比率を保つ「元画像に合わせる」、被写体の形にぴったり合わせる「被写体にフィット」が選択可能です。
                     </p>
                   </div>
                 </div>
