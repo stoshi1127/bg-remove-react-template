@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
   const base64String = await arrayBufferToBase64(fileBuffer);
   const dataURI = `data:${mimeType};base64,${base64String}`;
 
-  const modelVersion = 'fb8af171cfa1616ddcf1242c093f9c46bcada5ad4cf6f2fbe8b81b330ec5c003'; // Updated model version for cjwbw/rembg
+  const modelVersion = 'bria/remove-background'; // 851-labs/background-remover
 
   try {
     // Step 1: Start the prediction
@@ -50,7 +50,6 @@ export async function POST(req: NextRequest) {
         version: modelVersion,
         input: {
           image: dataURI,
-          model: 'isnet-general-use', // Parameter for the rembg model
         },
       }),
     });
