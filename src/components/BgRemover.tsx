@@ -295,7 +295,7 @@ export default function BgRemoverMulti() {
         || (file.type === "" && /\.(heic|heif)$/i.test(file.name));
 
       let previewUrl: string | undefined = undefined;
-      if (file.type.startsWith("image/")) {
+      if (file.type.startsWith("image/") || isHeic) {
         previewUrl = URL.createObjectURL(file);
         registerObjectUrl(previewUrl);
       }
@@ -320,14 +320,16 @@ export default function BgRemoverMulti() {
           const finalBlob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
           const newName = input.originalFile.name.replace(/\.[^.]+$/, ".jpg");
           
-          // HEIC変換後のblobで新しいプレビューURLを生成するか検討
-          // ここでは元のプレビューを維持し、変換後のblobは処理に使用
+          // HEIC変換後の新しいプレビューURLを生成
+          const newPreviewUrl = URL.createObjectURL(finalBlob);
+          registerObjectUrl(newPreviewUrl);
+          
           setInputs(prev => prev.map(i => i.id === input.id ? {
             ...i,
             blob: finalBlob,
             name: newName,
-            status: "ready"
-            // HEIC変換後のプレビューが必要ならここで input.previewUrl も更新
+            status: "ready",
+            previewUrl: newPreviewUrl // HEIC変換後のプレビューURLに更新
           } : i));
         } catch (err: unknown) {
           console.error("HEIC 変換エラー:", err, input.name);
@@ -646,82 +648,131 @@ export default function BgRemoverMulti() {
           <h3 className="text-lg font-semibold text-gray-800">選択されたファイル:</h3>
           <ul className="border border-gray-200 rounded-md divide-y divide-gray-200 shadow-sm bg-white">
             {inputs.map(input => (
-              <li key={input.id} className={`p-3 flex items-start space-x-3 transition-all duration-300 ease-in-out ${
+              <li key={input.id} className={`p-3 transition-all duration-300 ease-in-out ${
                 input.status === 'completed' ? 'bg-green-50' :
                 input.status === 'error' ? 'bg-red-50' : 'bg-white'
               }`}>
-                {(input.outputUrl || input.previewUrl) && (
-                  <div className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded overflow-hidden flex items-center justify-center">
-                    <img 
-                      src={input.outputUrl ?? input.previewUrl} 
-                      alt={`プレビュー ${input.name}`}
-                      className="object-contain w-full h-full"
-                    />
+                <div className="flex items-start space-x-3">
+                  <div className="flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 bg-gray-100 rounded overflow-hidden flex items-center justify-center">
+                    {input.outputUrl ? (
+                      <img 
+                        src={input.outputUrl} 
+                        alt={`処理済み ${input.name}`}
+                        className="object-contain w-full h-full"
+                      />
+                    ) : input.previewUrl && (input.status === 'ready' || input.status === 'uploading' || input.status === 'processing' || input.status === 'completed') ? (
+                      <img 
+                        src={input.previewUrl} 
+                        alt={`プレビュー ${input.name}`}
+                        className="object-contain w-full h-full"
+                        onError={(e) => {
+                          // プレビューの読み込みエラー時（HEICファイルなど）はプレースホルダーを表示
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          const parent = target.parentElement;
+                          if (parent && !parent.querySelector('.fallback-icon')) {
+                            const fallbackDiv = document.createElement('div');
+                            fallbackDiv.className = 'fallback-icon flex flex-col items-center justify-center text-gray-500 w-full h-full';
+                            fallbackDiv.innerHTML = `
+                              <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                              <span class="text-xs">画像</span>
+                            `;
+                            parent.appendChild(fallbackDiv);
+                          }
+                        }}
+                      />
+                    ) : input.status === 'converting' ? (
+                      <div className="flex flex-col items-center justify-center text-gray-500">
+                        <div className="animate-spin rounded-full h-6 w-6 border-2 border-blue-500 border-t-transparent mb-1"></div>
+                        <span className="text-xs">変換中</span>
+                      </div>
+                    ) : input.status === 'pending' ? (
+                      <div className="flex flex-col items-center justify-center text-gray-500">
+                        <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span className="text-xs">待機中</span>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center text-gray-500">
+                        <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span className="text-xs">画像</span>
+                      </div>
+                    )}
                   </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">{input.name}</p>
-                  <p className={`text-xs font-medium ${
-                    input.status === 'error' ? 'text-red-700' :
-                    input.status === 'completed' ? 'text-green-700' :
-                    input.status === 'processing' || input.status === 'uploading' ? 'text-blue-600' :
-                    'text-gray-500'
-                  }`}>
-                    ステータス: 
-                    {input.status === 'pending' && '待機中'}
-                    {input.status === 'converting' && 'HEIC変換中...'}
-                    {input.status === 'ready' && '準備完了'}
-                    {input.status === 'uploading' && 'アップロード中...'}
-                    {input.status === 'processing' && '背景除去中...'}
-                    {input.status === 'completed' && '完了 🎉'}
-                    {input.status === 'error' && 'エラー'}
-                  </p>
-                  {input.errorMessage && <p className="text-xs text-red-600 mt-0.5">詳細: {input.errorMessage}</p>}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">{input.name}</p>
+                    <p className={`text-xs font-medium ${
+                      input.status === 'error' ? 'text-red-700' :
+                      input.status === 'completed' ? 'text-green-700' :
+                      input.status === 'processing' || input.status === 'uploading' ? 'text-blue-600' :
+                      'text-gray-500'
+                    }`}>
+                      ステータス: 
+                      {input.status === 'pending' && '待機中'}
+                      {input.status === 'converting' && 'HEIC変換中...'}
+                      {input.status === 'ready' && '準備完了'}
+                      {input.status === 'uploading' && 'アップロード中...'}
+                      {input.status === 'processing' && '背景除去中...'}
+                      {input.status === 'completed' && '完了 🎉'}
+                      {input.status === 'error' && 'エラー'}
+                    </p>
+                    {input.errorMessage && <p className="text-xs text-red-600 mt-0.5 break-words">詳細: {input.errorMessage}</p>}
+                  </div>
                 </div>
-                <div className="flex-shrink-0 flex flex-col items-end space-y-1">
-                  {input.outputUrl && input.status === 'completed' && (
-                    <div className="flex justify-center space-x-4 mt-2">
-                      {/* ダウンロードボタン */}
-                      <a href={input.outputUrl} download={`processed_${input.name.replace(/\.[^.]+$/, ".png")}`}>
-                        <PrimaryButton variant="outline" size="sm">
-                          ダウンロード
-                        </PrimaryButton>
-                      </a>
-                      {/* イージートリミングで編集ボタン - Linkを使用 */}
-                      {input.boundingBox && input.outputUrl && (
+                
+                {/* ボタンエリア - スマホでは下に配置 */}
+                {(input.outputUrl && input.status === 'completed') || input.status === 'error' ? (
+                  <div className="mt-3 pt-2 border-t border-gray-100">
+                    {input.outputUrl && input.status === 'completed' && (
+                      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                        {/* ダウンロードボタン */}
+                        <a href={input.outputUrl} download={`processed_${input.name.replace(/\.[^.]+$/, ".png")}`} className="flex-1 sm:flex-none">
+                          <PrimaryButton variant="outline" size="sm" className="w-full sm:w-auto">
+                            ダウンロード
+                          </PrimaryButton>
+                        </a>
+                        {/* イージートリミングで編集ボタン - Linkを使用 */}
+                        {input.boundingBox && input.outputUrl && (
                           <Link 
-                              href="/trim"
-                              onClick={() => {
-                                  // localStorageに画像URLとバウンディングボックスを保存
-                                  // outputUrlは既にData URLになっているはず
-                                  localStorage.setItem('trimImage', input.outputUrl || '');
-                                  localStorage.setItem('trimBoundingBox', JSON.stringify(input.boundingBox));
-                                  // ページ遷移はLinkコンポーネントが行う
-                              }}
-                              passHref // Next.js 13/14のLinkで子要素がインタラクティブな場合に使用が推奨
-                              target="_blank" // ここで新しいタブで開く設定を追加
-                              rel="noopener noreferrer" // セキュリティのために追加
+                            href="/trim"
+                            onClick={() => {
+                              // localStorageに画像URLとバウンディングボックスを保存
+                              // outputUrlは既にData URLになっているはず
+                              localStorage.setItem('trimImage', input.outputUrl || '');
+                              localStorage.setItem('trimBoundingBox', JSON.stringify(input.boundingBox));
+                              // ページ遷移はLinkコンポーネントが行う
+                            }}
+                            passHref // Next.js 13/14のLinkで子要素がインタラクティブな場合に使用が推奨
+                            target="_blank" // ここで新しいタブで開く設定を追加
+                            rel="noopener noreferrer" // セキュリティのために追加
+                            className="flex-1 sm:flex-none"
                           >
-                              <PrimaryButton size="sm">
-                                  イージートリミングで編集
-                              </PrimaryButton>
+                            <PrimaryButton size="sm" className="w-full sm:w-auto">
+                              イージートリミングで編集
+                            </PrimaryButton>
                           </Link>
-                      )}
-                    </div>
-                  )}
-                  {input.status === 'error' && (
-                    <button 
-                      onClick={() => {
+                        )}
+                      </div>
+                    )}
+                    {input.status === 'error' && (
+                      <button 
+                        onClick={() => {
                           updateInputStatus(input.id, 'ready', undefined);
                           setMsg(null); 
-                      }}
-                      className="px-3 py-1.5 rounded-md text-sm font-medium text-white bg-yellow-500 hover:bg-yellow-600 transition-colors whitespace-nowrap"
-                      title="このファイルで再試行（エラークリア）"
-                    >
-                      再試行
-                    </button>
-                  )}
-                </div>
+                        }}
+                        className="w-full sm:w-auto px-3 py-1.5 rounded-md text-sm font-medium text-white bg-yellow-500 hover:bg-yellow-600 transition-colors"
+                        title="このファイルで再試行（エラークリア）"
+                      >
+                        再試行
+                      </button>
+                    )}
+                  </div>
+                ) : null}
               </li>
             ))}
           </ul>

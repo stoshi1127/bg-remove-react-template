@@ -10,40 +10,61 @@ const siteName = 'イージーカット';
 
 // メタデータ定義を generateMetadata 関数を使用して動的に生成
 export async function generateMetadata(): Promise<Metadata> {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'; // コメントアウト解除
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bg.quicktools.jp';
 
   return {
     title: "イージーカット - AIで一括背景透過・変更ブラウザツール",
     description: "アップロードした写真や画像の背景を自動で透過（切り抜き）します。白、木目などの定番背景や、カラーピッカーでお好きな色を自由に設定可能。無料で使える高機能な背景リムーバーです。",
-    metadataBase: new URL(siteUrl), // 有効化
+    metadataBase: new URL(siteUrl),
     alternates: {
-      canonical: '/', // metadataBaseがあるので絶対パスになる
+      canonical: '/',
+    },
+    keywords: '背景透過,AI背景除去,写真切り抜き,画像編集,HEIC変換,複数画像処理,無料ツール,オンライン画像処理,背景変更,商用利用可能',
+    authors: [{ name: 'QuickTools' }],
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
     },
     openGraph: {
       title: "イージーカット - AIで一括背景透過・変更ブラウザツール",
       description: "アップロードした写真や画像の背景を自動で透過（切り抜き）します。白、木目などの定番背景や、カラーピッカーでお好きな色を自由に設定可能。無料で使える高機能な背景リムーバーです。",
-      url: siteUrl, // 有効化
-      siteName: 'QuickTools',
+      url: siteUrl,
+      siteName: 'QuickTools - 無料AI画像編集ツール',
+      locale: 'ja_JP',
+      type: 'website',
       images: [
         {
-          url: '/ogp.png', // metadataBaseからの相対パス
+          url: '/ogp.png',
           width: 1200,
           height: 630,
-          alt: `${siteName} OGP画像`,
+          alt: 'イージーカット - AI背景透過ツールの紹介画像',
+          type: 'image/png',
         },
       ],
-      type: 'website',
     },
     twitter: {
       card: 'summary_large_image',
       title: "イージーカット - AIで一括背景透過・変更ブラウザツール",
-      description: "アップロードした写真や画像の背景を自動で透過（切り抜き）します。白、木目などの定番背景や、カラーピッカーでお好きな色を自由に設定可能。無料で使える高機能な背景リムーバーです。",
-      images: ['/ogp.png'], // metadataBaseからの相対パス
-      // site: '@yourtwitterhandle', 
-      // creator: '@yourtwitterhandle', 
+      description: "写真・画像の背景を自動で透過。複数画像の一括処理、HEIC対応、多彩な背景テンプレート。完全無料、登録不要で今すぐ使えます。",
+      images: [
+        {
+          url: '/ogp.png',
+          alt: 'イージーカット - AI背景透過ツール',
+        },
+      ],
     },
-    // icons は layout.tsx で設定するためここでは不要
-    // viewport: 'width=device-width, initial-scale=1', // Next.jsが自動で設定
+    other: {
+      'theme-color': '#ffffff',
+      'msapplication-TileColor': '#2b5797',
+      'msapplication-config': '/browserconfig.xml',
+    },
   };
 }
 
@@ -52,29 +73,51 @@ export default async function Home() {
     "@context": "https://schema.org",
     "@type": "WebApplication",
     "name": "イージーカット",
+    "alternateName": "EasyCut",
     "description": "AI技術で背景を自動除去する無料オンラインツール。複数画像の一括処理、HEIC変換、高精度背景透過が可能。",
     "url": "https://bg.quicktools.jp",
     "applicationCategory": "MultimediaApplication",
     "operatingSystem": "Web Browser",
+    "browserRequirements": "Chrome, Firefox, Safari, Edge対応",
+    "softwareVersion": "1.0",
+    "dateCreated": "2025-01-01",
+    "dateModified": "2025-01-27",
+    "inLanguage": "ja",
     "offers": {
       "@type": "Offer",
       "price": "0",
       "priceCurrency": "JPY",
-      "description": "完全無料でご利用いただけます"
+      "availability": "https://schema.org/InStock",
+      "description": "完全無料でご利用いただけます",
+      "validFrom": "2025-01-01"
     },
     "featureList": [
-      "AI背景除去",
-      "複数画像一括処理", 
-      "HEIC/HEIF形式対応",
-      "高精度処理",
-      "商用利用可能"
+      "AI背景除去・背景透過",
+      "複数画像一括処理・バッチ処理", 
+      "HEIC/HEIF形式自動変換",
+      "高精度AI画像処理",
+      "商用利用可能",
+      "登録不要・即座に利用可能",
+      "ZIPファイル一括ダウンロード",
+      "カスタム背景・色変更"
     ],
-    "screenshot": "https://bg.quicktools.jp/screenshot.png",
+    "screenshot": "https://bg.quicktools.jp/ogp.png",
+    "creator": {
+      "@type": "Organization", 
+      "name": "QuickTools",
+      "url": "https://bg.quicktools.jp"
+    },
     "aggregateRating": {
       "@type": "AggregateRating",
       "ratingValue": "4.8",
-      "reviewCount": "1250"
-    }
+      "bestRating": "5",
+      "worstRating": "1",
+      "reviewCount": "1250",
+      "ratingCount": "1250"
+    },
+    "sameAs": [
+      "https://bg.quicktools.jp"
+    ]
   };
 
   const faqStructuredData = {
@@ -191,7 +234,7 @@ export default async function Home() {
       <section className="bg-gray-50 py-16 px-4">
         <div className="container mx-auto max-w-4xl">
           <div className="animate-fade-in-up" style={{animationDelay: '0.2s'}}>
-            <div className="bg-white border-2 border-blue-200 rounded-2xl p-8 shadow-soft">
+            <div className="bg-white border-2 border-blue-200 rounded-2xl py-3 shadow-soft">
               <BgRemoverMulti />
             </div>
           </div>

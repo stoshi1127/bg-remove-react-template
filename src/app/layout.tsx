@@ -16,13 +16,16 @@ export const metadata = {
   },
   robots: 'index,follow',
   language: 'ja',
-  openGraph: {
-    title: 'イージーカット | 無料AI背景透過・画像編集ツール',
-    description: '複数画像の一括背景透過、HEIC変換、画像トリミングが無料で使える日本語AIツール。iPhone画像対応、高精度AI処理、商用利用OK。',
-    locale: 'ja_JP',
-    type: 'website',
-    siteName: 'QuickTools',
+  icons: {
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/icon.png', type: 'image/png', sizes: '32x32' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
   },
+  // OGPメタデータは各ページで個別に設定
 };
 
 export default function RootLayout({
