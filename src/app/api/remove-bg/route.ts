@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
   const base64String = await arrayBufferToBase64(fileBuffer);
   const dataURI = `data:${mimeType};base64,${base64String}`;
 
-  const modelVersion = 'bria/remove-background'; // 851-labs/background-remover
+  const modelVersion = '851-labs/background-remover:a029dff38972b5fda4ec5d75d7d1cd25aeff621d2cf4946a41055d7db66b80bc'; 
 
   try {
     // Step 1: Start the prediction
