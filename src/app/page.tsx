@@ -41,7 +41,7 @@ export async function generateMetadata(): Promise<Metadata> {
       type: 'website',
       images: [
         {
-          url: '/ogp.png',
+          url: '/ogp.png?v=202501',
           width: 1200,
           height: 630,
           alt: 'イージーカット - AI背景透過ツールの紹介画像',
@@ -55,7 +55,7 @@ export async function generateMetadata(): Promise<Metadata> {
       description: "写真・画像の背景を自動で透過。複数画像の一括処理、HEIC対応、多彩な背景テンプレート。完全無料、登録不要で今すぐ使えます。",
       images: [
         {
-          url: '/ogp.png',
+          url: '/ogp.png?v=202501',
           alt: 'イージーカット - AI背景透過ツール',
         },
       ],
