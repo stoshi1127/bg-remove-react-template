@@ -443,6 +443,58 @@ export default async function Home() {
           </div>
         </section>
 
+        {/* X公式アカウント・フィードバックセクション */}
+        <section className="py-16 px-4">
+          <div className="container mx-auto max-w-3xl">
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 p-8 rounded-2xl text-center">
+              <div className="mb-8">
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">公式Xアカウントをフォロー！</h3>
+                <p className="text-gray-700 max-w-2xl mx-auto">
+                  毎日「今日は何の日」にちなんだ画像を投稿しています。新機能の紹介やお役立ち情報もお届けします。
+                </p>
+              </div>
+              
+              {/* X公式アカウントフォロー */}
+              <div className="bg-white p-8 rounded-xl shadow-soft max-w-md mx-auto">
+                <div className="bg-blue-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <svg className="w-10 h-10 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                  </svg>
+                </div>
+                <h4 className="text-xl font-semibold text-gray-900 mb-3">公式Xをフォロー</h4>
+                <p className="text-gray-600 mb-6">
+                  「今日は何の日」にちなんだ画像投稿や新機能情報を配信中
+                </p>
+                <a
+                  href="https://x.com/QuickToolsJP"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center px-8 py-4 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors duration-200 text-lg"
+                >
+                  <svg className="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                  </svg>
+                  フォローする
+                </a>
+              </div>
+
+              {/* 投稿内容の説明 */}
+              <div className="mt-8 pt-8 border-t border-blue-200">
+                <div className="flex items-center justify-center mb-3">
+                  <svg className="w-6 h-6 mr-2 text-orange-500" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                  <h4 className="text-lg font-semibold text-gray-900">毎日投稿中！</h4>
+                </div>
+                <p className="text-gray-600 text-sm">
+                  「猫の日」「桜の日」など、今日は何の日にちなんだテーマで画像を投稿しています。<br />
+                  季節の話題やトレンドに合わせた背景透過の活用例をお楽しみください。
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* SEO強化：活用事例セクション */}
         <section className="py-16 px-4">
           <div className="container mx-auto max-w-5xl">
