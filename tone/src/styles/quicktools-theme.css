@@ -1,0 +1,389 @@
+/**
+ * QuickTools Design System
+ * 統一されたカラーパレット、タイポグラフィ、コンポーネントスタイル
+ */
+
+:root {
+  /* QuickTools Brand Colors */
+  --qt-primary-50: #eff6ff;
+  --qt-primary-100: #dbeafe;
+  --qt-primary-200: #bfdbfe;
+  --qt-primary-300: #93c5fd;
+  --qt-primary-400: #60a5fa;
+  --qt-primary-500: #3b82f6;
+  --qt-primary-600: #2563eb;
+  --qt-primary-700: #1d4ed8;
+  --qt-primary-800: #1e40af;
+  --qt-primary-900: #1e3a8a;
+
+  /* QuickTools Secondary Colors */
+  --qt-secondary-50: #f0f9ff;
+  --qt-secondary-100: #e0f2fe;
+  --qt-secondary-200: #bae6fd;
+  --qt-secondary-300: #7dd3fc;
+  --qt-secondary-400: #38bdf8;
+  --qt-secondary-500: #0ea5e9;
+  --qt-secondary-600: #0284c7;
+  --qt-secondary-700: #0369a1;
+  --qt-secondary-800: #075985;
+  --qt-secondary-900: #0c4a6e;
+
+  /* QuickTools Neutral Colors */
+  --qt-neutral-50: #f8fafc;
+  --qt-neutral-100: #f1f5f9;
+  --qt-neutral-200: #e2e8f0;
+  --qt-neutral-300: #cbd5e1;
+  --qt-neutral-400: #94a3b8;
+  --qt-neutral-500: #64748b;
+  --qt-neutral-600: #475569;
+  --qt-neutral-700: #334155;
+  --qt-neutral-800: #1e293b;
+  --qt-neutral-900: #0f172a;
+
+  /* QuickTools Success Colors */
+  --qt-success-50: #f0fdf4;
+  --qt-success-100: #dcfce7;
+  --qt-success-200: #bbf7d0;
+  --qt-success-300: #86efac;
+  --qt-success-400: #4ade80;
+  --qt-success-500: #22c55e;
+  --qt-success-600: #16a34a;
+  --qt-success-700: #15803d;
+  --qt-success-800: #166534;
+  --qt-success-900: #14532d;
+
+  /* QuickTools Warning Colors */
+  --qt-warning-50: #fffbeb;
+  --qt-warning-100: #fef3c7;
+  --qt-warning-200: #fde68a;
+  --qt-warning-300: #fcd34d;
+  --qt-warning-400: #fbbf24;
+  --qt-warning-500: #f59e0b;
+  --qt-warning-600: #d97706;
+  --qt-warning-700: #b45309;
+  --qt-warning-800: #92400e;
+  --qt-warning-900: #78350f;
+
+  /* QuickTools Error Colors */
+  --qt-error-50: #fef2f2;
+  --qt-error-100: #fee2e2;
+  --qt-error-200: #fecaca;
+  --qt-error-300: #fca5a5;
+  --qt-error-400: #f87171;
+  --qt-error-500: #ef4444;
+  --qt-error-600: #dc2626;
+  --qt-error-700: #b91c1c;
+  --qt-error-800: #991b1b;
+  --qt-error-900: #7f1d1d;
+
+  /* QuickTools Typography */
+  --qt-font-family-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  --qt-font-family-mono: 'JetBrains Mono', 'Fira Code', 'Monaco', 'Consolas', monospace;
+
+  /* QuickTools Font Sizes */
+  --qt-text-xs: 0.75rem;      /* 12px */
+  --qt-text-sm: 0.875rem;     /* 14px */
+  --qt-text-base: 1rem;       /* 16px */
+  --qt-text-lg: 1.125rem;     /* 18px */
+  --qt-text-xl: 1.25rem;      /* 20px */
+  --qt-text-2xl: 1.5rem;      /* 24px */
+  --qt-text-3xl: 1.875rem;    /* 30px */
+  --qt-text-4xl: 2.25rem;     /* 36px */
+  --qt-text-5xl: 3rem;        /* 48px */
+
+  /* QuickTools Font Weights */
+  --qt-font-light: 300;
+  --qt-font-normal: 400;
+  --qt-font-medium: 500;
+  --qt-font-semibold: 600;
+  --qt-font-bold: 700;
+  --qt-font-extrabold: 800;
+
+  /* QuickTools Line Heights */
+  --qt-leading-tight: 1.25;
+  --qt-leading-snug: 1.375;
+  --qt-leading-normal: 1.5;
+  --qt-leading-relaxed: 1.625;
+  --qt-leading-loose: 2;
+
+  /* QuickTools Spacing */
+  --qt-space-1: 0.25rem;      /* 4px */
+  --qt-space-2: 0.5rem;       /* 8px */
+  --qt-space-3: 0.75rem;      /* 12px */
+  --qt-space-4: 1rem;         /* 16px */
+  --qt-space-5: 1.25rem;      /* 20px */
+  --qt-space-6: 1.5rem;       /* 24px */
+  --qt-space-8: 2rem;         /* 32px */
+  --qt-space-10: 2.5rem;      /* 40px */
+  --qt-space-12: 3rem;        /* 48px */
+  --qt-space-16: 4rem;        /* 64px */
+
+  /* QuickTools Border Radius */
+  --qt-radius-sm: 0.125rem;   /* 2px */
+  --qt-radius-base: 0.25rem;  /* 4px */
+  --qt-radius-md: 0.375rem;   /* 6px */
+  --qt-radius-lg: 0.5rem;     /* 8px */
+  --qt-radius-xl: 0.75rem;    /* 12px */
+  --qt-radius-2xl: 1rem;      /* 16px */
+  --qt-radius-full: 9999px;
+
+  /* QuickTools Shadows */
+  --qt-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --qt-shadow-base: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --qt-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --qt-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --qt-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+  /* QuickTools Transitions */
+  --qt-transition-fast: 150ms ease-in-out;
+  --qt-transition-base: 200ms ease-in-out;
+  --qt-transition-slow: 300ms ease-in-out;
+
+  /* QuickTools Z-Index */
+  --qt-z-dropdown: 1000;
+  --qt-z-sticky: 1020;
+  --qt-z-fixed: 1030;
+  --qt-z-modal-backdrop: 1040;
+  --qt-z-modal: 1050;
+  --qt-z-popover: 1060;
+  --qt-z-tooltip: 1070;
+}
+
+/* QuickTools Base Typography */
+.qt-text {
+  font-family: var(--qt-font-family-sans);
+  color: var(--qt-neutral-800);
+  line-height: var(--qt-leading-normal);
+}
+
+.qt-text-xs { font-size: var(--qt-text-xs); }
+.qt-text-sm { font-size: var(--qt-text-sm); }
+.qt-text-base { font-size: var(--qt-text-base); }
+.qt-text-lg { font-size: var(--qt-text-lg); }
+.qt-text-xl { font-size: var(--qt-text-xl); }
+.qt-text-2xl { font-size: var(--qt-text-2xl); }
+.qt-text-3xl { font-size: var(--qt-text-3xl); }
+.qt-text-4xl { font-size: var(--qt-text-4xl); }
+.qt-text-5xl { font-size: var(--qt-text-5xl); }
+
+.qt-font-light { font-weight: var(--qt-font-light); }
+.qt-font-normal { font-weight: var(--qt-font-normal); }
+.qt-font-medium { font-weight: var(--qt-font-medium); }
+.qt-font-semibold { font-weight: var(--qt-font-semibold); }
+.qt-font-bold { font-weight: var(--qt-font-bold); }
+.qt-font-extrabold { font-weight: var(--qt-font-extrabold); }
+
+/* QuickTools Button Styles */
+.qt-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--qt-space-2);
+  padding: var(--qt-space-3) var(--qt-space-6);
+  font-family: var(--qt-font-family-sans);
+  font-size: var(--qt-text-sm);
+  font-weight: var(--qt-font-medium);
+  line-height: var(--qt-leading-tight);
+  border: 1px solid transparent;
+  border-radius: var(--qt-radius-lg);
+  cursor: pointer;
+  transition: all var(--qt-transition-base);
+  text-decoration: none;
+  min-height: 44px; /* Accessibility: Touch target size */
+}
+
+.qt-button:focus {
+  outline: 2px solid var(--qt-primary-500);
+  outline-offset: 2px;
+}
+
+.qt-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Primary Button */
+.qt-button-primary {
+  background-color: var(--qt-primary-600);
+  color: white;
+  border-color: var(--qt-primary-600);
+}
+
+.qt-button-primary:hover:not(:disabled) {
+  background-color: var(--qt-primary-700);
+  border-color: var(--qt-primary-700);
+  transform: translateY(-1px);
+  box-shadow: var(--qt-shadow-md);
+}
+
+.qt-button-primary:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: var(--qt-shadow-sm);
+}
+
+/* Secondary Button */
+.qt-button-secondary {
+  background-color: white;
+  color: var(--qt-neutral-700);
+  border-color: var(--qt-neutral-300);
+}
+
+.qt-button-secondary:hover:not(:disabled) {
+  background-color: var(--qt-neutral-50);
+  border-color: var(--qt-neutral-400);
+  transform: translateY(-1px);
+  box-shadow: var(--qt-shadow-sm);
+}
+
+/* QuickTools Card Styles */
+.qt-card {
+  background-color: white;
+  border: 1px solid var(--qt-neutral-200);
+  border-radius: var(--qt-radius-xl);
+  box-shadow: var(--qt-shadow-sm);
+  overflow: hidden;
+}
+
+.qt-card-header {
+  padding: var(--qt-space-6);
+  border-bottom: 1px solid var(--qt-neutral-200);
+}
+
+.qt-card-body {
+  padding: var(--qt-space-6);
+}
+
+.qt-card-footer {
+  padding: var(--qt-space-6);
+  border-top: 1px solid var(--qt-neutral-200);
+  background-color: var(--qt-neutral-50);
+}
+
+/* QuickTools Input Styles */
+.qt-input {
+  width: 100%;
+  padding: var(--qt-space-3) var(--qt-space-4);
+  font-family: var(--qt-font-family-sans);
+  font-size: var(--qt-text-sm);
+  line-height: var(--qt-leading-tight);
+  color: var(--qt-neutral-900);
+  background-color: white;
+  border: 1px solid var(--qt-neutral-300);
+  border-radius: var(--qt-radius-lg);
+  transition: all var(--qt-transition-base);
+}
+
+.qt-input:focus {
+  outline: none;
+  border-color: var(--qt-primary-500);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.qt-input:disabled {
+  background-color: var(--qt-neutral-100);
+  color: var(--qt-neutral-500);
+  cursor: not-allowed;
+}
+
+/* QuickTools Badge Styles */
+.qt-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--qt-space-1) var(--qt-space-3);
+  font-size: var(--qt-text-xs);
+  font-weight: var(--qt-font-medium);
+  line-height: var(--qt-leading-tight);
+  border-radius: var(--qt-radius-full);
+}
+
+.qt-badge-primary {
+  background-color: var(--qt-primary-100);
+  color: var(--qt-primary-800);
+}
+
+.qt-badge-success {
+  background-color: var(--qt-success-100);
+  color: var(--qt-success-800);
+}
+
+.qt-badge-warning {
+  background-color: var(--qt-warning-100);
+  color: var(--qt-warning-800);
+}
+
+.qt-badge-error {
+  background-color: var(--qt-error-100);
+  color: var(--qt-error-800);
+}
+
+/* QuickTools Alert Styles */
+.qt-alert {
+  padding: var(--qt-space-4);
+  border-radius: var(--qt-radius-lg);
+  border-left: 4px solid;
+}
+
+.qt-alert-info {
+  background-color: var(--qt-primary-50);
+  border-color: var(--qt-primary-500);
+  color: var(--qt-primary-800);
+}
+
+.qt-alert-success {
+  background-color: var(--qt-success-50);
+  border-color: var(--qt-success-500);
+  color: var(--qt-success-800);
+}
+
+.qt-alert-warning {
+  background-color: var(--qt-warning-50);
+  border-color: var(--qt-warning-500);
+  color: var(--qt-warning-800);
+}
+
+.qt-alert-error {
+  background-color: var(--qt-error-50);
+  border-color: var(--qt-error-500);
+  color: var(--qt-error-800);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .qt-button {
+    padding: var(--qt-space-2) var(--qt-space-4);
+    font-size: var(--qt-text-xs);
+  }
+  
+  .qt-card-header,
+  .qt-card-body,
+  .qt-card-footer {
+    padding: var(--qt-space-4);
+  }
+}
+
+/* Accessibility: High Contrast Mode */
+@media (prefers-contrast: high) {
+  .qt-button {
+    border-width: 2px;
+  }
+  
+  .qt-card {
+    border-width: 2px;
+  }
+  
+  .qt-input {
+    border-width: 2px;
+  }
+}
+
+/* Accessibility: Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .qt-button,
+  .qt-input {
+    transition: none;
+  }
+  
+  .qt-button:hover:not(:disabled) {
+    transform: none;
+  }
+}

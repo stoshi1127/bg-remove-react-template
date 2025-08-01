@@ -1,0 +1,224 @@
+/* ワークフローステップのスタイル */
+
+.workflowSteps {
+  width: 100%;
+  margin-bottom: 2rem;
+}
+
+.stepsList {
+  display: flex;
+  justify-content: space-between;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: relative;
+}
+
+.stepItem {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease-in-out;
+  width: 100%;
+  max-width: 200px;
+}
+
+.step.clickable {
+  cursor: pointer;
+}
+
+.step.clickable:hover {
+  background-color: #f8fafc;
+  transform: translateY(-2px);
+}
+
+.step.clickable:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.stepNumber {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.step.disabled .stepNumber {
+  background-color: #e5e7eb;
+  color: #9ca3af;
+  border: 2px solid #e5e7eb;
+}
+
+.step.available .stepNumber {
+  background-color: #ffffff;
+  color: #6b7280;
+  border: 2px solid #d1d5db;
+}
+
+.step.current .stepNumber {
+  background-color: #3b82f6;
+  color: #ffffff;
+  border: 2px solid #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.step.completed .stepNumber {
+  background-color: #10b981;
+  color: #ffffff;
+  border: 2px solid #10b981;
+}
+
+.checkIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.stepContent {
+  flex: 1;
+}
+
+.stepTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem 0;
+  transition: color 0.2s ease-in-out;
+}
+
+.step.disabled .stepTitle {
+  color: #9ca3af;
+}
+
+.step.available .stepTitle {
+  color: #374151;
+}
+
+.step.current .stepTitle {
+  color: #1f2937;
+}
+
+.step.completed .stepTitle {
+  color: #065f46;
+}
+
+.stepDescription {
+  font-size: 0.75rem;
+  margin: 0;
+  line-height: 1.4;
+  transition: color 0.2s ease-in-out;
+}
+
+.step.disabled .stepDescription {
+  color: #9ca3af;
+}
+
+.step.available .stepDescription {
+  color: #6b7280;
+}
+
+.step.current .stepDescription {
+  color: #4b5563;
+}
+
+.step.completed .stepDescription {
+  color: #047857;
+}
+
+.stepConnector {
+  position: absolute;
+  top: 1.25rem;
+  left: 50%;
+  right: -50%;
+  height: 2px;
+  background-color: #e5e7eb;
+  z-index: -1;
+}
+
+.stepItem:last-child .stepConnector {
+  display: none;
+}
+
+/* レスポンシブデザイン */
+@media (max-width: 768px) {
+  .stepsList {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .stepItem {
+    flex-direction: row;
+    align-items: flex-start;
+    text-align: left;
+  }
+  
+  .step {
+    flex-direction: row;
+    text-align: left;
+    padding: 0.75rem;
+    max-width: none;
+    width: 100%;
+  }
+  
+  .stepNumber {
+    margin-bottom: 0;
+    margin-right: 0.75rem;
+    flex-shrink: 0;
+  }
+  
+  .stepConnector {
+    position: absolute;
+    top: auto;
+    left: 1.25rem;
+    right: auto;
+    bottom: -0.5rem;
+    width: 2px;
+    height: 1rem;
+    background-color: #e5e7eb;
+  }
+  
+  .stepItem:last-child .stepConnector {
+    display: none;
+  }
+}
+
+/* アクセシビリティ: 高コントラストモード対応 */
+@media (prefers-contrast: high) {
+  .step.current .stepNumber {
+    border-width: 3px;
+  }
+  
+  .step.completed .stepNumber {
+    border-width: 3px;
+  }
+}
+
+/* アクセシビリティ: アニメーション削減 */
+@media (prefers-reduced-motion: reduce) {
+  .step,
+  .stepNumber,
+  .stepTitle,
+  .stepDescription {
+    transition: none;
+  }
+  
+  .step.clickable:hover {
+    transform: none;
+  }
+}

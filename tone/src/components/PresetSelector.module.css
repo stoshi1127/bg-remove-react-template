@@ -1,0 +1,167 @@
+.preset-selector {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.preset-selector__title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.preset-selector__description {
+  color: #6b7280;
+  text-align: center;
+  margin-bottom: 2rem;
+  line-height: 1.5;
+}
+
+.preset-selector__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.preset-card {
+  position: relative;
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.preset-card:hover:not(.preset-card--disabled) {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+  transform: translateY(-2px);
+}
+
+.preset-card--selected {
+  border-color: #3b82f6;
+  background: #eff6ff;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.preset-card--disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.preset-card__icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.preset-card__name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 0.75rem;
+}
+
+.preset-card__description {
+  color: #6b7280;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.preset-card__selected-indicator {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 24px;
+  height: 24px;
+  background: #3b82f6;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+/* レスポンシブデザイン */
+@media (max-width: 768px) {
+  .preset-selector {
+    padding: 1rem;
+  }
+  
+  .preset-selector__grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .preset-card {
+    padding: 1.25rem;
+    min-height: 44px; /* アクセシビリティ: タッチターゲットサイズ */
+  }
+  
+  .preset-card__icon {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .preset-selector {
+    padding: 0.75rem;
+  }
+  
+  .preset-selector__title {
+    font-size: 1.25rem;
+  }
+  
+  .preset-selector__description {
+    font-size: 0.875rem;
+  }
+  
+  .preset-card {
+    padding: 1rem;
+  }
+  
+  .preset-card__name {
+    font-size: 1rem;
+  }
+  
+  .preset-card__description {
+    font-size: 0.8125rem;
+  }
+}
+
+/* アクセシビリティ: フォーカス表示の改善 */
+.preset-card:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* アクセシビリティ: 高コントラストモード対応 */
+@media (prefers-contrast: high) {
+  .preset-card {
+    border-width: 3px;
+  }
+  
+  .preset-card--selected {
+    border-width: 4px;
+  }
+}
+
+/* アクセシビリティ: アニメーション削減 */
+@media (prefers-reduced-motion: reduce) {
+  .preset-card {
+    transition: none;
+  }
+  
+  .preset-card:hover:not(.preset-card--disabled) {
+    transform: none;
+  }
+}

@@ -1,0 +1,59 @@
+@import "tailwindcss";
+@import "../styles/quicktools-theme.css";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--qt-neutral-50);
+  color: var(--qt-neutral-800);
+  font-family: var(--qt-font-family-sans);
+  line-height: var(--qt-leading-normal);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* QuickTools Global Styles */
+* {
+  box-sizing: border-box;
+}
+
+#__next {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Focus styles for better accessibility */
+*:focus {
+  outline: 2px solid var(--qt-primary-500);
+  outline-offset: 2px;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}

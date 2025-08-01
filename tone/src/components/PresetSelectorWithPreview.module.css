@@ -1,0 +1,45 @@
+.preset-selector-with-preview {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.preset-selector-with-preview__layout {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 2rem;
+  align-items: start;
+}
+
+.preset-selector-with-preview__selector {
+  min-width: 0; /* グリッドアイテムのオーバーフローを防ぐ */
+}
+
+.preset-selector-with-preview__preview {
+  position: sticky;
+  top: 2rem;
+}
+
+/* レスポンシブデザイン */
+@media (max-width: 1024px) {
+  .preset-selector-with-preview__layout {
+    grid-template-columns: 1fr 350px;
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .preset-selector-with-preview {
+    padding: 1rem;
+  }
+  
+  .preset-selector-with-preview__layout {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .preset-selector-with-preview__preview {
+    position: static;
+    order: -1; /* モバイルではプレビューを上に表示 */
+  }
+}
