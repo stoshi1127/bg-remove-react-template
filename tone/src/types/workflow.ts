@@ -10,6 +10,15 @@ export interface WorkflowState {
   canProceedToStep: (step: WorkflowStep) => boolean;
 }
 
+export interface WorkflowActions {
+  completeStep: (step: WorkflowStep) => void;
+  goToStep: (step: WorkflowStep) => void;
+  nextStep: () => void;
+  previousStep: () => void;
+  resetWorkflow: () => void;
+  validateStepData: (step: WorkflowStep, data?: unknown) => boolean;
+}
+
 export interface WorkflowStepInfo {
   id: WorkflowStep;
   title: string;

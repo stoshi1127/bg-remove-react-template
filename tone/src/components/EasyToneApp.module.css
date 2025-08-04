@@ -1,33 +1,92 @@
-/* EasyToneアプリのスタイル */
+/* EasyToneアプリのスタイル - QuickToolsデザインシステム適用 */
 
 .easyToneApp {
-  /* WorkflowContainerのスタイルを継承 */
+  position: relative;
+  min-height: 100vh;
+}
+
+.errorNotifications {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 400px;
+}
+
+.errorContainer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--qt-space-2);
+  align-items: flex-end;
+}
+
+.retryButton {
+  padding: var(--qt-space-2) var(--qt-space-3);
+  background-color: var(--qt-warning-600);
+  color: white;
+  border: 1px solid var(--qt-warning-600);
+  border-radius: var(--qt-radius-md);
+  font-size: var(--qt-text-sm);
+  font-weight: var(--qt-font-medium);
+  font-family: var(--qt-font-family-sans);
+  cursor: pointer;
+  transition: all var(--qt-transition-base);
+  min-height: 32px;
+}
+
+.retryButton:hover:not(:disabled) {
+  background-color: var(--qt-warning-700);
+  border-color: var(--qt-warning-700);
+  transform: translateY(-1px);
+  box-shadow: var(--qt-shadow-sm);
+}
+
+.retryButton:focus {
+  outline: 2px solid var(--qt-warning-500);
+  outline-offset: 2px;
+}
+
+.retryButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.workflowContainer {
+  flex: 1;
 }
 
 .stepContent {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: var(--qt-space-8);
   height: 100%;
+  animation: qt-fade-in 0.3s ease-out;
 }
 
 .stepHeader {
   text-align: center;
-  margin-bottom: 1rem;
+  margin-bottom: var(--qt-space-4);
 }
 
 .stepTitle {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0 0 0.5rem 0;
+  font-size: var(--qt-text-2xl);
+  font-weight: var(--qt-font-semibold);
+  color: var(--qt-neutral-800);
+  font-family: var(--qt-font-family-sans);
+  line-height: var(--qt-leading-tight);
+  margin: 0 0 var(--qt-space-2) 0;
 }
 
 .stepDescription {
-  font-size: 1rem;
-  color: #6b7280;
+  font-size: var(--qt-text-base);
+  color: var(--qt-neutral-600);
+  font-family: var(--qt-font-family-sans);
+  line-height: var(--qt-leading-relaxed);
   margin: 0;
-  line-height: 1.6;
   max-width: 600px;
   margin-left: auto;
   margin-right: auto;
@@ -35,33 +94,39 @@
 
 .uploadedImagesInfo {
   text-align: center;
-  padding: 1rem;
-  background-color: #f0f9ff;
-  border: 1px solid #bae6fd;
-  border-radius: 0.5rem;
-  color: #0c4a6e;
+  padding: var(--qt-space-4);
+  background-color: var(--qt-primary-50);
+  border: 1px solid var(--qt-primary-200);
+  border-radius: var(--qt-radius-lg);
+  color: var(--qt-primary-800);
+  border-left: 4px solid var(--qt-primary-500);
+  animation: qt-slide-in-right 0.3s ease-out;
 }
 
 .uploadedImagesInfo p {
   margin: 0;
-  font-weight: 500;
+  font-weight: var(--qt-font-medium);
+  font-family: var(--qt-font-family-sans);
 }
 
 .selectedPresetInfo {
   text-align: center;
-  padding: 1rem;
-  background-color: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  border-radius: 0.5rem;
-  color: #14532d;
+  padding: var(--qt-space-4);
+  background-color: var(--qt-success-50);
+  border: 1px solid var(--qt-success-200);
+  border-radius: var(--qt-radius-lg);
+  color: var(--qt-success-800);
+  border-left: 4px solid var(--qt-success-500);
+  animation: qt-slide-in-left 0.3s ease-out;
 }
 
 .selectedPresetInfo p {
   margin: 0;
+  font-family: var(--qt-font-family-sans);
 }
 
 .selectedPresetInfo strong {
-  font-weight: 600;
+  font-weight: var(--qt-font-semibold);
 }
 
 .startProcessing {
@@ -73,80 +138,89 @@
 }
 
 .startButton {
-  padding: 1rem 2rem;
-  background-color: #3b82f6;
-  color: #ffffff;
-  border: none;
-  border-radius: 0.5rem;
-  font-size: 1.125rem;
-  font-weight: 600;
+  padding: var(--qt-space-4) var(--qt-space-8);
+  background-color: var(--qt-primary-600);
+  color: white;
+  border: 1px solid var(--qt-primary-600);
+  border-radius: var(--qt-radius-lg);
+  font-size: var(--qt-text-lg);
+  font-weight: var(--qt-font-semibold);
+  font-family: var(--qt-font-family-sans);
   cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transition: all var(--qt-transition-base);
+  box-shadow: var(--qt-shadow-md);
+  min-height: 44px; /* Accessibility: Touch target size */
 }
 
 .startButton:hover {
-  background-color: #2563eb;
+  background-color: var(--qt-primary-700);
+  border-color: var(--qt-primary-700);
   transform: translateY(-2px);
-  box-shadow: 0 8px 12px -1px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--qt-shadow-lg);
+  transition: all var(--qt-transition-bounce);
 }
 
 .startButton:focus {
-  outline: 2px solid #3b82f6;
+  outline: 2px solid var(--qt-primary-500);
   outline-offset: 2px;
 }
 
 .startButton:active {
   transform: translateY(0);
+  box-shadow: var(--qt-shadow-sm);
 }
 
 .resetContainer {
   display: flex;
   justify-content: center;
-  margin-top: 1rem;
+  margin-top: var(--qt-space-4);
 }
 
 .resetButton {
-  padding: 0.5rem 1rem;
-  background-color: #ffffff;
-  color: #6b7280;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  font-weight: 500;
+  padding: var(--qt-space-2) var(--qt-space-4);
+  background-color: white;
+  color: var(--qt-neutral-600);
+  border: 1px solid var(--qt-neutral-300);
+  border-radius: var(--qt-radius-lg);
+  font-size: var(--qt-text-sm);
+  font-weight: var(--qt-font-medium);
+  font-family: var(--qt-font-family-sans);
   cursor: pointer;
-  transition: all 0.2s ease-in-out;
+  transition: all var(--qt-transition-base);
+  min-height: 44px; /* Accessibility: Touch target size */
 }
 
 .resetButton:hover {
-  background-color: #f9fafb;
-  color: #374151;
-  border-color: #9ca3af;
+  background-color: var(--qt-neutral-50);
+  color: var(--qt-neutral-700);
+  border-color: var(--qt-neutral-400);
+  transform: translateY(-1px);
+  box-shadow: var(--qt-shadow-sm);
 }
 
 .resetButton:focus {
-  outline: 2px solid #3b82f6;
+  outline: 2px solid var(--qt-primary-500);
   outline-offset: 2px;
 }
 
 /* レスポンシブデザイン */
 @media (max-width: 768px) {
   .stepContent {
-    gap: 1.5rem;
+    gap: var(--qt-space-6);
   }
   
   .stepTitle {
-    font-size: 1.25rem;
+    font-size: var(--qt-text-xl);
   }
   
   .stepDescription {
-    font-size: 0.875rem;
-    padding: 0 1rem;
+    font-size: var(--qt-text-sm);
+    padding: 0 var(--qt-space-4);
   }
   
   .uploadedImagesInfo,
   .selectedPresetInfo {
-    margin: 0 -0.5rem;
+    margin: 0 calc(-1 * var(--qt-space-2));
   }
   
   .startProcessing {
@@ -154,38 +228,38 @@
   }
   
   .startButton {
-    padding: 0.875rem 1.5rem;
-    font-size: 1rem;
+    padding: var(--qt-space-3) var(--qt-space-6);
+    font-size: var(--qt-text-base);
   }
 }
 
 @media (max-width: 480px) {
   .stepContent {
-    gap: 1rem;
+    gap: var(--qt-space-4);
   }
   
   .stepTitle {
-    font-size: 1.125rem;
+    font-size: var(--qt-text-lg);
   }
   
   .stepDescription {
-    font-size: 0.8125rem;
+    font-size: var(--qt-text-sm);
   }
   
   .uploadedImagesInfo,
   .selectedPresetInfo {
-    padding: 0.75rem;
-    font-size: 0.875rem;
+    padding: var(--qt-space-3);
+    font-size: var(--qt-text-sm);
   }
   
   .startButton {
-    padding: 0.75rem 1.25rem;
-    font-size: 0.9375rem;
+    padding: var(--qt-space-3) var(--qt-space-5);
+    font-size: var(--qt-text-base);
   }
   
   .resetButton {
-    padding: 0.375rem 0.75rem;
-    font-size: 0.8125rem;
+    padding: var(--qt-space-2) var(--qt-space-3);
+    font-size: var(--qt-text-sm);
   }
 }
 
@@ -194,29 +268,12 @@
   outline: none;
 }
 
-/* アクセシビリティ: スクリーンリーダー対応 */
-.uploadedImagesInfo,
-.selectedPresetInfo {
-  border-left: 4px solid #3b82f6;
-}
-
-/* アクセシビリティ: タッチターゲットサイズ */
-@media (max-width: 768px) {
-  .startButton,
-  .resetButton {
-    min-height: 44px;
-    min-width: 44px;
-  }
-}
-
 /* アクセシビリティ: 高コントラストモード対応 */
 @media (prefers-contrast: high) {
-  .uploadedImagesInfo {
-    border-width: 2px;
-  }
-  
+  .uploadedImagesInfo,
   .selectedPresetInfo {
     border-width: 2px;
+    border-left-width: 4px;
   }
   
   .startButton,
@@ -232,7 +289,8 @@
     transition: none;
   }
   
-  .startButton:hover {
+  .startButton:hover,
+  .resetButton:hover {
     transform: none;
   }
 }

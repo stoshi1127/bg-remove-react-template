@@ -35,7 +35,7 @@ export interface WorkerResponse {
 
 // Web Worker内でのImageData実装（Node.js環境対応）
 if (typeof ImageData === 'undefined') {
-  (globalThis as any).ImageData = class ImageData {
+  (globalThis as unknown as { ImageData: typeof ImageData }).ImageData = class ImageData {
     data: Uint8ClampedArray;
     width: number;
     height: number;

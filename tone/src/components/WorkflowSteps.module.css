@@ -1,8 +1,8 @@
-/* ワークフローステップのスタイル */
+/* ワークフローステップのスタイル - QuickTools Design System */
 
 .workflowSteps {
   width: 100%;
-  margin-bottom: 2rem;
+  margin-bottom: var(--qt-space-8);
 }
 
 .stepsList {
@@ -27,9 +27,9 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  transition: all 0.2s ease-in-out;
+  padding: var(--qt-space-4);
+  border-radius: var(--qt-radius-lg);
+  transition: all var(--qt-transition-smooth);
   width: 100%;
   max-width: 200px;
 }
@@ -39,56 +39,60 @@
 }
 
 .step.clickable:hover {
-  background-color: #f8fafc;
-  transform: translateY(-2px);
+  background-color: var(--qt-neutral-50);
+  transform: translateY(-3px);
+  box-shadow: var(--qt-shadow-md);
+  transition: all var(--qt-transition-bounce);
 }
 
 .step.clickable:focus {
-  outline: 2px solid #3b82f6;
+  outline: 2px solid var(--qt-primary-500);
   outline-offset: 2px;
 }
 
 .stepNumber {
   width: 2.5rem;
   height: 2.5rem;
-  border-radius: 50%;
+  border-radius: var(--qt-radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 600;
-  font-size: 1rem;
-  margin-bottom: 0.5rem;
-  transition: all 0.2s ease-in-out;
+  font-weight: var(--qt-font-semibold);
+  font-size: var(--qt-text-base);
+  font-family: var(--qt-font-family-sans);
+  margin-bottom: var(--qt-space-2);
+  transition: all var(--qt-transition-base);
 }
 
 .step.disabled .stepNumber {
-  background-color: #e5e7eb;
-  color: #9ca3af;
-  border: 2px solid #e5e7eb;
+  background-color: var(--qt-neutral-200);
+  color: var(--qt-neutral-400);
+  border: 2px solid var(--qt-neutral-200);
 }
 
 .step.available .stepNumber {
-  background-color: #ffffff;
-  color: #6b7280;
-  border: 2px solid #d1d5db;
+  background-color: white;
+  color: var(--qt-neutral-500);
+  border: 2px solid var(--qt-neutral-300);
 }
 
 .step.current .stepNumber {
-  background-color: #3b82f6;
-  color: #ffffff;
-  border: 2px solid #3b82f6;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+  background-color: var(--qt-primary-600);
+  color: white;
+  border: 2px solid var(--qt-primary-600);
+  box-shadow: 0 0 0 4px var(--qt-primary-100);
+  animation: qt-pulse 2s ease-in-out infinite;
 }
 
 .step.completed .stepNumber {
-  background-color: #10b981;
-  color: #ffffff;
-  border: 2px solid #10b981;
+  background-color: var(--qt-success-600);
+  color: white;
+  border: 2px solid var(--qt-success-600);
 }
 
 .checkIcon {
-  width: 1.25rem;
-  height: 1.25rem;
+  width: var(--qt-space-5);
+  height: var(--qt-space-5);
 }
 
 .stepContent {
@@ -96,49 +100,51 @@
 }
 
 .stepTitle {
-  font-size: 0.875rem;
-  font-weight: 600;
-  margin: 0 0 0.25rem 0;
-  transition: color 0.2s ease-in-out;
+  font-size: var(--qt-text-sm);
+  font-weight: var(--qt-font-semibold);
+  font-family: var(--qt-font-family-sans);
+  margin: 0 0 var(--qt-space-1) 0;
+  transition: color var(--qt-transition-base);
 }
 
 .step.disabled .stepTitle {
-  color: #9ca3af;
+  color: var(--qt-neutral-400);
 }
 
 .step.available .stepTitle {
-  color: #374151;
+  color: var(--qt-neutral-700);
 }
 
 .step.current .stepTitle {
-  color: #1f2937;
+  color: var(--qt-neutral-800);
 }
 
 .step.completed .stepTitle {
-  color: #065f46;
+  color: var(--qt-success-700);
 }
 
 .stepDescription {
-  font-size: 0.75rem;
+  font-size: var(--qt-text-xs);
+  font-family: var(--qt-font-family-sans);
   margin: 0;
-  line-height: 1.4;
-  transition: color 0.2s ease-in-out;
+  line-height: var(--qt-leading-snug);
+  transition: color var(--qt-transition-base);
 }
 
 .step.disabled .stepDescription {
-  color: #9ca3af;
+  color: var(--qt-neutral-400);
 }
 
 .step.available .stepDescription {
-  color: #6b7280;
+  color: var(--qt-neutral-500);
 }
 
 .step.current .stepDescription {
-  color: #4b5563;
+  color: var(--qt-neutral-600);
 }
 
 .step.completed .stepDescription {
-  color: #047857;
+  color: var(--qt-success-600);
 }
 
 .stepConnector {
@@ -147,7 +153,7 @@
   left: 50%;
   right: -50%;
   height: 2px;
-  background-color: #e5e7eb;
+  background-color: var(--qt-neutral-200);
   z-index: -1;
 }
 
@@ -159,7 +165,7 @@
 @media (max-width: 768px) {
   .stepsList {
     flex-direction: column;
-    gap: 1rem;
+    gap: var(--qt-space-4);
   }
   
   .stepItem {
@@ -171,14 +177,14 @@
   .step {
     flex-direction: row;
     text-align: left;
-    padding: 0.75rem;
+    padding: var(--qt-space-3);
     max-width: none;
     width: 100%;
   }
   
   .stepNumber {
     margin-bottom: 0;
-    margin-right: 0.75rem;
+    margin-right: var(--qt-space-3);
     flex-shrink: 0;
   }
   
@@ -187,10 +193,10 @@
     top: auto;
     left: 1.25rem;
     right: auto;
-    bottom: -0.5rem;
+    bottom: calc(-1 * var(--qt-space-2));
     width: 2px;
-    height: 1rem;
-    background-color: #e5e7eb;
+    height: var(--qt-space-4);
+    background-color: var(--qt-neutral-200);
   }
   
   .stepItem:last-child .stepConnector {
@@ -200,10 +206,7 @@
 
 /* アクセシビリティ: 高コントラストモード対応 */
 @media (prefers-contrast: high) {
-  .step.current .stepNumber {
-    border-width: 3px;
-  }
-  
+  .step.current .stepNumber,
   .step.completed .stepNumber {
     border-width: 3px;
   }

@@ -22,22 +22,22 @@ export const PresetSelector: React.FC<PresetSelectorProps> = ({
   disabled = false
 }) => {
   return (
-    <div className={styles['preset-selector']}>
+    <div className={styles.presetSelector}>
       <h2 
         id="preset-selector-title"
-        className={styles['preset-selector__title']}
+        className={styles.title}
       >
         フィルタープリセットを選択
       </h2>
       <p 
         id="preset-selector-description"
-        className={styles['preset-selector__description']}
+        className={styles.description}
       >
         お好みのスタイルを選んで、すべての画像に統一感のある処理を適用します
       </p>
       
       <div 
-        className={styles['preset-selector__grid']}
+        className={styles.grid}
         role="radiogroup"
         aria-labelledby="preset-selector-title"
         aria-describedby="preset-selector-description"
@@ -45,9 +45,9 @@ export const PresetSelector: React.FC<PresetSelectorProps> = ({
         {presets.map((preset, index) => (
           <button
             key={preset.id}
-            className={`${styles['preset-card']} ${
-              selectedPreset === preset.id ? styles['preset-card--selected'] : ''
-            } ${disabled ? styles['preset-card--disabled'] : ''}`}
+            className={`${styles.presetCard} ${
+              selectedPreset === preset.id ? styles.presetCardSelected : ''
+            } ${disabled ? styles.presetCardDisabled : ''}`}
             onClick={() => !disabled && onPresetSelect(preset.id)}
             disabled={disabled}
             role="radio"
@@ -67,20 +67,20 @@ export const PresetSelector: React.FC<PresetSelectorProps> = ({
               }
             }}
           >
-            <div className={styles['preset-card__icon']} aria-hidden="true">
+            <div className={styles.presetIcon} aria-hidden="true">
               {preset.icon}
             </div>
-            <h3 className={styles['preset-card__name']}>
+            <h3 className={styles.presetName}>
               {preset.name}
             </h3>
             <p 
-              className={styles['preset-card__description']}
+              className={styles.presetDescription}
               id={`preset-${preset.id}-description`}
             >
               {preset.description}
             </p>
             {selectedPreset === preset.id && (
-              <div className={styles['preset-card__selected-indicator']} aria-hidden="true">
+              <div className={styles.selectedIndicator} aria-hidden="true">
                 ✓
               </div>
             )}

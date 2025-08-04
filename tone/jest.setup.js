@@ -3,7 +3,11 @@
 
 // Used for __tests__/testing-library.js
 // Learn more: https://github.com/testing-library/jest-dom
-import '@testing-library/jest-dom'
+require('@testing-library/jest-dom');
+
+// Mock URL methods
+global.URL.createObjectURL = jest.fn(() => 'mock-url');
+global.URL.revokeObjectURL = jest.fn();
 
 // Mock Worker for heic2any
 global.Worker = class Worker {
@@ -18,5 +22,37 @@ global.Worker = class Worker {
 
   terminate() {
     // Mock implementation
+  }
+};
+
+// Mock Canvas API
+const mockCanvas = {
+  getContext: jest.fn(() => ({
+    drawImage: jest.fn(),
+    getImageData: jest.fn(() => ({
+      data: new Uint8ClampedArray(4),
+      width: 100,
+      height: 100
+    })),
+    putImageData: jest.fn(),
+    canvas: { toBlob: jest.fn((callback) => callback(new Blob())) }
+  })),
+  width: 100,
+  height: 100
+};
+
+global.HTMLCanvasElement.prototype.getContext = mockCanvas.getContext;
+
+// Mock Image constructor
+global.Image = class MockImage {
+  onload = null;
+  src = '';
+  width = 100;
+  height = 100;
+  
+  constructor() {
+    setTimeout(() => {
+      if (this.onload) this.onload();
+    }, 10);
   }
 };

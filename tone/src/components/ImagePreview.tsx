@@ -160,19 +160,21 @@ export const ImagePreview: React.FC<ImagePreviewProps> = ({
                   
                   <div>
                     <dt className="text-xs font-medium text-gray-500">ファイルサイズ</dt>
-                    <dd className="text-sm text-gray-900">{formatFileSize(selectedImage.metadata.fileSize)}</dd>
+                    <dd className="text-sm text-gray-900">{formatFileSize(selectedImage.metadata.size)}</dd>
                   </div>
                   
                   <div>
                     <dt className="text-xs font-medium text-gray-500">画像サイズ</dt>
                     <dd className="text-sm text-gray-900">
-                      {formatDimensions(selectedImage.metadata.width, selectedImage.metadata.height)}
+                      {selectedImage.metadata.width && selectedImage.metadata.height 
+                        ? formatDimensions(selectedImage.metadata.width, selectedImage.metadata.height)
+                        : '不明'}
                     </dd>
                   </div>
                   
                   <div>
                     <dt className="text-xs font-medium text-gray-500">形式</dt>
-                    <dd className="text-sm text-gray-900">{selectedImage.metadata.format}</dd>
+                    <dd className="text-sm text-gray-900">{selectedImage.metadata.type}</dd>
                   </div>
                   
                   <div>

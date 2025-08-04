@@ -72,8 +72,8 @@ describe('downloadUtils', () => {
     jest.clearAllMocks();
     
     // グローバルオブジェクトのモック設定
-    global.document = mockDocument as any;
-    global.URL = mockURL as any;
+    global.document = mockDocument as unknown as Document;
+    global.URL = mockURL as unknown as typeof URL;
     
     // createElement のモック設定
     mockCreateElement.mockReturnValue({
@@ -241,7 +241,7 @@ describe('downloadUtils', () => {
     });
 
     it('should return false when document is not available', () => {
-      // @ts-ignore
+      // @ts-expect-error - Testing undefined document
       global.document = undefined;
 
       const result = canDownload();

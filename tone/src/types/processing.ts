@@ -1,4 +1,4 @@
-import { FilterPreset } from './filter';
+
 
 /**
  * 処理可能な画像の型定義
@@ -31,11 +31,12 @@ export interface ProcessedImage {
  * 画像メタデータの型定義
  */
 export interface ImageMetadata {
-  width: number;
-  height: number;
-  fileSize: number;
-  format: string;
+  name: string;
+  size: number;
+  type: string;
   lastModified: number;
+  width?: number;
+  height?: number;
 }
 
 /**

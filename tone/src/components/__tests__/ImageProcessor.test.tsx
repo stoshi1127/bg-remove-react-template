@@ -60,7 +60,7 @@ describe('ImageProcessor', () => {
       processImages: jest.fn(),
       destroy: jest.fn(),
       getStatus: jest.fn()
-    } as any;
+    } as unknown as OptimizedImageProcessingWorkerPool;
 
     MockedWorkerPool.mockImplementation(() => mockWorkerPool);
   });

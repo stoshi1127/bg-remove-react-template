@@ -4,6 +4,7 @@ import React, { useCallback, useState, useRef } from 'react';
 import { ProcessableImage, ImageMetadata } from '../types';
 import { processFileForHeic, isHeicFile } from '../utils/heicConverter';
 import ImagePreview from './ImagePreview';
+import styles from './ImageUploader.module.css';
 
 interface ImageUploaderProps {
   onImagesSelected: (images: ProcessableImage[]) => void;
@@ -55,11 +56,12 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       
       img.onload = () => {
         const metadata: ImageMetadata = {
+          name: file.name,
+          size: file.size,
+          type: file.type || `image/${file.name.split('.').pop()?.toLowerCase()}`,
+          lastModified: file.lastModified,
           width: img.naturalWidth,
           height: img.naturalHeight,
-          fileSize: file.size,
-          format: file.type || `image/${file.name.split('.').pop()?.toLowerCase()}`,
-          lastModified: file.lastModified,
         };
         URL.revokeObjectURL(url);
         resolve(metadata);
@@ -68,11 +70,12 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       img.onerror = () => {
         // エラーの場合はデフォルト値を返す
         const metadata: ImageMetadata = {
+          name: file.name,
+          size: file.size,
+          type: file.type || `image/${file.name.split('.').pop()?.toLowerCase()}`,
+          lastModified: file.lastModified,
           width: 0,
           height: 0,
-          fileSize: file.size,
-          format: file.type || `image/${file.name.split('.').pop()?.toLowerCase()}`,
-          lastModified: file.lastModified,
         };
         URL.revokeObjectURL(url);
         resolve(metadata);
@@ -91,7 +94,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       const originalUrl = URL.createObjectURL(processedFile);
       
       return {
-        id: `${file.name}-${file.lastModified}-${Math.random().toString(36).substr(2, 9)}`,
+        id: `${file.name}-${file.lastModified}-${Math.random().toString(36).substring(2, 11)}`,
         file: processedFile, // 変換後のファイルを使用
         originalUrl,
         metadata,
@@ -104,7 +107,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       const originalUrl = URL.createObjectURL(file);
       
       return {
-        id: `${file.name}-${file.lastModified}-${Math.random().toString(36).substr(2, 9)}`,
+        id: `${file.name}-${file.lastModified}-${Math.random().toString(36).substring(2, 11)}`,
         file,
         originalUrl,
         metadata,
@@ -222,10 +225,10 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   }, [processedImages, onImagesSelected]);
 
   return (
-    <div className={`image-uploader ${className}`}>
+    <div className={`${styles.imageUploader} ${className}`}>
       {/* プレビューエリア */}
       {showPreview && processedImages.length > 0 && (
-        <div className="mb-6">
+        <div className={styles.previewArea}>
           <ImagePreview 
             images={processedImages}
             onRemoveImage={handleRemoveImage}
@@ -236,13 +239,9 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       {/* ドラッグ&ドロップエリア */}
       <div
         className={`
-          border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
-          ${isDragOver 
-            ? 'border-blue-500 bg-blue-50' 
-            : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
-          }
-          ${isProcessing ? 'opacity-50 pointer-events-none' : ''}
-          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+          ${styles.dropZone}
+          ${isDragOver ? styles.dropZoneActive : ''}
+          ${isProcessing ? styles.dropZoneProcessing : ''}
         `}
         onDragEnter={handleDragEnter}
         onDragLeave={handleDragLeave}
@@ -261,17 +260,18 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         aria-describedby="upload-instructions"
       >
         {isProcessing ? (
-          <div className="flex flex-col items-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-4"></div>
-            <p className="text-gray-600">ファイルを処理中...</p>
+          <div className={styles.processingContent}>
+            <div className={styles.spinner}></div>
+            <p className={styles.processingText}>ファイルを処理中...</p>
           </div>
         ) : (
-          <div className="flex flex-col items-center">
+          <div className={styles.uploadContent}>
             <svg
-              className="w-12 h-12 text-gray-400 mb-4"
+              className={styles.uploadIcon}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
+              aria-hidden="true"
             >
               <path
                 strokeLinecap="round"
@@ -280,13 +280,13 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
                 d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
               />
             </svg>
-            <p className="text-lg font-medium text-gray-700 mb-2">
+            <p className={styles.uploadTitle}>
               画像をドラッグ&ドロップ
             </p>
-            <p className="text-sm text-gray-500 mb-4">
+            <p className={styles.uploadSubtitle}>
               または、クリックしてファイルを選択
             </p>
-            <p id="upload-instructions" className="text-xs text-gray-400">
+            <p id="upload-instructions" className={styles.uploadInstructions}>
               対応形式: JPG, PNG, HEIC | 最大サイズ: {Math.round(maxFileSize / 1024 / 1024)}MB
             </p>
           </div>
@@ -300,24 +300,24 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         multiple
         accept={acceptedFormats.join(',')}
         onChange={handleFileSelect}
-        className="hidden"
+        className={styles.hiddenInput}
         aria-hidden="true"
       />
 
       {/* エラー表示 */}
       {errors.length > 0 && (
         <div 
-          className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg"
+          className={styles.errorContainer}
           role="alert"
           aria-live="assertive"
         >
-          <h4 className="text-sm font-medium text-red-800 mb-2">
+          <h4 className={styles.errorTitle}>
             以下のエラーが発生しました:
           </h4>
-          <ul className="text-sm text-red-700 space-y-1">
+          <ul className={styles.errorList}>
             {errors.map((error, index) => (
-              <li key={index} className="flex items-start">
-                <span className="mr-2" aria-hidden="true">•</span>
+              <li key={index} className={styles.errorItem}>
+                <span className={styles.errorBullet} aria-hidden="true">•</span>
                 <span>{error}</span>
               </li>
             ))}

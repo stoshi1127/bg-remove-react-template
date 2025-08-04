@@ -22,10 +22,54 @@ export const useWorkflow = () => {
     }
   }, [completedSteps]);
 
+  const validateStepData = useCallback((step: WorkflowStep, data?: unknown): boolean => {
+    switch (step) {
+      case 'upload':
+        // アップロードステップでは画像データが必要
+        return Array.isArray(data) && data.length > 0;
+      case 'preset':
+        // プリセット選択ステップではプリセットオブジェクトが必要
+        return data !== null && typeof data === 'object';
+      case 'download':
+        // ダウンロードステップでは処理済み画像データが必要
+        return Array.isArray(data) && data.length > 0;
+      default:
+        return false;
+    }
+  }, []);
+
   const completeStep = useCallback((step: WorkflowStep) => {
     setCompletedSteps(prev => {
       if (!prev.includes(step)) {
-        return [...prev, step];
+        const newCompletedSteps = [...prev, step];
+        
+        // 自動的に次のステップに進む
+        const stepOrder: WorkflowStep[] = ['upload', 'preset', 'download'];
+        const currentIndex = stepOrder.indexOf(step);
+        
+        if (currentIndex < stepOrder.length - 1) {
+          const nextStepValue = stepOrder[currentIndex + 1];
+          // 次のステップに進む条件をチェック
+          let canProceedToNext = false;
+          
+          switch (nextStepValue) {
+            case 'preset':
+              canProceedToNext = newCompletedSteps.includes('upload');
+              break;
+            case 'download':
+              canProceedToNext = newCompletedSteps.includes('upload') && newCompletedSteps.includes('preset');
+              break;
+          }
+          
+          if (canProceedToNext) {
+            // 少し遅延を入れてスムーズな遷移を実現
+            setTimeout(() => {
+              setCurrentStep(nextStepValue);
+            }, 300);
+          }
+        }
+        
+        return newCompletedSteps;
       }
       return prev;
     });
@@ -104,5 +148,6 @@ export const useWorkflow = () => {
     nextStep,
     previousStep,
     resetWorkflow,
+    validateStepData,
   };
 };

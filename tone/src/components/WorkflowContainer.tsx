@@ -18,6 +18,7 @@ interface WorkflowContainerProps {
     previousStep: () => void;
     resetWorkflow: () => void;
     canProceedToStep: (step: WorkflowStep) => boolean;
+    validateStepData: (step: WorkflowStep, data?: unknown) => boolean;
   }) => React.ReactNode;
   className?: string;
 }

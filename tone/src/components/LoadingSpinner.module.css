@@ -1,0 +1,64 @@
+/* LoadingSpinnerのスタイル - QuickTools Design System */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--qt-space-3);
+}
+
+.spinner {
+  border-radius: var(--qt-radius-full);
+  border-style: solid;
+  animation: qt-spin 1s linear infinite;
+}
+
+/* サイズバリエーション */
+.small {
+  width: 16px;
+  height: 16px;
+  border-width: 2px;
+}
+
+.medium {
+  width: 24px;
+  height: 24px;
+  border-width: 2px;
+}
+
+.large {
+  width: 32px;
+  height: 32px;
+  border-width: 3px;
+}
+
+/* カラーバリエーション */
+.primary {
+  border-color: var(--qt-neutral-200);
+  border-top-color: var(--qt-primary-500);
+}
+
+.secondary {
+  border-color: var(--qt-neutral-200);
+  border-top-color: var(--qt-secondary-500);
+}
+
+.neutral {
+  border-color: var(--qt-neutral-300);
+  border-top-color: var(--qt-neutral-600);
+}
+
+.label {
+  font-size: var(--qt-text-sm);
+  font-family: var(--qt-font-family-sans);
+  color: var(--qt-neutral-600);
+  font-weight: var(--qt-font-medium);
+}
+
+/* アクセシビリティ: アニメーション削減 */
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+    border-top-color: var(--qt-primary-500);
+  }
+}

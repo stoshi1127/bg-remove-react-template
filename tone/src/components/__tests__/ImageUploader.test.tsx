@@ -15,7 +15,7 @@ Object.defineProperty(global.URL, 'revokeObjectURL', {
 });
 
 // Mock Image constructor
-let mockImageInstances: any[] = [];
+let mockImageInstances: HTMLImageElement[] = [];
 
 Object.defineProperty(global, 'Image', {
   value: jest.fn(() => {

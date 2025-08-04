@@ -2,12 +2,12 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { FilterPreset, FilterConfig } from '../types/filter';
-import { ProcessableImage } from '../types/image';
+
 import styles from './PresetPreview.module.css';
 
 interface PresetPreviewProps {
   selectedPreset: FilterPreset | null;
-  previewImage: ProcessableImage | null;
+  previewImage: File | null;
   className?: string;
 }
 
@@ -24,6 +24,24 @@ export const PresetPreview: React.FC<PresetPreviewProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!previewImage) {
+      setOriginalImageUrl(null);
+      setPreviewUrl(null);
+      return;
+    }
+
+    // Create URL for the original image
+    const imageUrl = URL.createObjectURL(previewImage);
+    setOriginalImageUrl(imageUrl);
+
+    // Cleanup function to revoke the URL
+    return () => {
+      URL.revokeObjectURL(imageUrl);
+    };
+  }, [previewImage]);
 
   useEffect(() => {
     if (!selectedPreset || !previewImage || !canvasRef.current) {
@@ -63,7 +81,7 @@ export const PresetPreview: React.FC<PresetPreviewProps> = ({
           setIsProcessing(false);
         };
 
-        img.src = previewImage.originalUrl;
+        img.src = originalImageUrl!;
       } catch (error) {
         console.error('Preview generation failed:', error);
         setIsProcessing(false);
@@ -107,7 +125,7 @@ export const PresetPreview: React.FC<PresetPreviewProps> = ({
             <div className={styles['preset-preview__before']}>
               <h4 className={styles['preset-preview__label']}>処理前</h4>
               <img
-                src={previewImage.originalUrl}
+                src={originalImageUrl!}
                 alt="処理前のプレビュー"
                 className={styles['preset-preview__image']}
               />

@@ -9,8 +9,14 @@ import {
   ProcessingError,
   BatchProcessingResult 
 } from '../types/processing';
-import { ImageProcessingWorkerPool } from '../workers/workerPool';
+import { OptimizedImageProcessingWorkerPool } from '../workers/optimizedWorkerPool';
 import { ProcessedImageResult } from '../workers/workerTypes';
+import { 
+  getMemoryUsage, 
+  calculateOptimalBatchSize,
+  createProcessingChunks,
+  DEFAULT_OPTIMIZATION_CONFIG 
+} from '../utils/performanceOptimization';
 import styles from './ImageProcessor.module.css';
 
 /**
@@ -47,19 +53,29 @@ export const ImageProcessor: React.FC<ImageProcessorProps> = ({
     errors: []
   });
   
-  const workerPoolRef = useRef<ImageProcessingWorkerPool | null>(null);
+  const workerPoolRef = useRef<OptimizedImageProcessingWorkerPool | null>(null);
   const startTimeRef = useRef<number>(0);
   const processedImagesRef = useRef<ProcessedImage[]>([]);
   const errorsRef = useRef<ProcessingError[]>([]);
+  const [memoryUsage, setMemoryUsage] = useState(getMemoryUsage());
 
-  // Worker pool の初期化
+  // Worker pool の初期化と最適化
   useEffect(() => {
-    workerPoolRef.current = new ImageProcessingWorkerPool();
+    workerPoolRef.current = new OptimizedImageProcessingWorkerPool(
+      undefined, // 自動的に最適な数を計算
+      DEFAULT_OPTIMIZATION_CONFIG
+    );
+    
+    // メモリ使用量の定期監視
+    const memoryMonitorInterval = setInterval(() => {
+      setMemoryUsage(getMemoryUsage());
+    }, 2000);
     
     return () => {
       if (workerPoolRef.current) {
         workerPoolRef.current.destroy();
       }
+      clearInterval(memoryMonitorInterval);
     };
   }, []);
 
@@ -147,7 +163,7 @@ export const ImageProcessor: React.FC<ImageProcessorProps> = ({
   }, [selectedPreset, updateProgress]);
 
   /**
-   * 一括処理を開始
+   * 最適化された一括処理を開始
    */
   const startBatchProcessing = useCallback(async () => {
     if (!workerPoolRef.current || images.length === 0) {
@@ -162,13 +178,34 @@ export const ImageProcessor: React.FC<ImageProcessorProps> = ({
     onProcessingStart?.();
 
     try {
-      // 並列処理で画像を処理
-      const processingPromises = images.map((image, index) => 
-        processImage(image, index)
-      );
+      // 最適なバッチサイズを計算
+      const averageFileSize = images.reduce((sum, img) => sum + img.file.size, 0) / images.length;
+      const batchSize = calculateOptimalBatchSize(images.length, averageFileSize);
+      
+      // 画像をチャンクに分割
+      const imageChunks = createProcessingChunks(images, batchSize);
+      
+      console.log(`Processing ${images.length} images in ${imageChunks.length} batches of ${batchSize}`);
+      
+      // チャンクごとに順次処理（メモリ効率のため）
+      for (let chunkIndex = 0; chunkIndex < imageChunks.length; chunkIndex++) {
+        const chunk = imageChunks[chunkIndex];
+        
+        // チャンク内の画像を並列処理
+        const chunkPromises = chunk.map((image, index) => {
+          const globalIndex = chunkIndex * batchSize + index;
+          return processImage(image, globalIndex);
+        });
 
-      // すべての処理が完了するまで待機（エラーがあっても継続）
-      const results = await Promise.allSettled(processingPromises);
+        // チャンクの処理完了を待機
+        await Promise.allSettled(chunkPromises);
+        
+        // メモリクリーンアップ（チャンク間）
+        if (chunkIndex < imageChunks.length - 1) {
+          // 少し待機してメモリ解放を促進
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      }
       
       // 最終的な進行状況を更新
       updateProgress(images.length, null, errorsRef.current);
@@ -200,7 +237,10 @@ export const ImageProcessor: React.FC<ImageProcessorProps> = ({
   const cancelProcessing = useCallback(() => {
     if (workerPoolRef.current) {
       workerPoolRef.current.destroy();
-      workerPoolRef.current = new ImageProcessingWorkerPool();
+      workerPoolRef.current = new OptimizedImageProcessingWorkerPool(
+        undefined,
+        DEFAULT_OPTIMIZATION_CONFIG
+      );
     }
     setIsProcessing(false);
     setProgress({
@@ -300,6 +340,31 @@ export const ImageProcessor: React.FC<ImageProcessorProps> = ({
           </div>
         </div>
       )}
+
+      {/* パフォーマンス情報表示 */}
+      <div className={styles.performanceInfo}>
+        <div className={styles.memoryUsage}>
+          <span className={styles.memoryLabel}>メモリ使用量:</span>
+          <span className={`${styles.memoryValue} ${styles[memoryUsage.memoryPressure]}`}>
+            {memoryUsage.memoryPressure === 'high' ? '高' : 
+             memoryUsage.memoryPressure === 'medium' ? '中' : '低'}
+          </span>
+          {memoryUsage.usedJSHeapSize > 0 && (
+            <span className={styles.memoryDetails}>
+              ({Math.round(memoryUsage.usedJSHeapSize / 1024 / 1024)}MB / 
+               {Math.round(memoryUsage.jsHeapSizeLimit / 1024 / 1024)}MB)
+            </span>
+          )}
+        </div>
+        {workerPoolRef.current && (
+          <div className={styles.workerStatus}>
+            <span className={styles.workerLabel}>ワーカー:</span>
+            <span className={styles.workerValue}>
+              {workerPoolRef.current.getDetailedStatus().totalWorkers}個
+            </span>
+          </div>
+        )}
+      </div>
 
       <div className={styles.controls}>
         {!isProcessing ? (

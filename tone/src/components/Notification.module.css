@@ -1,0 +1,216 @@
+/* Notificationのスタイル - QuickTools Design System */
+
+.notification {
+  max-width: 400px;
+  padding: var(--qt-space-4);
+  border-radius: var(--qt-radius-lg);
+  box-shadow: var(--qt-shadow-lg);
+  border-left: 4px solid;
+  background-color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.entering {
+  animation: qt-slide-in-right 0.3s ease-out;
+}
+
+.exiting {
+  animation: slideOut 0.3s ease-in forwards;
+}
+
+@keyframes slideOut {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+/* タイプ別スタイル */
+.success {
+  border-left-color: var(--qt-success-500);
+  background-color: var(--qt-success-50);
+}
+
+.error {
+  border-left-color: var(--qt-error-500);
+  background-color: var(--qt-error-50);
+}
+
+.warning {
+  border-left-color: var(--qt-warning-500);
+  background-color: var(--qt-warning-50);
+}
+
+.info {
+  border-left-color: var(--qt-primary-500);
+  background-color: var(--qt-primary-50);
+}
+
+.content {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--qt-space-3);
+}
+
+.iconContainer {
+  flex-shrink: 0;
+  margin-top: var(--qt-space-1);
+}
+
+.icon {
+  width: 20px;
+  height: 20px;
+}
+
+.success .icon {
+  color: var(--qt-success-600);
+}
+
+.error .icon {
+  color: var(--qt-error-600);
+}
+
+.warning .icon {
+  color: var(--qt-warning-600);
+}
+
+.info .icon {
+  color: var(--qt-primary-600);
+}
+
+.textContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  font-size: var(--qt-text-sm);
+  font-weight: var(--qt-font-semibold);
+  font-family: var(--qt-font-family-sans);
+  margin: 0 0 var(--qt-space-1) 0;
+  line-height: var(--qt-leading-tight);
+}
+
+.success .title {
+  color: var(--qt-success-800);
+}
+
+.error .title {
+  color: var(--qt-error-800);
+}
+
+.warning .title {
+  color: var(--qt-warning-800);
+}
+
+.info .title {
+  color: var(--qt-primary-800);
+}
+
+.message {
+  font-size: var(--qt-text-sm);
+  font-family: var(--qt-font-family-sans);
+  margin: 0;
+  line-height: var(--qt-leading-normal);
+}
+
+.success .message {
+  color: var(--qt-success-700);
+}
+
+.error .message {
+  color: var(--qt-error-700);
+}
+
+.warning .message {
+  color: var(--qt-warning-700);
+}
+
+.info .message {
+  color: var(--qt-primary-700);
+}
+
+.closeButton {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: var(--qt-space-1);
+  cursor: pointer;
+  border-radius: var(--qt-radius-md);
+  transition: all var(--qt-transition-base);
+  color: var(--qt-neutral-400);
+  margin-top: calc(-1 * var(--qt-space-1));
+  margin-right: calc(-1 * var(--qt-space-1));
+}
+
+.closeButton:hover {
+  background-color: var(--qt-neutral-100);
+  color: var(--qt-neutral-600);
+}
+
+.closeButton:focus {
+  outline: 2px solid var(--qt-primary-500);
+  outline-offset: 2px;
+}
+
+.closeIcon {
+  width: 16px;
+  height: 16px;
+}
+
+/* レスポンシブデザイン */
+@media (max-width: 480px) {
+  .notification {
+    max-width: 100%;
+    margin: 0 var(--qt-space-2);
+  }
+  
+  .content {
+    gap: var(--qt-space-2);
+  }
+  
+  .title {
+    font-size: var(--qt-text-xs);
+  }
+  
+  .message {
+    font-size: var(--qt-text-xs);
+  }
+}
+
+/* アクセシビリティ: 高コントラストモード対応 */
+@media (prefers-contrast: high) {
+  .notification {
+    border-left-width: 6px;
+    border: 2px solid;
+  }
+  
+  .success {
+    border-color: var(--qt-success-600);
+  }
+  
+  .error {
+    border-color: var(--qt-error-600);
+  }
+  
+  .warning {
+    border-color: var(--qt-warning-600);
+  }
+  
+  .info {
+    border-color: var(--qt-primary-600);
+  }
+}
+
+/* アクセシビリティ: アニメーション削減 */
+@media (prefers-reduced-motion: reduce) {
+  .entering,
+  .exiting {
+    animation: none;
+  }
+}

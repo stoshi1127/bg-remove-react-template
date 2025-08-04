@@ -8,7 +8,7 @@ import EasyToneApp from '../EasyToneApp';
 
 // 依存コンポーネントをモック
 jest.mock('../WorkflowContainer', () => {
-  return function MockWorkflowContainer({ children }: any) {
+  return function MockWorkflowContainer({ children }: { children: (props: unknown) => React.ReactNode }) {
     const mockWorkflowProps = {
       currentStep: 'upload',
       completedSteps: [],
@@ -29,7 +29,7 @@ jest.mock('../WorkflowContainer', () => {
 });
 
 jest.mock('../ImageUploader', () => {
-  return function MockImageUploader({ onImagesSelected }: any) {
+  return function MockImageUploader({ onImagesSelected }: { onImagesSelected: (images: unknown[]) => void }) {
     return (
       <div data-testid="image-uploader">
         <button
@@ -49,7 +49,7 @@ jest.mock('../ImageUploader', () => {
 });
 
 jest.mock('../PresetSelectorWithPreview', () => {
-  return function MockPresetSelectorWithPreview({ onPresetSelect }: any) {
+  return function MockPresetSelectorWithPreview({ onPresetSelect }: { onPresetSelect: (presetId: string) => void }) {
     const mockPreset = {
       id: 'crisp-product',
       name: '商品をくっきりと',
@@ -76,7 +76,7 @@ jest.mock('../PresetSelectorWithPreview', () => {
 });
 
 jest.mock('../ImageProcessor', () => {
-  return function MockImageProcessor({ onProcessingComplete }: any) {
+  return function MockImageProcessor({ onProcessingComplete }: { onProcessingComplete: (results: unknown) => void }) {
     return (
       <div data-testid="image-processor">
         <button
@@ -148,10 +148,10 @@ describe('EasyToneApp', () => {
     });
   });
 
-  it('should show preset selection step content', () => {
+  it('should show preset selection step content', async () => {
     // WorkflowContainerのモックを更新してpreset stepを返すように
     jest.doMock('../WorkflowContainer', () => {
-      return function MockWorkflowContainer({ children }: any) {
+      return function MockWorkflowContainer({ children }: { children: (props: unknown) => React.ReactNode }) {
         const mockWorkflowProps = {
           currentStep: 'preset',
           completedSteps: ['upload'],
@@ -172,7 +172,7 @@ describe('EasyToneApp', () => {
     });
 
     // 新しいコンポーネントインスタンスを作成
-    const EasyToneAppWithPreset = require('../EasyToneApp').default;
+    const { default: EasyToneAppWithPreset } = await import('../EasyToneApp');
     
     render(<EasyToneAppWithPreset />);
     
@@ -197,10 +197,10 @@ describe('EasyToneApp', () => {
     });
   });
 
-  it('should show download step with start processing button', () => {
+  it('should show download step with start processing button', async () => {
     // WorkflowContainerのモックを更新してdownload stepを返すように
     jest.doMock('../WorkflowContainer', () => {
-      return function MockWorkflowContainer({ children }: any) {
+      return function MockWorkflowContainer({ children }: { children: (props: unknown) => React.ReactNode }) {
         const mockWorkflowProps = {
           currentStep: 'download',
           completedSteps: ['upload', 'preset'],
@@ -220,7 +220,7 @@ describe('EasyToneApp', () => {
       };
     });
 
-    const EasyToneAppWithDownload = require('../EasyToneApp').default;
+    const { default: EasyToneAppWithDownload } = await import('../EasyToneApp');
     
     render(<EasyToneAppWithDownload />);
     

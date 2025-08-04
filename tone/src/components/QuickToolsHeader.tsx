@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import Link from 'next/link';
 import styles from './QuickToolsHeader.module.css';
 
 interface QuickToolsHeaderProps {
@@ -27,7 +28,7 @@ const QuickToolsHeader: React.FC<QuickToolsHeaderProps> = ({
       <div className={styles.container}>
         {/* QuickTools Logo */}
         <div className={styles.logoSection}>
-          <a 
+          <Link 
             href="/" 
             className={styles.logoLink}
             aria-label="QuickTools ホームページに戻る"
@@ -59,7 +60,7 @@ const QuickToolsHeader: React.FC<QuickToolsHeaderProps> = ({
                 <span className={styles.currentTool}>{currentTool}</span>
               </div>
             </div>
-          </a>
+          </Link>
         </div>
 
         {/* Navigation */}

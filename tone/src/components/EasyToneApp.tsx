@@ -1,16 +1,22 @@
+"use client";
+
 /**
  * EasyToneメインアプリケーションコンポーネント
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { WorkflowStep } from '../types/workflow';
-import { ProcessableImage, ProcessedImage } from '../types/processing';
+import { ProcessableImage, ProcessedImage, BatchProcessingResult } from '../types/processing';
 import { FilterPreset } from '../types/filter';
+import { getPresetById } from '../constants/presets';
 import WorkflowContainer from './WorkflowContainer';
 import ImageUploader from './ImageUploader';
 import PresetSelectorWithPreview from './PresetSelectorWithPreview';
 import ImageProcessor from './ImageProcessor';
 import ResultViewer from './ResultViewer';
+import { ErrorBoundary } from './ErrorBoundary';
+import { useErrorHandler } from '../hooks/useErrorHandler';
+import Notification from './Notification';
 import styles from './EasyToneApp.module.css';
 
 const EasyToneApp: React.FC = () => {
@@ -18,6 +24,14 @@ const EasyToneApp: React.FC = () => {
   const [selectedPreset, setSelectedPreset] = useState<FilterPreset | null>(null);
   const [processedImages, setProcessedImages] = useState<ProcessedImage[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  
+  // エラーハンドリング
+  const [errorState, errorActions] = useErrorHandler({
+    enableAutoRecovery: true,
+    onError: (error) => {
+      console.error('Application error:', error);
+    }
+  });
 
   // アクセシビリティ: フォーカス管理
   const stepContentRef = React.useRef<HTMLDivElement>(null);
@@ -29,14 +43,24 @@ const EasyToneApp: React.FC = () => {
     }
   }, []);
 
+  // ブラウザ互換性チェック
+  useEffect(() => {
+    const compatibilityError = errorActions.checkCompatibility();
+    if (compatibilityError) {
+      console.warn('Browser compatibility issue detected:', compatibilityError);
+    }
+  }, [errorActions]);
+
   const handleImagesUploaded = (images: ProcessableImage[]) => {
     setUploadedImages(images);
-    // 画像がアップロードされたらプリセット選択ステップに進む準備ができる
+    // エラー状態をクリア（新しい画像がアップロードされた場合）
+    errorActions.clearErrors();
   };
 
   const handlePresetSelected = (preset: FilterPreset) => {
     setSelectedPreset(preset);
-    // プリセットが選択されたら処理ステップに進む準備ができる
+    // エラー状態をクリア（新しいプリセットが選択された場合）
+    errorActions.clearErrors();
   };
 
   const handleProcessingStart = () => {
@@ -50,9 +74,11 @@ const EasyToneApp: React.FC = () => {
   };
 
   const handleProcessingError = (error: Error) => {
-    console.error('Processing error:', error);
+    errorActions.handleError(error, {
+      component: 'EasyToneApp',
+      action: 'imageProcessing'
+    });
     setIsProcessing(false);
-    // エラーハンドリング - 必要に応じてユーザーに通知
   };
 
   const handleReset = () => {
@@ -60,6 +86,19 @@ const EasyToneApp: React.FC = () => {
     setSelectedPreset(null);
     setProcessedImages([]);
     setIsProcessing(false);
+    errorActions.clearErrors();
+  };
+
+  const handleRetry = async () => {
+    if (errorState.lastError && errorState.lastError.recoverable) {
+      const success = await errorActions.retryLastError();
+      if (success) {
+        // リトライが成功した場合、処理を再開
+        if (selectedPreset && uploadedImages.length > 0 && processedImages.length === 0) {
+          setIsProcessing(true);
+        }
+      }
+    }
   };
 
   const renderStepContent = (
@@ -84,19 +123,8 @@ const EasyToneApp: React.FC = () => {
               </p>
             </div>
             <ImageUploader
-              onImagesSelected={(files) => {
-                const processableImages: ProcessableImage[] = files.map((file, index) => ({
-                  id: `image-${Date.now()}-${index}`,
-                  file,
-                  originalUrl: URL.createObjectURL(file),
-                  metadata: {
-                    name: file.name,
-                    size: file.size,
-                    type: file.type,
-                    lastModified: file.lastModified,
-                  },
-                  status: 'pending',
-                }));
+              onImagesSelected={(processableImages) => {
+                // ImageUploaderは既にProcessableImage[]を返すので、そのまま使用
                 handleImagesUploaded(processableImages);
                 completeStep('upload');
               }}
@@ -129,12 +157,16 @@ const EasyToneApp: React.FC = () => {
               </p>
             </div>
             <PresetSelectorWithPreview
-              previewImage={uploadedImages[0]?.originalUrl}
-              onPresetSelect={(preset) => {
-                handlePresetSelected(preset);
-                completeStep('preset');
+              previewImage={uploadedImages[0]?.file}
+              onPresetSelect={(presetId) => {
+                // プリセットIDから実際のプリセットオブジェクトを取得
+                const preset = getPresetById(presetId);
+                if (preset) {
+                  handlePresetSelected(preset);
+                  completeStep('preset');
+                }
               }}
-              selectedPreset={selectedPreset}
+              selectedPreset={selectedPreset?.id || null}
             />
             {selectedPreset && (
               <div 
@@ -169,36 +201,26 @@ const EasyToneApp: React.FC = () => {
               </p>
             </div>
             
-            {isProcessing && selectedPreset && (
+            {selectedPreset && processedImages.length === 0 && (
               <ImageProcessor
                 images={uploadedImages}
                 selectedPreset={selectedPreset}
                 onProcessingStart={handleProcessingStart}
-                onProcessingComplete={(results) => {
-                  handleProcessingComplete(results);
+                onProcessingComplete={(results: BatchProcessingResult) => {
+                  handleProcessingComplete(results.processedImages);
                   completeStep('download');
                 }}
-                onProcessingError={handleProcessingError}
+                onProcessingError={(errorMessage: string) => {
+                  handleProcessingError(new Error(errorMessage));
+                }}
               />
             )}
 
-            {!isProcessing && processedImages.length > 0 && (
+            {processedImages.length > 0 && (
               <ResultViewer
                 originalImages={uploadedImages}
                 processedImages={processedImages}
               />
-            )}
-
-            {!isProcessing && processedImages.length === 0 && selectedPreset && (
-              <div className={styles.startProcessing}>
-                <button
-                  type="button"
-                  onClick={() => setIsProcessing(true)}
-                  className={styles.startButton}
-                >
-                  処理を開始
-                </button>
-              </div>
             )}
           </div>
         );
@@ -209,29 +231,89 @@ const EasyToneApp: React.FC = () => {
   };
 
   return (
-    <WorkflowContainer className={styles.easyToneApp}>
-      {({ currentStep, completeStep, resetWorkflow }) => (
-        <>
-          {renderStepContent(currentStep, completeStep)}
-          
-          {(uploadedImages.length > 0 || processedImages.length > 0) && (
-            <div className={styles.resetContainer}>
-              <button
-                type="button"
-                onClick={() => {
-                  handleReset();
-                  resetWorkflow();
-                }}
-                className={styles.resetButton}
-                aria-label="すべてをリセットして最初からやり直す"
-              >
-                リセット
-              </button>
-            </div>
-          )}
-        </>
-      )}
-    </WorkflowContainer>
+    <ErrorBoundary
+      onError={(error) => {
+        console.error('Application-level error:', error);
+      }}
+    >
+      <div className={styles.easyToneApp}>
+        {/* エラー通知 */}
+        {errorState.errors.length > 0 && (
+          <div className={styles.errorNotifications}>
+            {errorState.errors.slice(-3).map((error, index) => (
+              <div key={`${error.type}-${error.context.timestamp}-${index}`} className={styles.errorContainer}>
+                <Notification
+                  type="error"
+                  message={error.message}
+                  onClose={() => errorActions.clearError(errorState.errors.length - 3 + index)}
+                  autoClose={error.type !== 'BROWSER_COMPATIBILITY'}
+                />
+                {error.recoverable && errorState.lastError === error && (
+                  <button
+                    type="button"
+                    onClick={handleRetry}
+                    className={styles.retryButton}
+                    disabled={errorState.isRecovering}
+                    aria-label="エラーからの回復を試行"
+                  >
+                    {errorState.isRecovering ? '回復中...' : '再試行'}
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+        
+        <WorkflowContainer className={styles.workflowContainer}>
+          {({ currentStep, completeStep, resetWorkflow, validateStepData }) => {
+            const enhancedCompleteStep = (step: WorkflowStep) => {
+              // データ検証を行ってからステップを完了
+              let isValid = false;
+              switch (step) {
+                case 'upload':
+                  isValid = validateStepData(step, uploadedImages);
+                  break;
+                case 'preset':
+                  isValid = validateStepData(step, selectedPreset);
+                  break;
+                case 'download':
+                  isValid = validateStepData(step, processedImages);
+                  break;
+              }
+              
+              if (isValid) {
+                completeStep(step);
+              } else {
+                console.warn(`Step ${step} validation failed`);
+              }
+            };
+
+            return (
+              <>
+                {renderStepContent(currentStep, enhancedCompleteStep)}
+                
+                {(uploadedImages.length > 0 || processedImages.length > 0) && (
+                  <div className={styles.resetContainer}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleReset();
+                        resetWorkflow();
+                        errorActions.clearErrors();
+                      }}
+                      className={styles.resetButton}
+                      aria-label="すべてをリセットして最初からやり直す"
+                    >
+                      リセット
+                    </button>
+                  </div>
+                )}
+              </>
+            );
+          }}
+        </WorkflowContainer>
+      </div>
+    </ErrorBoundary>
   );
 };
 

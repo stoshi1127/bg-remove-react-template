@@ -38,7 +38,7 @@ const mockImage = {
   height: 100
 };
 
-global.Image = jest.fn(() => mockImage) as any;
+global.Image = jest.fn(() => mockImage) as unknown as typeof Image;
 
 describe('PresetSelectorWithPreview', () => {
   const mockOnPresetSelect = jest.fn();

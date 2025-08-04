@@ -3,7 +3,10 @@ export type {
   ImageMetadata,
   ProcessableImage,
   ProcessedImage,
-} from './image';
+  ProcessingProgress,
+  ProcessingError,
+  BatchProcessingResult,
+} from './processing';
 
 // フィルター関連の型定義をエクスポート
 export type {
