@@ -182,29 +182,25 @@ export default async function Home() {
       <section className="bg-white py-16 px-4">
         <div className="container mx-auto max-w-4xl text-center">
           {/* メインタイトル */}
-          <div className="animate-fade-in-up mb-12">
+          <div className="animate-fade-in-up mb-8">
             <h1 className="text-responsive-xl font-bold text-gray-900 mb-6">
               {siteName}
             </h1>
-            <p className="text-responsive-md text-gray-600 mb-8 leading-relaxed max-w-2xl mx-auto">
+            <p className="text-responsive-md text-gray-600 mb-6 leading-relaxed max-w-2xl mx-auto">
               AIが画像の背景を自動で切り抜き、多彩な背景（グラデーション、レンガなど）や好きな色に合成します。さらに「16:9」や「被写体にフィット」など豊富なアスペクト比を選び、ZIPで一括ダウンロードも可能。
             </p>
           </div>
+
+          {/* アップロードエリア - メイン */}
+          <div className="animate-fade-in-up mb-12" style={{animationDelay: '0.1s'}}>
+            <div className="bg-white border-2 border-blue-200 rounded-2xl py-3 shadow-lg">
+              <BgRemoverMulti />
+            </div>
+          </div>
           
           {/* CTAセクション */}
-          <div className="animate-fade-in-up mb-12" style={{animationDelay: '0.1s'}}>
-            <div className="bg-blue-50 border border-blue-100 p-6 rounded-2xl mb-8">
-              <div className="flex items-center justify-center mb-4">
-                <div className="bg-blue-600 p-2 rounded-lg mr-3">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                  </svg>
-                </div>
-                <h2 className="text-2xl font-bold text-gray-900">
-                  今すぐ無料で背景透過！
-                </h2>
-              </div>
-              <p className="text-gray-700 mb-4">登録不要・制限なし・高速処理でプロ品質の仕上がり</p>
+          <div className="animate-fade-in-up mb-8" style={{animationDelay: '0.2s'}}>
+            <div className="bg-blue-50 border border-blue-100 p-4 rounded-2xl">
               <div className="flex flex-wrap justify-center gap-3">
                 <span className="inline-flex items-center px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
                   <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -224,22 +220,19 @@ export default async function Home() {
                   </svg>
                   安全・安心
                 </span>
+                <span className="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium">
+                  <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd"></path>
+                  </svg>
+                  最大30枚一括処理
+                </span>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* アップロードエリア - 強調セクション */}
-      <section className="bg-gray-50 py-16 px-4">
-        <div className="container mx-auto max-w-4xl">
-          <div className="animate-fade-in-up" style={{animationDelay: '0.2s'}}>
-            <div className="bg-white border-2 border-blue-200 rounded-2xl py-3 shadow-soft">
-              <BgRemoverMulti />
-            </div>
-          </div>
-        </div>
-      </section>
+
 
       {/* メインコンテンツ */}
       <main className="bg-white">
