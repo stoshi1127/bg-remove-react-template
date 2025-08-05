@@ -68,8 +68,10 @@ export default function BgRemoverMulti() {
   
   // 並行処理制限の設定（ユーザーには見せず、完全自動）
   const [maxConcurrentProcesses, setMaxConcurrentProcesses] = useState<number>(5); // デフォルト5並行
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [currentlyProcessing, setCurrentlyProcessing] = useState<number>(0);
   const [adaptiveConcurrency] = useState<boolean>(true); // 常に自動調整ON
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [avgResponseTime, setAvgResponseTime] = useState<number>(0); // 平均レスポンス時間
 
   // デバッグ・ログ機能（開発者モードのみ、通常は非表示）
@@ -113,9 +115,10 @@ export default function BgRemoverMulti() {
       ...log,
       timestamp: Date.now()
     }].slice(-100)); // 最新100件を保持
-  }, [debugMode]);
+  }, [debugMode, setProcessingLogs]);
 
   // パフォーマンス統計
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [performanceStats, setPerformanceStats] = useState<{
     totalProcessed: number;
     totalErrors: number;
@@ -214,7 +217,7 @@ export default function BgRemoverMulti() {
       event: 'error',
       details: 'ユーザーによるキャンセル'
     });
-  }, [debugMode]);
+  }, [addLog]);
 
   // オブジェクトURLを管理するためのRef
   const objectUrlsRef = useRef<string[]>([]);
@@ -1150,7 +1153,8 @@ export default function BgRemoverMulti() {
               const processingTime = input.startTime && input.endTime 
                 ? ((input.endTime - input.startTime) / 1000).toFixed(1) 
                 : null;
-              const currentTime = input.startTime && !input.endTime 
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const currentTime = input.startTime && !input.endTime 
                 ? ((Date.now() - input.startTime) / 1000).toFixed(1) 
                 : null;
               
