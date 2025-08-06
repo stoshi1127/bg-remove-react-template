@@ -3,8 +3,11 @@
  * ブランド統一されたフッター
  */
 
+'use client';
+
 import React from 'react';
 import styles from './QuickToolsFooter.module.css';
+import { QUICKTOOLS_SERVICES, QUICKTOOLS_BRAND, trackServiceNavigation } from '../utils/quickToolsIntegration';
 
 interface QuickToolsFooterProps {
   className?: string;
@@ -15,19 +18,16 @@ const QuickToolsFooter: React.FC<QuickToolsFooterProps> = ({
 }) => {
   const currentYear = new Date().getFullYear();
 
-  const toolLinks = [
-    { name: 'BG Remove', href: '/bg-remove' },
-    { name: 'Image Resize', href: '/resize' },
-    { name: 'Format Convert', href: '/convert' },
-    { name: 'Compress', href: '/compress' },
-    { name: 'EasyTone', href: '/tone' },
-  ];
+  const handleServiceNavigation = (serviceName: string, serviceUrl: string) => {
+    trackServiceNavigation('tone', serviceName.toLowerCase().replace(' ', '-'));
+    window.open(serviceUrl, '_blank', 'noopener,noreferrer');
+  };
 
   const supportLinks = [
-    { name: 'ヘルプ', href: '/help' },
-    { name: 'お問い合わせ', href: '/contact' },
-    { name: 'プライバシーポリシー', href: '/privacy' },
-    { name: '利用規約', href: '/terms' },
+    { name: 'ヘルプ', href: QUICKTOOLS_BRAND.support.help },
+    { name: 'お問い合わせ', href: QUICKTOOLS_BRAND.support.contact },
+    { name: 'プライバシーポリシー', href: QUICKTOOLS_BRAND.support.privacy },
+    { name: '利用規約', href: QUICKTOOLS_BRAND.support.terms },
   ];
 
   return (
@@ -61,7 +61,7 @@ const QuickToolsFooter: React.FC<QuickToolsFooterProps> = ({
               <span className={styles.brandName}>QuickTools</span>
             </div>
             <p className={styles.brandDescription}>
-              画像処理を簡単に。プロ品質の結果を、誰でも使えるシンプルなツールで。
+              {QUICKTOOLS_BRAND.tagline}
             </p>
           </div>
 
@@ -69,15 +69,16 @@ const QuickToolsFooter: React.FC<QuickToolsFooterProps> = ({
           <div className={styles.linkSection}>
             <h3 className={styles.linkSectionTitle}>ツール</h3>
             <ul className={styles.linkList} role="list">
-              {toolLinks.map((link) => (
-                <li key={link.name}>
-                  <a
-                    href={link.href}
+              {QUICKTOOLS_SERVICES.map((service) => (
+                <li key={service.id}>
+                  <button
+                    type="button"
+                    onClick={() => handleServiceNavigation(service.name, service.url)}
                     className={styles.link}
-                    aria-label={`${link.name}ツールに移動`}
+                    aria-label={`${service.name}ツールに移動`}
                   >
-                    {link.name}
-                  </a>
+                    {service.icon} {service.name}
+                  </button>
                 </li>
               ))}
             </ul>
@@ -106,7 +107,7 @@ const QuickToolsFooter: React.FC<QuickToolsFooterProps> = ({
             <h3 className={styles.linkSectionTitle}>フォロー</h3>
             <div className={styles.socialLinks}>
               <a
-                href="https://twitter.com/quicktools"
+                href={QUICKTOOLS_BRAND.social.twitter}
                 className={styles.socialLink}
                 aria-label="TwitterでQuickToolsをフォロー"
                 target="_blank"
@@ -122,7 +123,7 @@ const QuickToolsFooter: React.FC<QuickToolsFooterProps> = ({
                 </svg>
               </a>
               <a
-                href="https://github.com/quicktools"
+                href={QUICKTOOLS_BRAND.social.github}
                 className={styles.socialLink}
                 aria-label="GitHubでQuickToolsをフォロー"
                 target="_blank"
@@ -148,7 +149,7 @@ const QuickToolsFooter: React.FC<QuickToolsFooterProps> = ({
         {/* Copyright */}
         <div className={styles.copyright}>
           <p className={styles.copyrightText}>
-            © {currentYear} QuickTools. All rights reserved.
+            © {currentYear} {QUICKTOOLS_BRAND.name}. All rights reserved.
           </p>
           <p className={styles.madeWith}>
             Made with{' '}

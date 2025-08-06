@@ -1,0 +1,106 @@
+/* ServiceIntegrationStatus コンポーネントのスタイル */
+
+.container {
+  padding: 12px 16px;
+  background: var(--color-background-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.statusIndicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.statusIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.statusIcon.integrated {
+  background: var(--color-success);
+  color: white;
+}
+
+.statusIcon.error {
+  background: var(--color-error);
+  color: white;
+}
+
+.statusText {
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.details {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+}
+
+.errorList,
+.serviceList {
+  margin-bottom: 12px;
+}
+
+.errorList:last-child,
+.serviceList:last-child {
+  margin-bottom: 0;
+}
+
+.errorTitle,
+.serviceTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin: 0 0 6px 0;
+}
+
+.errors,
+.services {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.error,
+.service {
+  padding: 4px 0;
+  font-size: 13px;
+}
+
+.error {
+  color: var(--color-error);
+}
+
+.service {
+  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* レスポンシブデザイン */
+@media (max-width: 768px) {
+  .container {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+  
+  .statusIcon {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .details {
+    margin-top: 10px;
+    padding-top: 10px;
+  }
+}

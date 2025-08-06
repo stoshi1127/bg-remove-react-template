@@ -5,6 +5,8 @@ import {
   calculateOptimalConcurrency,
   calculateOptimalBatchSize,
   createProcessingChunks,
+  calculateProcessingMetrics,
+  performMemoryCleanup,
   DEFAULT_OPTIMIZATION_CONFIG
 } from '../performanceOptimization';
 
@@ -26,8 +28,8 @@ describe('Performance Optimization Utils', () => {
     });
 
     it('should handle browsers without memory API', () => {
-      const originalMemory = (performance as any).memory;
-      delete (performance as any).memory;
+      const originalMemory = (performance as unknown as { memory?: unknown }).memory;
+      delete (performance as unknown as { memory?: unknown }).memory;
       
       const memoryInfo = getMemoryUsage();
       
@@ -37,7 +39,7 @@ describe('Performance Optimization Utils', () => {
       expect(memoryInfo.memoryPressure).toBe('low');
       
       // Restore original memory object
-      (performance as any).memory = originalMemory;
+      (performance as unknown as { memory: unknown }).memory = originalMemory;
     });
   });
 
@@ -222,7 +224,7 @@ describe('Performance Optimization Utils', () => {
 
 describe('Performance Metrics', () => {
   it('should calculate processing metrics correctly', () => {
-    const { calculateProcessingMetrics } = require('../performanceOptimization');
+    // calculateProcessingMetrics is already imported
     
     const startTime = 1000;
     const endTime = 2000;
@@ -259,7 +261,7 @@ describe('Performance Metrics', () => {
 
 describe('Memory Management', () => {
   it('should handle memory cleanup gracefully', () => {
-    const { performMemoryCleanup } = require('../performanceOptimization');
+    // performMemoryCleanup is already imported
     
     // Should not throw error even if gc is not available
     expect(() => performMemoryCleanup()).not.toThrow();

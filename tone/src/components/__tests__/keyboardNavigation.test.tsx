@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import EasyToneApp from '../EasyToneApp';
 import PresetSelector from '../PresetSelector';
@@ -124,7 +124,6 @@ describe('キーボードナビゲーションテスト', () => {
     });
 
     it('無効なステップではキーボード操作が無効であること', async () => {
-      const user = userEvent.setup();
       mockCanProceedToStep.mockReturnValue(false);
       
       render(
@@ -377,7 +376,6 @@ describe('キーボードナビゲーションテスト', () => {
     });
 
     it('ステップ変更時にフォーカスが適切に管理されること', async () => {
-      const user = userEvent.setup();
       render(<EasyToneApp />);
       
       // ステップコンテンツ領域にフォーカスが設定される
@@ -427,7 +425,6 @@ describe('キーボードナビゲーションテスト', () => {
 
   describe('キーボードショートカット', () => {
     it('グローバルキーボードショートカットが機能すること', async () => {
-      const user = userEvent.setup();
       render(<EasyToneApp />);
       
       // 例: Ctrl+Rでリセット（実装されている場合）

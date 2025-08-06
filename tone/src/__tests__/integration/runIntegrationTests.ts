@@ -22,9 +22,10 @@ const runIntegrationTests = async () => {
     
     try {
       const testPath = path.join(__dirname, testFile);
-      execSync(`npx jest ${testPath} --verbose`, {
+      execSync(`npx jest ${testPath} --verbose --maxWorkers=1 --runInBand --forceExit`, {
         stdio: 'inherit',
-        cwd: process.cwd()
+        cwd: process.cwd(),
+        timeout: 60000 // 60 second timeout per test file
       });
       
       testResults.push({ file: testFile, passed: true });

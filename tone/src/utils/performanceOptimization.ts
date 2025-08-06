@@ -1,5 +1,3 @@
-import { FilterConfig } from '../types/filter';
-
 /**
  * パフォーマンス最適化ユーティリティ
  * Requirements: 8.1, 8.2, 8.4
@@ -138,7 +136,7 @@ export async function loadOptimizedImageToCanvas(
   config: ImageOptimizationConfig = DEFAULT_OPTIMIZATION_CONFIG
 ): Promise<HTMLCanvasElement> {
   return new Promise((resolve, reject) => {
-    const img = new Image();
+    const img = new window.Image();
     
     img.onload = () => {
       try {

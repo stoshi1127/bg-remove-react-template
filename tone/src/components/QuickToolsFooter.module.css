@@ -87,6 +87,12 @@
   font-family: var(--qt-font-family-sans);
   transition: color var(--qt-transition-base);
   line-height: var(--qt-leading-normal);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
 }
 
 .link:hover {

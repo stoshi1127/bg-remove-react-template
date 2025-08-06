@@ -22,12 +22,12 @@ global.ImageData = class ImageData {
     this.width = width;
     this.height = height || data.length / (width * 4);
   }
-} as any;
+} as unknown as typeof ImageData;
 
-// Mock Canvas API for testing
+// Mock Canvas API for testing with smaller dimensions
 const mockCanvas = {
-  width: 100,
-  height: 100,
+  width: 10,
+  height: 10,
   getContext: jest.fn(),
   toBlob: jest.fn()
 } as unknown as HTMLCanvasElement;
@@ -38,20 +38,20 @@ const mockContext = {
   drawImage: jest.fn()
 } as unknown as CanvasRenderingContext2D;
 
-// Mock Image constructor
+// Mock Image constructor with smaller test images
 global.Image = class {
   onload: (() => void) | null = null;
   onerror: (() => void) | null = null;
   src = '';
-  width = 100;
-  height = 100;
+  width = 10;
+  height = 10;
   
   constructor() {
     setTimeout(() => {
       if (this.onload) this.onload();
     }, 0);
   }
-} as any;
+} as unknown as typeof Image;
 
 // Mock URL.createObjectURL
 global.URL.createObjectURL = jest.fn(() => 'mock-url');
@@ -61,7 +61,7 @@ global.document.createElement = jest.fn((tagName: string) => {
   if (tagName === 'canvas') {
     return mockCanvas;
   }
-  return {} as any;
+  return {} as unknown as HTMLElement;
 });
 
 describe('imageFilters', () => {
@@ -338,7 +338,7 @@ describe('imageFilters', () => {
             if (this.onerror) this.onerror();
           }, 0);
         }
-      } as any;
+      } as unknown as typeof Image;
 
       const mockFile = new File([''], 'test.jpg', { type: 'image/jpeg' });
       

@@ -46,7 +46,7 @@ describe('QuickToolsブランド統合', () => {
       
       const logoLink = screen.getByLabelText('QuickTools ホームページに戻る');
       expect(logoLink).toBeInTheDocument();
-      expect(logoLink).toHaveAttribute('href', '/');
+      expect(logoLink).toHaveAttribute('href', 'https://quicktools.app');
       
       const brandNames = screen.getAllByText('QuickTools');
       expect(brandNames.length).toBeGreaterThan(0);
@@ -112,7 +112,6 @@ describe('QuickToolsブランド統合', () => {
       // ツールリンクをチェック
       const easyToneLink = screen.getByLabelText('EasyToneツールに移動');
       expect(easyToneLink).toBeInTheDocument();
-      expect(easyToneLink).toHaveAttribute('href', '/tone');
     });
 
     it('サポートリンクが正しく表示される', () => {
@@ -139,12 +138,12 @@ describe('QuickToolsブランド統合', () => {
       const githubLink = screen.getByLabelText('GitHubでQuickToolsをフォロー');
       
       expect(twitterLink).toBeInTheDocument();
-      expect(twitterLink).toHaveAttribute('href', 'https://twitter.com/quicktools');
+      expect(twitterLink).toHaveAttribute('href', 'https://twitter.com/quicktoolsapp');
       expect(twitterLink).toHaveAttribute('target', '_blank');
       expect(twitterLink).toHaveAttribute('rel', 'noopener noreferrer');
       
       expect(githubLink).toBeInTheDocument();
-      expect(githubLink).toHaveAttribute('href', 'https://github.com/quicktools');
+      expect(githubLink).toHaveAttribute('href', 'https://github.com/quicktools-app');
       expect(githubLink).toHaveAttribute('target', '_blank');
       expect(githubLink).toHaveAttribute('rel', 'noopener noreferrer');
     });

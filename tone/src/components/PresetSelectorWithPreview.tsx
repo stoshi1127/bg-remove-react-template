@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ProcessableImage } from '../types/processing';
+
 import { PresetSelector } from './PresetSelector';
 import { PresetPreview } from './PresetPreview';
 import { getPresetById, FILTER_PRESETS } from '../constants/presets';

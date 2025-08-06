@@ -51,7 +51,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   // 画像メタデータの抽出
   const extractImageMetadata = async (file: File): Promise<ImageMetadata> => {
     return new Promise((resolve) => {
-      const img = new Image();
+      const img = new window.Image();
       const url = URL.createObjectURL(file);
       
       img.onload = () => {
@@ -163,7 +163,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     }
     
     setIsProcessing(false);
-  }, [acceptedFormats, maxFileSize, onImagesSelected]);
+  }, [maxFileSize, onImagesSelected, createProcessableImage, processedImages, validateFileFormat, validateFileSize]);
 
   // ドラッグ&ドロップのハンドラー
   const handleDragEnter = useCallback((e: React.DragEvent) => {

@@ -213,7 +213,7 @@ describe('useDownload', () => {
       const { result } = renderHook(() => useDownload());
       const processedImages = [createMockProcessedImage('1', 'photo.jpg', '商品をくっきりと')];
 
-      let progressCallback: ((progress: any) => void) | undefined;
+      let progressCallback: ((progress: { processed: number; total: number; currentFile: string }) => void) | undefined;
       mockDownloadUtils.downloadAllImagesAsZipWithProgress.mockImplementation(
         async (images, onProgress) => {
           progressCallback = onProgress;

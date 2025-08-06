@@ -4,12 +4,11 @@
  */
 
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 
 import { EasyToneApp } from '@/components/EasyToneApp';
-import { WorkflowContainer } from '@/components/WorkflowContainer';
 
 // Mock file utilities
 const createMockFile = (name: string, type: string = 'image/jpeg'): File => {
@@ -48,7 +47,7 @@ beforeAll(() => {
         if (this.onload) this.onload();
       }, 10);
     }
-  } as any;
+  } as unknown as typeof Worker;
 });
 
 describe('Workflow Integration Tests', () => {

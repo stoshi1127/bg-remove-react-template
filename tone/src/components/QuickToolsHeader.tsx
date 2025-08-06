@@ -3,9 +3,12 @@
  * ブランドロゴとナビゲーションリンクを含む統一されたヘッダー
  */
 
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
 import styles from './QuickToolsHeader.module.css';
+import { getOtherServices, trackServiceNavigation, QUICKTOOLS_BRAND } from '../utils/quickToolsIntegration';
 
 interface QuickToolsHeaderProps {
   currentTool?: string;
@@ -16,12 +19,12 @@ const QuickToolsHeader: React.FC<QuickToolsHeaderProps> = ({
   currentTool = 'EasyTone',
   className = '',
 }) => {
-  const quickToolsLinks = [
-    { name: 'BG Remove', href: '/bg-remove', description: '背景除去ツール' },
-    { name: 'Image Resize', href: '/resize', description: '画像リサイズツール' },
-    { name: 'Format Convert', href: '/convert', description: '形式変換ツール' },
-    { name: 'Compress', href: '/compress', description: '画像圧縮ツール' },
-  ];
+  const otherServices = getOtherServices('tone');
+  
+  const handleServiceNavigation = (serviceName: string, serviceUrl: string) => {
+    trackServiceNavigation('tone', serviceName.toLowerCase().replace(' ', '-'));
+    window.open(serviceUrl, '_blank', 'noopener,noreferrer');
+  };
 
   return (
     <header className={`${styles.header} ${className}`} role="banner">
@@ -29,9 +32,11 @@ const QuickToolsHeader: React.FC<QuickToolsHeaderProps> = ({
         {/* QuickTools Logo */}
         <div className={styles.logoSection}>
           <Link 
-            href="/" 
+            href={QUICKTOOLS_BRAND.homeUrl} 
             className={styles.logoLink}
             aria-label="QuickTools ホームページに戻る"
+            target="_blank"
+            rel="noopener noreferrer"
           >
             <div className={styles.logo}>
               <svg
@@ -91,23 +96,23 @@ const QuickToolsHeader: React.FC<QuickToolsHeaderProps> = ({
             </button>
             
             <div className={styles.navDropdownMenu} role="menu">
-              {quickToolsLinks.map((tool) => (
-                <a
-                  key={tool.name}
-                  href={tool.href}
-                  className={`${styles.navDropdownItem} ${
-                    tool.name === currentTool ? styles.navDropdownItemActive : ''
-                  }`}
+              {otherServices.map((service) => (
+                <button
+                  key={service.id}
+                  type="button"
+                  onClick={() => handleServiceNavigation(service.name, service.url)}
+                  className={styles.navDropdownItem}
                   role="menuitem"
-                  aria-current={tool.name === currentTool ? 'page' : undefined}
                 >
                   <div className={styles.navDropdownItemContent}>
-                    <span className={styles.navDropdownItemName}>{tool.name}</span>
+                    <span className={styles.navDropdownItemName}>
+                      {service.icon} {service.name}
+                    </span>
                     <span className={styles.navDropdownItemDescription}>
-                      {tool.description}
+                      {service.description}
                     </span>
                   </div>
-                </a>
+                </button>
               ))}
             </div>
           </div>
@@ -165,22 +170,22 @@ const QuickToolsHeader: React.FC<QuickToolsHeaderProps> = ({
           </div>
           
           <div className={styles.mobileNavLinks}>
-            {quickToolsLinks.map((tool) => (
-              <a
-                key={tool.name}
-                href={tool.href}
-                className={`${styles.mobileNavLink} ${
-                  tool.name === currentTool ? styles.mobileNavLinkActive : ''
-                }`}
-                aria-current={tool.name === currentTool ? 'page' : undefined}
+            {otherServices.map((service) => (
+              <button
+                key={service.id}
+                type="button"
+                onClick={() => handleServiceNavigation(service.name, service.url)}
+                className={styles.mobileNavLink}
               >
                 <div className={styles.mobileNavLinkContent}>
-                  <span className={styles.mobileNavLinkName}>{tool.name}</span>
+                  <span className={styles.mobileNavLinkName}>
+                    {service.icon} {service.name}
+                  </span>
                   <span className={styles.mobileNavLinkDescription}>
-                    {tool.description}
+                    {service.description}
                   </span>
                 </div>
-              </a>
+              </button>
             ))}
           </div>
         </div>

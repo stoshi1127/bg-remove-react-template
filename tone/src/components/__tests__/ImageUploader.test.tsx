@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { ImageUploader } from '../ImageUploader';
-import { ProcessableImage } from '../../types';
+
 
 // Mock URL.createObjectURL and URL.revokeObjectURL
 const mockCreateObjectURL = jest.fn();

@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 import { FilterPreset, FilterConfig } from '../types/filter';
+import { DEFAULT_BLUR_DATA_URL, getResponsiveImageSizes } from '../utils/imageOptimization';
 
 import styles from './PresetPreview.module.css';
 
@@ -57,7 +59,7 @@ export const PresetPreview: React.FC<PresetPreviewProps> = ({
         if (!ctx) return;
 
         // 画像を読み込み
-        const img = new Image();
+        const img = new window.Image();
         img.onload = () => {
           // キャンバスサイズを設定（プレビュー用に小さくする）
           const maxSize = 300;
@@ -89,7 +91,7 @@ export const PresetPreview: React.FC<PresetPreviewProps> = ({
     };
 
     applyPresetPreview();
-  }, [selectedPreset, previewImage]);
+  }, [selectedPreset, previewImage, originalImageUrl]);
 
   if (!selectedPreset) {
     return (
@@ -124,10 +126,16 @@ export const PresetPreview: React.FC<PresetPreviewProps> = ({
           <div className={styles['preset-preview__comparison']}>
             <div className={styles['preset-preview__before']}>
               <h4 className={styles['preset-preview__label']}>処理前</h4>
-              <img
+              <Image
                 src={originalImageUrl!}
                 alt="処理前のプレビュー"
+                width={300}
+                height={200}
                 className={styles['preset-preview__image']}
+                priority={false}
+                placeholder="blur"
+                blurDataURL={DEFAULT_BLUR_DATA_URL}
+                sizes={getResponsiveImageSizes('preview')}
               />
             </div>
             
@@ -140,10 +148,16 @@ export const PresetPreview: React.FC<PresetPreviewProps> = ({
                     <p>プレビュー生成中...</p>
                   </div>
                 ) : previewUrl ? (
-                  <img
+                  <Image
                     src={previewUrl}
                     alt="処理後のプレビュー"
+                    width={300}
+                    height={200}
                     className={styles['preset-preview__image']}
+                    priority={false}
+                    placeholder="blur"
+                    blurDataURL={DEFAULT_BLUR_DATA_URL}
+                    sizes={getResponsiveImageSizes('preview')}
                   />
                 ) : (
                   <div className={styles['preset-preview__error']}>

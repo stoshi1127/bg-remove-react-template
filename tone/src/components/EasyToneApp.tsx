@@ -17,6 +17,8 @@ import ResultViewer from './ResultViewer';
 import { ErrorBoundary } from './ErrorBoundary';
 import { useErrorHandler } from '../hooks/useErrorHandler';
 import Notification from './Notification';
+import ServiceIntegrationStatus from './ServiceIntegrationStatus';
+import RecommendedServices from './RecommendedServices';
 import styles from './EasyToneApp.module.css';
 
 const EasyToneApp: React.FC = () => {
@@ -217,10 +219,30 @@ const EasyToneApp: React.FC = () => {
             )}
 
             {processedImages.length > 0 && (
-              <ResultViewer
-                originalImages={uploadedImages}
-                processedImages={processedImages}
-              />
+              <>
+                <ResultViewer
+                  originalImages={uploadedImages}
+                  processedImages={processedImages}
+                />
+                
+                {/* QuickToolsサービス統合 */}
+                <div className={styles.serviceIntegration}>
+                  <ServiceIntegrationStatus className={styles.integrationStatus} />
+                  
+                  <RecommendedServices
+                    className={styles.recommendedServices}
+                    processedImages={processedImages.map(img => ({
+                      id: img.id,
+                      url: img.processedUrl,
+                      name: img.originalImage.file.name,
+                      metadata: img.originalImage.metadata
+                    }))}
+                    onServiceSelect={(serviceId) => {
+                      console.log(`Navigating to service: ${serviceId}`);
+                    }}
+                  />
+                </div>
+              </>
             )}
           </div>
         );

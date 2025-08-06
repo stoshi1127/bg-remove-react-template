@@ -4,13 +4,12 @@
  */
 
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 
 import { EasyToneApp } from '@/components/EasyToneApp';
 import { heicConverter } from '@/utils/heicConverter';
-import { applyFilters } from '@/utils/imageFilters';
 import { downloadUtils } from '@/utils/downloadUtils';
 import { PRESETS } from '@/constants/presets';
 
@@ -21,13 +20,13 @@ jest.mock('@/utils/downloadUtils');
 const mockHeicConverter = heicConverter as jest.Mocked<typeof heicConverter>;
 const mockDownloadUtils = downloadUtils as jest.Mocked<typeof downloadUtils>;
 
-// Mock file creation utilities
-const createMockFile = (name: string, type: string = 'image/jpeg', size: number = 1000): File => {
+// Mock file creation utilities with smaller test files
+const createMockFile = (name: string, type: string = 'image/jpeg', size: number = 100): File => {
   const content = new Array(size).fill('x').join('');
   return new File([content], name, { type });
 };
 
-const createMockImageData = (width: number = 100, height: number = 100): ImageData => {
+const createMockImageData = (width: number = 10, height: number = 10): ImageData => {
   const data = new Uint8ClampedArray(width * height * 4);
   for (let i = 0; i < data.length; i += 4) {
     data[i] = 255;     // R
@@ -73,7 +72,7 @@ beforeAll(() => {
         if (this.onload) this.onload();
       }, 10);
     }
-  } as any;
+  } as unknown as typeof Worker;
 });
 
 beforeEach(() => {
@@ -282,7 +281,7 @@ describe('File Processing Pipeline Integration Tests', () => {
       await user.upload(fileInput, [file]);
 
       // Test each preset
-      for (const [presetId, preset] of Object.entries(PRESETS)) {
+      for (const [, preset] of Object.entries(PRESETS)) {
         await waitFor(() => {
           expect(screen.getByText(preset.name)).toBeInTheDocument();
         });

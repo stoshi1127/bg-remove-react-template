@@ -293,4 +293,34 @@
   .resetButton:hover {
     transform: none;
   }
+}/* サービ
+ス統合セクション */
+.serviceIntegration {
+  margin-top: var(--qt-space-8);
+  padding-top: var(--qt-space-6);
+  border-top: 1px solid var(--qt-gray-200);
+}
+
+.integrationStatus {
+  margin-bottom: var(--qt-space-4);
+}
+
+.recommendedServices {
+  margin-top: var(--qt-space-4);
+}
+
+/* レスポンシブデザイン */
+@media (max-width: 768px) {
+  .serviceIntegration {
+    margin-top: var(--qt-space-6);
+    padding-top: var(--qt-space-4);
+  }
+  
+  .integrationStatus {
+    margin-bottom: var(--qt-space-3);
+  }
+  
+  .recommendedServices {
+    margin-top: var(--qt-space-3);
+  }
 }

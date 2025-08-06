@@ -2,7 +2,7 @@
  * 通知・フィードバック表示コンポーネント
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import styles from './Notification.module.css';
 
 interface NotificationProps {
@@ -27,6 +27,14 @@ const Notification: React.FC<NotificationProps> = ({
   const [isVisible, setIsVisible] = useState(true);
   const [isExiting, setIsExiting] = useState(false);
 
+  const handleClose = useCallback(() => {
+    setIsExiting(true);
+    setTimeout(() => {
+      setIsVisible(false);
+      onClose?.();
+    }, 300); // アニメーション時間と合わせる
+  }, [onClose]);
+
   useEffect(() => {
     if (autoClose && duration > 0) {
       const timer = setTimeout(() => {
@@ -35,15 +43,7 @@ const Notification: React.FC<NotificationProps> = ({
 
       return () => clearTimeout(timer);
     }
-  }, [duration, autoClose]);
-
-  const handleClose = () => {
-    setIsExiting(true);
-    setTimeout(() => {
-      setIsVisible(false);
-      onClose?.();
-    }, 300); // アニメーション時間と合わせる
-  };
+  }, [duration, autoClose, handleClose]);
 
   if (!isVisible) return null;
 

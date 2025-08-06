@@ -35,7 +35,7 @@ export interface WorkerResponse {
 
 // Web Worker内でのImageData実装（Node.js環境対応）
 if (typeof ImageData === 'undefined') {
-  (globalThis as unknown as { ImageData: typeof ImageData }).ImageData = class ImageData {
+  class CustomImageData {
     data: Uint8ClampedArray;
     width: number;
     height: number;
@@ -45,7 +45,9 @@ if (typeof ImageData === 'undefined') {
       this.width = width;
       this.height = height || data.length / (width * 4);
     }
-  };
+  }
+  
+  (globalThis as { ImageData?: typeof CustomImageData }).ImageData = CustomImageData;
 }
 
 /**
@@ -95,9 +97,7 @@ self.onmessage = function(event: MessageEvent<WorkerMessage>) {
     try {
       const { imageData, filterConfig, width, height } = payload;
       
-      const startTime = performance.now();
       const processedImageData = processImageInWorker(imageData, filterConfig, width, height);
-      const endTime = performance.now();
 
       const response: WorkerResponse = {
         id,

@@ -39,7 +39,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     };
   }
 
-  static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
+  static getDerivedStateFromError(_error: Error): Partial<ErrorBoundaryState> {
     // エラーが発生したことを示すstate更新
     return {
       hasError: true,
@@ -52,8 +52,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       component: 'ErrorBoundary',
       action: 'componentDidCatch',
       timestamp: Date.now(),
-      userAgent: navigator.userAgent,
-      url: window.location.href,
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+      url: typeof window !== 'undefined' ? window.location.href : '',
       additionalInfo: {
         componentStack: errorInfo.componentStack,
         errorBoundary: true
@@ -204,7 +204,7 @@ const DefaultErrorFallback: React.FC<DefaultErrorFallbackProps> = ({
         
         <button
           className={styles.reloadButton}
-          onClick={() => window.location.reload()}
+          onClick={() => typeof window !== 'undefined' && window.location.reload()}
           aria-label="ページを再読み込み"
         >
           ページを再読み込み

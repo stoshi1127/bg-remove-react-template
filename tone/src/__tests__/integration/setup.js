@@ -49,7 +49,7 @@ global.FileReader = class MockFileReader {
     }, 10);
   }
   
-  readAsArrayBuffer(file) {
+  readAsArrayBuffer() {
     setTimeout(() => {
       this.result = new ArrayBuffer(8);
       if (this.onload) {

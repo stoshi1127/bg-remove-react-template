@@ -10,7 +10,7 @@ import PresetSelector from '../PresetSelector';
 import ResultViewer from '../ResultViewer';
 import WorkflowSteps from '../WorkflowSteps';
 import { FILTER_PRESETS } from '../../constants/presets';
-import { WORKFLOW_STEPS } from '../../types/workflow';
+
 import { ProcessableImage, ProcessedImage } from '../../types/processing';
 
 // モックデータ

@@ -5,8 +5,7 @@ import {
   classifyProcessingError,
   attemptErrorRecovery,
   generateUserFriendlyMessage,
-  ErrorStatistics,
-  SUPPORTED_FILE_TYPES
+  ErrorStatistics
 } from '../errorHandling';
 
 /**
@@ -30,8 +29,14 @@ Object.defineProperty(global, 'navigator', {
   writable: true
 });
 
-Object.defineProperty(global, 'window', {
-  value: mockWindow,
+// Mock window properties
+Object.defineProperty(window, 'location', {
+  value: mockWindow.location,
+  writable: true
+});
+
+Object.defineProperty(window, 'gtag', {
+  value: mockWindow.gtag,
   writable: true
 });
 
@@ -100,7 +105,7 @@ describe('Browser Capabilities', () => {
     });
 
     it('should return error for missing required capabilities', () => {
-      jest.spyOn(require('../errorHandling'), 'checkBrowserCapabilities').mockReturnValue({
+      jest.spyOn({ checkBrowserCapabilities }, 'checkBrowserCapabilities').mockReturnValue({
         webWorkers: true,
         canvas: false, // Missing required capability
         fileAPI: true,
@@ -116,7 +121,7 @@ describe('Browser Capabilities', () => {
     });
 
     it('should return warning for missing Web Workers', () => {
-      jest.spyOn(require('../errorHandling'), 'checkBrowserCapabilities').mockReturnValue({
+      jest.spyOn({ checkBrowserCapabilities }, 'checkBrowserCapabilities').mockReturnValue({
         webWorkers: false, // Missing recommended capability
         canvas: true,
         fileAPI: true,

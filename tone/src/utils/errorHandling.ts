@@ -62,7 +62,7 @@ export function checkBrowserCapabilities(): BrowserCapabilities {
   try {
     // Web Workers サポート
     capabilities.webWorkers = typeof Worker !== 'undefined';
-  } catch (e) {
+  } catch {
     capabilities.webWorkers = false;
   }
 
@@ -70,14 +70,14 @@ export function checkBrowserCapabilities(): BrowserCapabilities {
     // Canvas サポート
     const canvas = document.createElement('canvas');
     capabilities.canvas = !!(canvas.getContext && canvas.getContext('2d'));
-  } catch (e) {
+  } catch {
     capabilities.canvas = false;
   }
 
   try {
     // File API サポート
-    capabilities.fileAPI = !!(window.File && window.FileReader && window.FileList && window.Blob);
-  } catch (e) {
+    capabilities.fileAPI = typeof window !== 'undefined' && !!(window.File && window.FileReader && window.FileList && window.Blob);
+  } catch {
     capabilities.fileAPI = false;
   }
 
@@ -86,21 +86,21 @@ export function checkBrowserCapabilities(): BrowserCapabilities {
     const canvas = document.createElement('canvas');
     const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
     capabilities.webGL = !!gl;
-  } catch (e) {
+  } catch {
     capabilities.webGL = false;
   }
 
   try {
     // ImageData サポート
     capabilities.imageData = typeof ImageData !== 'undefined';
-  } catch (e) {
+  } catch {
     capabilities.imageData = false;
   }
 
   try {
     // OffscreenCanvas サポート
     capabilities.offscreenCanvas = typeof OffscreenCanvas !== 'undefined';
-  } catch (e) {
+  } catch {
     capabilities.offscreenCanvas = false;
   }
 
@@ -115,8 +115,8 @@ export function validateFileFormat(file: File): ProcessingError | null {
     component: 'FileValidator',
     action: 'validateFormat',
     timestamp: Date.now(),
-    userAgent: navigator.userAgent,
-    url: window.location.href,
+    userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+    url: typeof window !== 'undefined' ? window.location.href : '',
     additionalInfo: {
       fileName: file.name,
       fileType: file.type,
@@ -199,8 +199,8 @@ export function checkBrowserCompatibility(): ProcessingError | null {
     component: 'BrowserCompatibilityChecker',
     action: 'checkCompatibility',
     timestamp: Date.now(),
-    userAgent: navigator.userAgent,
-    url: window.location.href,
+    userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+    url: typeof window !== 'undefined' ? window.location.href : '',
     additionalInfo: { capabilities }
   };
 
@@ -313,7 +313,7 @@ export function classifyProcessingError(error: Error, context: ErrorContext): Pr
 export const errorRecoveryStrategies: Record<ProcessingError['type'], ErrorRecoveryStrategy> = {
   FILE_FORMAT: {
     canRecover: (error) => error.recoverable,
-    recover: async (error, retryCount) => {
+    recover: async () => {
       // ファイル形式エラーは基本的に回復不可能
       return false;
     },
@@ -346,8 +346,8 @@ export const errorRecoveryStrategies: Record<ProcessingError['type'], ErrorRecov
   },
 
   BROWSER_COMPATIBILITY: {
-    canRecover: (error) => false,
-    recover: async (error, retryCount) => {
+    canRecover: () => false,
+    recover: async () => {
       // ブラウザ互換性エラーは回復不可能
       return false;
     },

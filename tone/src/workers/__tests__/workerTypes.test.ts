@@ -18,7 +18,7 @@ global.ImageData = class ImageData {
     this.width = width;
     this.height = height || data.length / (width * 4);
   }
-} as any;
+} as unknown as typeof ImageData;
 
 describe('Worker Types', () => {
   describe('WorkerMessage', () => {

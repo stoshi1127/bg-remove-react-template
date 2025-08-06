@@ -1,7 +1,5 @@
 import type {
   ImageMetadata,
-  ProcessableImage,
-  ProcessedImage,
   FilterConfig,
   FilterPreset,
 } from '../index';

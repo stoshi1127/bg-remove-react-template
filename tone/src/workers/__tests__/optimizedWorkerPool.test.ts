@@ -25,17 +25,22 @@ Object.defineProperty(navigator, 'hardwareConcurrency', {
   configurable: true
 });
 
-// Mock Worker
+// Mock Worker with memory management
 class MockWorker {
   onmessage: ((event: MessageEvent) => void) | null = null;
   onerror: ((event: ErrorEvent) => void) | null = null;
+  private static instanceCount = 0;
+  private static readonly MAX_INSTANCES = 2; // Limit concurrent workers in tests
   
-  constructor(scriptURL: string) {
-    // Simulate worker creation
+  constructor() {
+    if (MockWorker.instanceCount >= MockWorker.MAX_INSTANCES) {
+      throw new Error('Too many worker instances in test');
+    }
+    MockWorker.instanceCount++;
   }
   
-  postMessage(message: any) {
-    // Simulate async processing
+  postMessage(message: unknown) {
+    // Simulate async processing with shorter timeout to prevent hanging
     setTimeout(() => {
       if (this.onmessage) {
         const response = {
@@ -43,8 +48,8 @@ class MockWorker {
             id: message.id,
             type: 'PROCESS_COMPLETE',
             payload: {
-              imageData: new ImageData(100, 100),
-              processingTime: 100
+              imageData: new ImageData(10, 10), // Smaller test image
+              processingTime: 10 // Faster processing time
             }
           }
         };
@@ -54,7 +59,13 @@ class MockWorker {
   }
   
   terminate() {
-    // Cleanup
+    MockWorker.instanceCount--;
+    this.onmessage = null;
+    this.onerror = null;
+  }
+  
+  static resetInstanceCount() {
+    MockWorker.instanceCount = 0;
   }
 }
 
@@ -63,7 +74,7 @@ global.URL.createObjectURL = jest.fn(() => 'mock-url');
 global.URL.revokeObjectURL = jest.fn();
 
 // Mock Worker constructor
-(global as any).Worker = MockWorker;
+(global as unknown as { Worker: typeof Worker }).Worker = MockWorker as unknown as typeof Worker;
 
 // Mock Canvas and ImageData
 class MockImageData {
@@ -78,7 +89,7 @@ class MockImageData {
   }
 }
 
-(global as any).ImageData = MockImageData;
+(global as unknown as { ImageData: typeof ImageData }).ImageData = MockImageData as unknown as typeof ImageData;
 
 // Mock Canvas
 const mockCanvas = {
@@ -106,13 +117,20 @@ describe('OptimizedImageProcessingWorkerPool', () => {
   
   beforeEach(() => {
     jest.clearAllMocks();
+    (MockWorker as unknown as { resetInstanceCount: () => void }).resetInstanceCount();
     workerPool = new OptimizedImageProcessingWorkerPool(2);
   });
   
-  afterEach(() => {
+  afterEach(async () => {
     if (workerPool) {
       workerPool.destroy();
     }
+    // Force garbage collection if available
+    if (global.gc) {
+      global.gc();
+    }
+    // Wait a bit for cleanup
+    await new Promise(resolve => setTimeout(resolve, 10));
   });
 
   describe('Initialization', () => {
@@ -202,8 +220,8 @@ describe('OptimizedImageProcessingWorkerPool', () => {
       const errorWorkerPool = new OptimizedImageProcessingWorkerPool(1);
       
       // Override worker creation to simulate error
-      const originalWorkers = (errorWorkerPool as any).pool.workers;
-      originalWorkers[0].postMessage = function(message: any) {
+      const originalWorkers = (errorWorkerPool as unknown as { pool: { workers: MockWorker[] } }).pool.workers;
+      originalWorkers[0].postMessage = function(message: unknown) {
         setTimeout(() => {
           if (this.onmessage) {
             const errorResponse = {
@@ -320,7 +338,7 @@ describe('OptimizedImageProcessingWorkerPool', () => {
   describe('Optimization Features', () => {
     it('should use optimized worker script', () => {
       // Test that the worker script contains optimization keywords
-      const workerScript = (workerPool as any).getOptimizedWorkerScript();
+      const workerScript = (workerPool as unknown as { getOptimizedWorkerScript: () => string }).getOptimizedWorkerScript();
       
       expect(workerScript).toContain('applyBrightnessOptimized');
       expect(workerScript).toContain('applyContrastOptimized');

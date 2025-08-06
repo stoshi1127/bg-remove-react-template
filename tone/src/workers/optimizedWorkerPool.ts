@@ -6,7 +6,6 @@ import {
   getMemoryUsage,
   calculateOptimalConcurrency,
   performMemoryCleanup,
-  calculateProcessingMetrics,
   DEFAULT_OPTIMIZATION_CONFIG,
   ImageOptimizationConfig,
   ProcessingMetrics

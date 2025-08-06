@@ -145,10 +145,15 @@
 
 .navDropdownItem {
   display: block;
+  width: 100%;
   padding: var(--qt-space-3) var(--qt-space-4);
   text-decoration: none;
   color: var(--qt-neutral-700);
+  border: none;
   border-bottom: 1px solid var(--qt-neutral-100);
+  background: none;
+  cursor: pointer;
+  text-align: left;
   transition: all var(--qt-transition-base);
 }
 
@@ -307,10 +312,15 @@
 
 .mobileNavLink {
   display: block;
+  width: 100%;
   padding: var(--qt-space-4);
   text-decoration: none;
   color: var(--qt-neutral-700);
+  border: none;
   border-bottom: 1px solid var(--qt-neutral-100);
+  background: none;
+  cursor: pointer;
+  text-align: left;
   transition: all var(--qt-transition-base);
 }
 

@@ -1,0 +1,62 @@
+{
+  "name": "EasyTone - 簡単画像トーン調整",
+  "short_name": "EasyTone",
+  "description": "3ステップで簡単に画像にプロのようなトーンを適用。複数の写真を一括処理できる無料のオンライン画像編集ツール。",
+  "start_url": "/tone",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "orientation": "portrait-primary",
+  "scope": "/tone/",
+  "lang": "ja",
+  "categories": ["photo", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/tone/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/tone/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/tone/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/tone/screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "EasyTone メイン画面"
+    },
+    {
+      "src": "/tone/screenshot-narrow.png",
+      "sizes": "640x1136",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "EasyTone モバイル画面"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "画像アップロード",
+      "short_name": "アップロード",
+      "description": "画像をアップロードして処理を開始",
+      "url": "/tone?step=upload",
+      "icons": [
+        {
+          "src": "/tone/shortcut-upload.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ]
+}

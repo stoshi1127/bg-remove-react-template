@@ -26,7 +26,7 @@ global.ImageData = class ImageData {
     this.width = width;
     this.height = height || data.length / (width * 4);
   }
-} as any;
+} as unknown as typeof ImageData;
 
 const mockImageData = new ImageData(new Uint8ClampedArray(100 * 100 * 4), 100, 100);
 
@@ -43,7 +43,7 @@ global.Image = class {
       if (this.onload) this.onload();
     }, 0);
   }
-} as any;
+} as unknown as typeof Image;
 
 // Mock URL.createObjectURL and revokeObjectURL
 global.URL.createObjectURL = jest.fn(() => 'mock-worker-url');
@@ -54,7 +54,7 @@ global.document.createElement = jest.fn((tagName: string) => {
   if (tagName === 'canvas') {
     return mockCanvas;
   }
-  return {} as any;
+  return {} as unknown as HTMLElement;
 });
 
 // Mock Worker
@@ -64,7 +64,7 @@ class MockWorker {
   
   constructor(public url: string) {}
   
-  postMessage(data: any) {
+  postMessage(data: unknown) {
     // Simulate async processing
     setTimeout(() => {
       if (this.onmessage) {
@@ -87,7 +87,7 @@ class MockWorker {
   }
 }
 
-global.Worker = MockWorker as any;
+global.Worker = MockWorker as unknown as typeof Worker;
 
 // Mock navigator.hardwareConcurrency
 Object.defineProperty(navigator, 'hardwareConcurrency', {
@@ -175,12 +175,12 @@ describe('ImageProcessingWorkerPool', () => {
       // Mock worker to return error
       const originalWorker = global.Worker;
       global.Worker = class extends MockWorker {
-        postMessage(data: any) {
+        postMessage(data: unknown) {
           setTimeout(() => {
             if (this.onmessage) {
               const response = {
                 data: {
-                  id: data.id,
+                  id: (data as { id: string }).id,
                   type: 'PROCESS_ERROR',
                   payload: {
                     error: 'Processing failed'
@@ -191,7 +191,7 @@ describe('ImageProcessingWorkerPool', () => {
             }
           }, 10);
         }
-      } as any;
+      } as unknown as typeof Worker;
 
       workerPool.destroy();
       workerPool = new ImageProcessingWorkerPool(1);
@@ -267,19 +267,19 @@ describe('ImageProcessingWorkerPool', () => {
       let messageCount = 0;
       const originalWorker = global.Worker;
       global.Worker = class extends MockWorker {
-        postMessage(data: any) {
+        postMessage(data: unknown) {
           messageCount++;
           setTimeout(() => {
             if (this.onmessage) {
               const response = messageCount === 2 ? {
                 data: {
-                  id: data.id,
+                  id: (data as { id: string }).id,
                   type: 'PROCESS_ERROR',
                   payload: { error: 'Processing failed' }
                 }
               } : {
                 data: {
-                  id: data.id,
+                  id: (data as { id: string }).id,
                   type: 'PROCESS_COMPLETE',
                   payload: { imageData: mockImageData }
                 }
@@ -288,7 +288,7 @@ describe('ImageProcessingWorkerPool', () => {
             }
           }, 10);
         }
-      } as any;
+      } as unknown as typeof Worker;
 
       workerPool.destroy();
       workerPool = new ImageProcessingWorkerPool(2);
@@ -394,11 +394,11 @@ describe('ImageProcessingWorkerPool', () => {
       };
 
       // Simulate worker error
-      const workers = (workerPool as any).pool.workers;
+      const workers = (workerPool as unknown as { pool: { workers: MockWorker[] } }).pool.workers;
       const worker = workers[0];
       
       // Start processing
-      const promise = workerPool.processImage(mockFile, filterConfig);
+      workerPool.processImage(mockFile, filterConfig);
       
       // Trigger worker error
       setTimeout(() => {

@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { ProcessableImage } from '../types';
+import { DEFAULT_BLUR_DATA_URL, getResponsiveImageSizes } from '../utils/imageOptimization';
 
 interface ImagePreviewProps {
   images: ProcessableImage[];
@@ -55,11 +57,16 @@ export const ImagePreview: React.FC<ImagePreviewProps> = ({
           >
             {/* 画像サムネイル */}
             <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 border-transparent hover:border-blue-300 transition-colors">
-              <img
+              <Image
                 src={image.originalUrl}
                 alt={image.file.name}
+                width={200}
+                height={200}
                 className="w-full h-full object-cover"
-                loading="lazy"
+                priority={false}
+                placeholder="blur"
+                blurDataURL={DEFAULT_BLUR_DATA_URL}
+                sizes={getResponsiveImageSizes('thumbnail')}
               />
             </div>
 
@@ -140,10 +147,16 @@ export const ImagePreview: React.FC<ImagePreviewProps> = ({
               {/* 画像表示エリア */}
               <div className="flex-1 p-4">
                 <div className="flex items-center justify-center bg-gray-50 rounded-lg min-h-96">
-                  <img
+                  <Image
                     src={selectedImage.originalUrl}
                     alt={selectedImage.file.name}
+                    width={800}
+                    height={600}
                     className="max-w-full max-h-96 object-contain"
+                    priority={true}
+                    placeholder="blur"
+                    blurDataURL={DEFAULT_BLUR_DATA_URL}
+                    sizes={getResponsiveImageSizes('fullsize')}
                   />
                 </div>
               </div>

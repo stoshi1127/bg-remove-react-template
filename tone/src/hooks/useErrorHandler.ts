@@ -76,8 +76,8 @@ export function useErrorHandler(options: UseErrorHandlerOptions = {}): [ErrorHan
         component: 'useErrorHandler',
         action: 'handleError',
         timestamp: Date.now(),
-        userAgent: navigator.userAgent,
-        url: window.location.href,
+        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+        url: typeof window !== 'undefined' ? window.location.href : '',
         ...contextOverride
       };
       processingError = classifyProcessingError(error as Error, context);

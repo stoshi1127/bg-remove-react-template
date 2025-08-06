@@ -1,6 +1,15 @@
 import React, { useState, useCallback } from 'react';
+import Image from 'next/image';
 import { ProcessableImage, ProcessedImage } from '../types/processing';
 import { useDownload } from '../hooks/useDownload';
+import dynamic from 'next/dynamic';
+
+// Lazy load RecommendedServices for better performance
+const RecommendedServices = dynamic(() => import('./RecommendedServices'), {
+  loading: () => <div className="animate-pulse bg-gray-200 h-32 rounded-lg" />,
+  ssr: false
+});
+import { DEFAULT_BLUR_DATA_URL, getResponsiveImageSizes } from '../utils/imageOptimization';
 import styles from './ResultViewer.module.css';
 
 /**
@@ -290,9 +299,11 @@ const ResultViewer: React.FC<ResultViewerProps> = ({
               <div className={styles.comparison}>
                 <div className={styles.imageContainer}>
                   <div className={styles.imageLabel} aria-hidden="true">処理前</div>
-                  <img
+                  <Image
                     src={originalImage.originalUrl}
                     alt={`処理前: ${originalImage.file.name}`}
+                    width={400}
+                    height={300}
                     className={styles.image}
                     onClick={() => openPreview(processedImage.id)}
                     onKeyDown={(e) => {
@@ -304,13 +315,19 @@ const ResultViewer: React.FC<ResultViewerProps> = ({
                     tabIndex={0}
                     role="button"
                     aria-label={`処理前の画像を拡大表示: ${originalImage.file.name}`}
+                    priority={false}
+                    placeholder="blur"
+                    blurDataURL={DEFAULT_BLUR_DATA_URL}
+                    sizes={getResponsiveImageSizes('preview')}
                   />
                 </div>
                 <div className={styles.imageContainer}>
                   <div className={styles.imageLabel} aria-hidden="true">処理後</div>
-                  <img
+                  <Image
                     src={processedImage.processedUrl}
                     alt={`処理後: ${originalImage.file.name}`}
+                    width={400}
+                    height={300}
                     className={styles.image}
                     onClick={() => openPreview(processedImage.id)}
                     onKeyDown={(e) => {
@@ -322,6 +339,10 @@ const ResultViewer: React.FC<ResultViewerProps> = ({
                     tabIndex={0}
                     role="button"
                     aria-label={`処理後の画像を拡大表示: ${originalImage.file.name}`}
+                    priority={false}
+                    placeholder="blur"
+                    blurDataURL={DEFAULT_BLUR_DATA_URL}
+                    sizes={getResponsiveImageSizes('preview')}
                   />
                 </div>
               </div>
@@ -461,13 +482,18 @@ const ResultViewer: React.FC<ResultViewerProps> = ({
                   </button>
                 )}
 
-                <img
-                  src={previewState.showOriginal 
+                <Image
+                  src={(previewState.showOriginal 
                     ? previewImage.originalImage?.originalUrl 
-                    : previewImage.processedImage?.processedUrl
-                  }
+                    : previewImage.processedImage?.processedUrl) || ''}
                   alt={previewState.showOriginal ? '処理前の画像' : '処理後の画像'}
+                  width={800}
+                  height={600}
                   className={styles.previewImage}
+                  priority={true}
+                  placeholder="blur"
+                  blurDataURL={DEFAULT_BLUR_DATA_URL}
+                  sizes={getResponsiveImageSizes('fullsize')}
                 />
 
                 {/* 右側ナビゲーション */}
@@ -528,6 +554,11 @@ const ResultViewer: React.FC<ResultViewerProps> = ({
         <div className={styles.emptyState}>
           <p>処理済みの画像がありません</p>
         </div>
+      )}
+
+      {/* 推奨サービス */}
+      {processedImages.length > 0 && (
+        <RecommendedServices />
       )}
     </div>
   );

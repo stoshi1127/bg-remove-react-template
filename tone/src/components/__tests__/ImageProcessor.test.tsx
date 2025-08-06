@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import '@testing-library/jest-dom';
 import { ImageProcessor } from '../ImageProcessor';
 import { FilterPreset } from '../../types/filter';
-import { ProcessableImage, BatchProcessingResult } from '../../types/processing';
+import { ProcessableImage } from '../../types/processing';
 import { ImageProcessingWorkerPool } from '../../workers/workerPool';
 
 // Mock the worker pool

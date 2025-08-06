@@ -3,12 +3,12 @@
  */
 
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import QuickToolsHeader from '../QuickToolsHeader';
 import QuickToolsFooter from '../QuickToolsFooter';
 import WorkflowSteps from '../WorkflowSteps';
-import { WorkflowStep } from '../../types/workflow';
+
 
 // QuickToolsテーマのCSS変数をテスト用にモック
 const mockQuickToolsTheme = () => {
@@ -89,7 +89,6 @@ describe('UI統合テスト', () => {
       expect(buttons.length).toBeGreaterThan(0);
       
       buttons.forEach(button => {
-        const computedStyle = getComputedStyle(button);
         // トランジションが設定されていることを確認
         expect(button).toBeInTheDocument();
       });
@@ -114,7 +113,6 @@ describe('UI統合テスト', () => {
       
       // 各ステップにトランジション効果が適用されていることを確認
       steps.forEach(step => {
-        const computedStyle = getComputedStyle(step);
         expect(step).toBeInTheDocument();
       });
     });
@@ -142,7 +140,7 @@ describe('UI統合テスト', () => {
             rule.type === CSSRule.KEYFRAMES_RULE ||
             (rule as CSSStyleRule).selectorText?.includes('qt-animate')
           );
-        } catch (e) {
+        } catch {
           return false;
         }
       });

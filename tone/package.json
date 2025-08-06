@@ -7,18 +7,22 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:unit": "jest --selectProjects unit",
-    "test:integration": "jest --selectProjects integration",
-    "test:integration:run": "ts-node src/__tests__/integration/runIntegrationTests.ts",
-    "test:coverage": "jest --coverage",
-    "test:all": "jest --selectProjects unit integration",
+    "test": "node --max-old-space-size=2048 node_modules/.bin/jest --maxWorkers=2",
+    "test:watch": "node --max-old-space-size=1024 node_modules/.bin/jest --watch --maxWorkers=1",
+    "test:unit": "node --max-old-space-size=1024 node_modules/.bin/jest --selectProjects unit --maxWorkers=2",
+    "test:integration": "node --max-old-space-size=2048 node_modules/.bin/jest --selectProjects integration --maxWorkers=1",
+    "test:integration:run": "node --max-old-space-size=1024 ts-node src/__tests__/integration/runIntegrationTests.ts",
+    "test:coverage": "node --max-old-space-size=2048 node_modules/.bin/jest --coverage --maxWorkers=1",
+    "test:all": "node --max-old-space-size=2048 node_modules/.bin/jest --selectProjects unit integration --maxWorkers=2",
+    "test:safe": "node --max-old-space-size=1024 node_modules/.bin/jest --maxWorkers=1 --runInBand",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:debug": "playwright test --debug",
-    "test:e2e:report": "playwright show-report"
+    "test:e2e:report": "playwright show-report",
+    "analyze": "ANALYZE=true npm run build",
+    "analyze:server": "BUNDLE_ANALYZE=server npm run build",
+    "analyze:browser": "BUNDLE_ANALYZE=browser npm run build"
   },
   "dependencies": {
     "heic2any": "^0.0.4",
@@ -40,6 +44,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "critters": "^0.0.23",
     "eslint": "^9",
     "eslint-config-next": "15.4.5",
     "jest": "^30.0.5",
@@ -47,6 +52,7 @@
     "jest-environment-jsdom": "^30.0.5",
     "tailwindcss": "^4",
     "ts-jest": "^29.4.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "webpack-bundle-analyzer": "^4.10.2"
   }
 }

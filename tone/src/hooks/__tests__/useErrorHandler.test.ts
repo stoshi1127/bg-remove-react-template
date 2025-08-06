@@ -18,8 +18,9 @@ Object.defineProperty(global, 'navigator', {
   writable: true
 });
 
-Object.defineProperty(global, 'window', {
-  value: { location: { href: 'http://localhost:3000' } },
+// Mock window.location
+Object.defineProperty(window, 'location', {
+  value: { href: 'http://localhost:3000' },
   writable: true
 });
 
