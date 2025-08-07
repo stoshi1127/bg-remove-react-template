@@ -1,0 +1,884 @@
+/* プリセット画像プレビューコンポーネントのスタイル */
+
+.presetImagePreview {
+  width: 100%;
+  padding: 1.5rem;
+  background: var(--color-surface);
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+}
+
+.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: var(--color-text-secondary);
+  text-align: center;
+  font-size: 1rem;
+}
+
+.header {
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 0 0 0.5rem 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.icon {
+  font-size: 1.5rem;
+}
+
+.description {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+}
+
+.imageGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+.imageItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--color-background);
+  border-radius: 8px;
+  border: 1px solid var(--color-border-light);
+  transition: all 0.2s ease;
+}
+
+.imageItem:hover {
+  border-color: var(--color-primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.imageComparison {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.beforeImage,
+.afterImage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.imageLabel {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.image {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--color-border-light);
+  transition: transform 0.2s ease;
+}
+
+.image:hover {
+  transform: scale(1.02);
+}
+
+.arrow {
+  font-size: 1.5rem;
+  color: var(--color-primary);
+  font-weight: bold;
+  margin: 0 0.5rem;
+  flex-shrink: 0;
+}
+
+.previewContainer {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  border: 1px solid var(--color-border-light);
+  background: var(--color-surface);
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-text-secondary);
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--color-border);
+  border-top: 2px solid var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loadingText {
+  font-size: 0.8rem;
+}
+
+.error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--color-error);
+  font-size: 0.8rem;
+  padding: 1rem;
+}
+
+.imageName {
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  word-break: break-word;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ホバー効果とクリック機能の強化 */
+.imageWrapper {
+  position: relative;
+  cursor: pointer;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+  background: var(--color-surface);
+  /* パフォーマンス最適化 */
+  will-change: transform, box-shadow;
+  backface-visibility: hidden;
+}
+
+.imageWrapper:hover {
+  transform: scale(1.05) translateZ(0);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15), 0 4px 10px rgba(0, 0, 0, 0.1);
+  z-index: 2;
+}
+
+.imageWrapper:focus {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+  transform: scale(1.02) translateZ(0);
+}
+
+.imageWrapper:active {
+  transform: scale(0.98) translateZ(0);
+  transition: transform 0.1s ease;
+}
+
+.clickableImage {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  filter: brightness(1);
+}
+
+.imageWrapper:hover .clickableImage {
+  filter: brightness(1.05);
+}
+
+.hoverOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.5));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  backdrop-filter: blur(2px);
+}
+
+.imageWrapper:hover .hoverOverlay {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.expandIcon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  animation: pulse 2s infinite;
+}
+
+.expandText {
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.5px;
+}
+
+.hovered {
+  transform: translateY(-4px) translateZ(0);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15), 0 6px 15px rgba(0, 0, 0, 0.1);
+  z-index: 3;
+}
+
+/* パルスアニメーション */
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+/* モーダル */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  animation: fadeIn 0.2s ease;
+}
+
+.modalContent {
+  background: var(--color-surface);
+  border-radius: 12px;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  animation: slideIn 0.2s ease;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.modalTitle {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  word-break: break-word;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  margin-left: 1rem;
+}
+
+.closeButton:hover {
+  background: var(--color-background);
+  color: var(--color-text-primary);
+}
+
+.closeButton:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.modalBody {
+  padding: 1.5rem;
+}
+
+.expandedComparison {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.expandedBefore,
+.expandedAfter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.expandedLabel {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  text-align: center;
+}
+
+.expandedImage {
+  max-width: 400px;
+  max-height: 400px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.expandedPlaceholder {
+  width: 400px;
+  height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  color: var(--color-text-secondary);
+}
+
+.modalNavigation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.navButton {
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.navButton:hover {
+  background: var(--color-primary-dark);
+  transform: translateY(-1px);
+}
+
+.navButton:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.imageCounter {
+  font-weight: 500;
+  color: var(--color-text-primary);
+  padding: 0 1rem;
+}
+
+.modalInstructions {
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  margin-top: 1rem;
+}
+
+.modalInstructions p {
+  margin: 0;
+}
+
+/* アニメーション */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { 
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to { 
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* グリッドレイアウトの最適化 */
+.imageGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 0.5rem;
+  scroll-behavior: smooth;
+  /* パフォーマンス最適化 */
+  contain: layout style;
+  will-change: scroll-position;
+}
+
+/* 効率的なグリッド表示のための調整 */
+@media (min-width: 768px) {
+  .imageGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .imageGrid {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 900px;
+    margin: 0 auto;
+    gap: 1.5rem;
+  }
+}
+
+@media (min-width: 1200px) {
+  .imageGrid {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+}
+
+@media (min-width: 1600px) {
+  .imageGrid {
+    grid-template-columns: repeat(3, 1fr);
+    max-width: 1400px;
+    gap: 2rem;
+  }
+}
+
+/* レスポンシブデザインの強化 */
+@media (max-width: 768px) {
+  .presetImagePreview {
+    padding: 1rem;
+  }
+
+  .imageGrid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    max-height: 55vh;
+    /* モバイル用スクロール最適化 */
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  .imageComparison {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .arrow {
+    transform: rotate(90deg);
+    margin: 0;
+    font-size: 1.25rem;
+  }
+
+  .image,
+  .previewContainer {
+    width: 140px;
+    height: 140px;
+  }
+
+  .title {
+    font-size: 1.1rem;
+    line-height: 1.3;
+  }
+
+  .description {
+    font-size: 0.85rem;
+    line-height: 1.4;
+  }
+
+  /* モバイル用ホバー効果の調整 */
+  .imageWrapper:hover {
+    transform: scale(1.02) translateZ(0);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+  }
+
+  .hovered {
+    transform: translateY(-2px) translateZ(0);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+  }
+
+  /* タッチデバイス用の調整 */
+  .imageWrapper {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  /* モバイル用モーダル調整 */
+  .modal {
+    padding: 0.5rem;
+    /* モバイルでのスクロール防止 */
+    position: fixed;
+    overflow: hidden;
+  }
+
+  .modalContent {
+    max-width: 95vw;
+    max-height: 95vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .modalHeader {
+    padding: 1rem;
+    position: sticky;
+    top: 0;
+    background: var(--color-surface);
+    z-index: 10;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .modalBody {
+    padding: 1rem;
+  }
+
+  .expandedComparison {
+    flex-direction: column;
+    gap: 1.5rem;
+    align-items: center;
+  }
+
+  .expandedImage {
+    max-width: min(280px, 80vw);
+    max-height: min(280px, 40vh);
+    width: auto;
+    height: auto;
+  }
+
+  .expandedPlaceholder {
+    width: min(280px, 80vw);
+    height: min(280px, 40vh);
+  }
+
+  .modalNavigation {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: center;
+    padding: 1rem 0;
+  }
+
+  .navButton {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.9rem;
+    min-width: 80px;
+    /* タッチターゲットサイズの確保 */
+    min-height: 44px;
+  }
+
+  .modalInstructions {
+    font-size: 0.8rem;
+    padding: 0 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .presetImagePreview {
+    padding: 0.75rem;
+  }
+
+  .imageGrid {
+    gap: 0.75rem;
+    padding: 0.25rem;
+    max-height: 50vh;
+  }
+
+  .image,
+  .previewContainer {
+    width: 110px;
+    height: 110px;
+  }
+
+  .imageItem {
+    padding: 0.75rem;
+    gap: 0.5rem;
+  }
+
+  .title {
+    font-size: 1rem;
+    gap: 0.25rem;
+  }
+
+  .icon {
+    font-size: 1.25rem;
+  }
+
+  .description {
+    font-size: 0.8rem;
+  }
+
+  .imageComparison {
+    gap: 0.75rem;
+  }
+
+  .arrow {
+    font-size: 1rem;
+  }
+
+  .imageLabel {
+    font-size: 0.75rem;
+  }
+
+  .imageName {
+    font-size: 0.75rem;
+  }
+
+  /* 極小画面用モーダル調整 */
+  .modal {
+    padding: 0.25rem;
+  }
+
+  .modalContent {
+    max-width: 98vw;
+    max-height: 98vh;
+    border-radius: 8px;
+  }
+
+  .modalHeader {
+    padding: 0.75rem;
+  }
+
+  .modalTitle {
+    font-size: 1rem;
+    line-height: 1.3;
+  }
+
+  .closeButton {
+    font-size: 1.25rem;
+    padding: 0.25rem;
+    min-width: 32px;
+    min-height: 32px;
+  }
+
+  .modalBody {
+    padding: 0.75rem;
+  }
+
+  .expandedComparison {
+    gap: 1rem;
+  }
+
+  .expandedLabel {
+    font-size: 0.9rem;
+  }
+
+  .expandedImage {
+    max-width: min(240px, 75vw);
+    max-height: min(240px, 35vh);
+  }
+
+  .expandedPlaceholder {
+    width: min(240px, 75vw);
+    height: min(240px, 35vh);
+    font-size: 0.8rem;
+  }
+
+  .modalNavigation {
+    gap: 0.5rem;
+    padding: 0.75rem 0;
+  }
+
+  .navButton {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    min-width: 70px;
+    min-height: 40px;
+  }
+
+  .imageCounter {
+    font-size: 0.85rem;
+    padding: 0 0.5rem;
+  }
+
+  .modalInstructions {
+    font-size: 0.75rem;
+    padding: 0 0.5rem;
+  }
+
+  /* 極小画面でのホバー効果無効化 */
+  .imageWrapper:hover {
+    transform: none;
+    box-shadow: none;
+  }
+
+  .hovered {
+    transform: none;
+    box-shadow: none;
+  }
+
+  .expandIcon {
+    font-size: 1.25rem;
+    animation: none;
+  }
+}
+
+/* アクセシビリティ対応の強化 */
+@media (prefers-reduced-motion: reduce) {
+  .imageWrapper,
+  .clickableImage,
+  .hoverOverlay,
+  .modal,
+  .modalContent,
+  .navButton,
+  .expandIcon {
+    transition: none;
+    animation: none;
+  }
+
+  .imageWrapper:hover {
+    transform: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .hovered {
+    transform: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .expandIcon {
+    animation: none;
+  }
+}
+
+/* ハイコントラストモード対応 */
+@media (prefers-contrast: high) {
+  .hoverOverlay {
+    background: rgba(0, 0, 0, 0.95);
+    backdrop-filter: none;
+  }
+
+  .modal {
+    background: rgba(0, 0, 0, 0.98);
+  }
+
+  .imageWrapper:focus {
+    outline: 4px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  .closeButton:focus,
+  .navButton:focus {
+    outline: 4px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  .imageItem {
+    border: 2px solid var(--color-border);
+  }
+
+  .imageItem:hover {
+    border-color: var(--color-primary);
+    border-width: 3px;
+  }
+
+  .expandText {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    font-weight: 700;
+  }
+}
+
+/* フォーカス表示の強化 */
+.imageWrapper:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px rgba(var(--color-primary-rgb), 0.2);
+}
+
+.closeButton:focus-visible,
+.navButton:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 5px rgba(var(--color-primary-rgb), 0.2);
+}
+
+/* スクリーンリーダー用の追加情報 */
+.srOnly {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* キーボードナビゲーション用のスタイル */
+.imageWrapper[tabindex="0"]:focus {
+  z-index: 10;
+}
+
+.modal:focus {
+  outline: none;
+}
+
+/* タッチデバイス用のアクセシビリティ */
+@media (pointer: coarse) {
+  .imageWrapper {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .closeButton,
+  .navButton {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.75rem;
+  }
+
+  .hoverOverlay {
+    /* タッチデバイスでは常に表示 */
+    opacity: 0.1;
+    transition: opacity 0.2s ease;
+  }
+
+  .imageWrapper:hover .hoverOverlay,
+  .imageWrapper:focus .hoverOverlay {
+    opacity: 1;
+  }
+}

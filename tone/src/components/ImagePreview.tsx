@@ -42,18 +42,34 @@ export const ImagePreview: React.FC<ImagePreviewProps> = ({
   return (
     <div className={`image-preview ${className}`}>
       <div className="mb-4">
-        <h3 className="text-lg font-medium text-gray-900 mb-2">
+        <h3 
+          id="uploaded-images-title"
+          className="text-lg font-medium text-gray-900 mb-2"
+        >
           アップロードされた画像 ({images.length}枚)
         </h3>
       </div>
 
       {/* 画像グリッド */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
-        {images.map((image) => (
+      <div 
+        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6"
+        role="grid"
+        aria-labelledby="uploaded-images-title"
+      >
+        {images.map((image, index) => (
           <div
             key={image.id}
             className="relative group cursor-pointer"
+            role="gridcell"
+            tabIndex={0}
             onClick={() => setSelectedImageId(image.id)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setSelectedImageId(image.id);
+              }
+            }}
+            aria-label={`画像 ${index + 1}: ${image.file.name}を拡大表示`}
           >
             {/* 画像サムネイル */}
             <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 border-transparent hover:border-blue-300 transition-colors">
@@ -98,10 +114,18 @@ export const ImagePreview: React.FC<ImagePreviewProps> = ({
                   e.stopPropagation();
                   onRemoveImage(image.id);
                 }}
-                className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:bg-red-600"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onRemoveImage(image.id);
+                  }
+                }}
+                className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity flex items-center justify-center hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
                 aria-label={`${image.file.name}を削除`}
+                tabIndex={0}
               >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                   <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                 </svg>
               </button>
@@ -121,23 +145,36 @@ export const ImagePreview: React.FC<ImagePreviewProps> = ({
       {selectedImage && (
         <div
           className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-title"
+          aria-describedby="modal-description"
           onClick={() => setSelectedImageId(null)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              setSelectedImageId(null);
+            }
+          }}
         >
           <div
             className="bg-white rounded-lg max-w-4xl max-h-full overflow-auto"
             onClick={(e) => e.stopPropagation()}
+            role="document"
           >
             {/* モーダルヘッダー */}
             <div className="flex items-center justify-between p-4 border-b">
-              <h4 className="text-lg font-medium text-gray-900 truncate">
+              <h4 
+                id="modal-title"
+                className="text-lg font-medium text-gray-900 truncate"
+              >
                 {selectedImage.file.name}
               </h4>
               <button
                 onClick={() => setSelectedImageId(null)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-                aria-label="閉じる"
+                className="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
+                aria-label="モーダルを閉じる"
               >
-                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                   <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                 </svg>
               </button>
@@ -162,7 +199,10 @@ export const ImagePreview: React.FC<ImagePreviewProps> = ({
               </div>
 
               {/* メタデータ表示エリア */}
-              <div className="w-full lg:w-80 p-4 border-t lg:border-t-0 lg:border-l bg-gray-50">
+              <div 
+                className="w-full lg:w-80 p-4 border-t lg:border-t-0 lg:border-l bg-gray-50"
+                id="modal-description"
+              >
                 <h5 className="text-sm font-medium text-gray-900 mb-3">画像情報</h5>
                 
                 <div className="space-y-3">

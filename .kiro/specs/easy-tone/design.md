@@ -48,6 +48,7 @@ interface ImageUploaderProps {
 interface PresetSelectorProps {
   presets: FilterPreset[];
   selectedPreset: string | null;
+  uploadedImages: ProcessableImage[];
   onPresetSelect: (presetId: string) => void;
 }
 
@@ -60,7 +61,8 @@ interface FilterPreset {
 }
 ```
 - 4つのプリセット表示
-- プレビュー機能
+- アップロードされた全画像のプレビュー表示
+- プリセット選択時のリアルタイムプレビュー機能
 - 選択状態の管理
 
 #### 3. ImageProcessor Component
