@@ -43,6 +43,10 @@ const templates = [
   { name: "ボケ", src: "/templates/bokeh-lights.jpg" },
   { name: "木目", src: "/templates/wood.jpg" },
   { name: "壁紙", src: "/templates/wallpaper.jpg" },
+  { name: "大理石", src: "/templates/marble.jpg" },
+  { name: "自然光", src: "/templates/natural-light.jpg" },
+  { name: "アート", src: "/templates/art01.jpg" },
+
 ];
 
 const aspectRatios = [
