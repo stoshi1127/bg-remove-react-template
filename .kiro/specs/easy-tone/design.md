@@ -20,6 +20,14 @@
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
+<<<<<<< HEAD
+=======
+### ワークフロー構成
+簡素化された2ステップワークフロー：
+1. **ステップ1**: 画像アップロード
+2. **ステップ2**: プリセット選択・処理実行・結果表示
+
+>>>>>>> dae31b03f5248e5bfa8a18ccef53acd35de4c421
 ### レイヤー構成
 1. **Presentation Layer**: React コンポーネント、UI/UX
 2. **Business Logic Layer**: 画像処理ロジック、プリセット管理
@@ -50,6 +58,11 @@ interface PresetSelectorProps {
   selectedPreset: string | null;
   uploadedImages: ProcessableImage[];
   onPresetSelect: (presetId: string) => void;
+<<<<<<< HEAD
+=======
+  onProcessStart: () => void;
+  isProcessing: boolean;
+>>>>>>> dae31b03f5248e5bfa8a18ccef53acd35de4c421
 }
 
 interface FilterPreset {
@@ -64,6 +77,11 @@ interface FilterPreset {
 - アップロードされた全画像のプレビュー表示
 - プリセット選択時のリアルタイムプレビュー機能
 - 選択状態の管理
+<<<<<<< HEAD
+=======
+- 統合された「処理を開始」ボタン
+- 処理中の状態表示
+>>>>>>> dae31b03f5248e5bfa8a18ccef53acd35de4c421
 
 #### 3. ImageProcessor Component
 ```typescript

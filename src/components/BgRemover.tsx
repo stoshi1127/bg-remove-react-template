@@ -43,6 +43,10 @@ const templates = [
   { name: "ボケ", src: "/templates/bokeh-lights.jpg" },
   { name: "木目", src: "/templates/wood.jpg" },
   { name: "壁紙", src: "/templates/wallpaper.jpg" },
+  { name: "大理石", src: "/templates/marble.jpg" },
+  { name: "自然光", src: "/templates/natural-light.jpg" },
+  { name: "アート", src: "/templates/art01.jpg" },
+
 ];
 
 const aspectRatios = [
@@ -661,10 +665,34 @@ export default function BgRemoverMulti() {
         });
 
         // AbortControllerを組み合わせる（コンポーネントのアンマウントとタイムアウト）
-        const combinedSignal = AbortSignal.any([
-          abortControllerRef.current?.signal,
-          timeoutController.signal
-        ].filter(Boolean) as AbortSignal[]);
+        // AbortSignal.any() は新しいブラウザでのみサポートされているため、手動で実装
+        let combinedSignal: AbortSignal;
+        if (abortControllerRef.current?.signal) {
+          // 複数のAbortSignalを手動で組み合わせる
+          const combinedController = new AbortController();
+          combinedSignal = combinedController.signal;
+          
+          // 既存のAbortControllerがabortされた場合
+          if (abortControllerRef.current.signal.aborted) {
+            combinedController.abort(abortControllerRef.current.signal.reason);
+          } else {
+            abortControllerRef.current.signal.addEventListener('abort', () => {
+              combinedController.abort(abortControllerRef.current?.signal.reason);
+            }, { once: true });
+          }
+          
+          // タイムアウトコントローラーがabortされた場合
+          if (timeoutController.signal.aborted) {
+            combinedController.abort(timeoutController.signal.reason);
+          } else {
+            timeoutController.signal.addEventListener('abort', () => {
+              combinedController.abort(timeoutController.signal.reason);
+            }, { once: true });
+          }
+        } else {
+          // abortControllerRef.currentがない場合はタイムアウトのみ
+          combinedSignal = timeoutController.signal;
+        }
 
         const response = await fetch("/api/remove-bg", {
           method: "POST",
