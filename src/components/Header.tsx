@@ -30,6 +30,9 @@ export default function Header() {
             <Link href="/" className="px-4 py-2 rounded-lg text-gray-700 hover:text-blue-600 hover:bg-gray-50 font-medium transition-colors duration-200">
               イージーカット
             </Link>
+            <Link href="/tone" className="px-4 py-2 rounded-lg text-gray-700 hover:text-blue-600 hover:bg-gray-50 font-medium transition-colors duration-200">
+              イージートーン
+            </Link>
             <Link href="/trim" className="px-4 py-2 rounded-lg text-gray-700 hover:text-blue-600 hover:bg-gray-50 font-medium transition-colors duration-200">
               イージートリミング
             </Link>
@@ -63,7 +66,7 @@ export default function Header() {
         </div>
 
         {/* スマホ用ドロップダウンメニュー */}
-        <div className={`md:hidden overflow-hidden transition-all duration-200 ease-out ${isMenuOpen ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}>
+        <div className={`md:hidden overflow-hidden transition-all duration-200 ease-out ${isMenuOpen ? 'max-h-52 opacity-100' : 'max-h-0 opacity-0'}`}>
           <nav className="pt-4 pb-2 space-y-1">
             <Link 
               href="/" 
@@ -71,6 +74,13 @@ export default function Header() {
               onClick={toggleMenu}
             >
               イージーカット
+            </Link>
+            <Link 
+              href="/tone" 
+              className="block px-4 py-2 rounded-lg text-gray-700 hover:text-blue-600 hover:bg-gray-50 font-medium transition-colors duration-200" 
+              onClick={toggleMenu}
+            >
+              イージートーン
             </Link>
             <Link 
               href="/trim" 

@@ -107,6 +107,9 @@ export default function RootLayout({
                   <Link href="/" className="block text-gray-300 hover:text-white transition-colors duration-200">
                     イージーカット
                   </Link>
+                  <Link href="/tone" className="block text-gray-300 hover:text-white transition-colors duration-200">
+                    イージートーン
+                  </Link>
                   <Link href="/trim" className="block text-gray-300 hover:text-white transition-colors duration-200">
                     イージートリミング
                   </Link>

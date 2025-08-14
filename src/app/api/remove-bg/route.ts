@@ -99,10 +99,10 @@ export async function POST(req: NextRequest) {
     }
 
     if (attempts >= maxAttempts && (prediction.status !== 'succeeded' && prediction.status !== 'failed' && prediction.status !== 'canceled')) {
-        console.error('Replicate prediction timed out after polling.');
-        return NextResponse.json({ error: 'Prediction timed out.' }, { status: 504 }); // Gateway Timeout
+      console.error('Replicate prediction timed out after polling.');
+      return NextResponse.json({ error: 'Prediction timed out.' }, { status: 504 }); // Gateway Timeout
     }
-    
+
     if (prediction.status !== 'succeeded' || !prediction.output) {
       console.error('Replicate prediction failed or no output:', prediction);
       const userError = prediction.error ? `Prediction failed: ${prediction.error}` : 'Prediction failed or did not produce an output.';
@@ -112,9 +112,9 @@ export async function POST(req: NextRequest) {
     // Ensure the output is a string URL (or an array with a string URL)
     let outputUrl: string | undefined;
     if (Array.isArray(prediction.output) && typeof prediction.output[0] === 'string') {
-        outputUrl = prediction.output[0];
+      outputUrl = prediction.output[0];
     } else if (typeof prediction.output === 'string') {
-        outputUrl = prediction.output;
+      outputUrl = prediction.output;
     }
 
     if (!outputUrl) {
