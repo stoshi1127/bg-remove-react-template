@@ -14,7 +14,7 @@ describe('AutoTransition Simple Tests', () => {
     // 基本的な要素が表示されることを確認
     expect(screen.getByText('イージートーン')).toBeInTheDocument();
     expect(screen.getByText('画像アップロード')).toBeInTheDocument();
-    expect(screen.getByText('フィルター選択・処理')).toBeInTheDocument();
+    expect(screen.getByText('仕上がり選択・実行')).toBeInTheDocument();
     expect(screen.getByText('完了')).toBeInTheDocument();
   });
 
@@ -44,14 +44,14 @@ describe('AutoTransition Simple Tests', () => {
     // 使い方ガイドが表示されることを確認
     expect(screen.getByText('イージートーンの使い方ガイド')).toBeInTheDocument();
     expect(screen.getByText('1. 画像をアップロード')).toBeInTheDocument();
-    expect(screen.getByText('2. フィルター選択・処理実行')).toBeInTheDocument();
+    expect(screen.getByText('2. 仕上がりを選ぶ・実行')).toBeInTheDocument();
   });
 
   test('QuickToolsブランド統合セクションが表示される', () => {
     render(<EasyToneApp />);
     
     // ブランド統合セクションが表示されることを確認
-    expect(screen.getByText('トーン調整＋背景透過で完璧な仕上がり')).toBeInTheDocument();
+    expect(screen.getByText('色調整（色調補正）＋背景透過で仕上げ')).toBeInTheDocument();
     expect(screen.getByText('イージーカットを使ってみる')).toBeInTheDocument();
   });
 

@@ -26,7 +26,7 @@ export const QUICKTOOLS_SERVICES: QuickToolsService[] = [
     {
         id: 'tone',
         name: 'イージートーン',
-        description: '画像トーン調整ツール',
+        description: 'かんたん色調整（色調補正）ツール',
         url: 'https://bg.quicktools.jp/tone',
         icon: '🎨',
         category: 'image',

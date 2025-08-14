@@ -1,4 +1,4 @@
-import '@testing-library/jest-dom';
+require('@testing-library/jest-dom');
 
 // Mock Next.js router
 jest.mock('next/navigation', () => ({
@@ -22,15 +22,17 @@ jest.mock('next/navigation', () => ({
 
 // Mock Next.js Link
 jest.mock('next/link', () => {
+  const React = require('react');
   return ({ children, href, ...props }) => {
-    return <a href={href} {...props}>{children}</a>;
+    return React.createElement('a', { href, ...props }, children);
   };
 });
 
 // Mock Next.js Image
 jest.mock('next/image', () => {
+  const React = require('react');
   return ({ src, alt, ...props }) => {
-    return <img src={src} alt={alt} {...props} />;
+    return React.createElement('img', { src, alt, ...props });
   };
 });
 

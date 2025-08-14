@@ -118,7 +118,7 @@ const EasyToneApp: React.FC = () => {
               イージートーン
             </h1>
             <p className="text-responsive-md text-gray-600 mb-6 leading-relaxed max-w-2xl mx-auto">
-              2ステップで簡単に画像にプロのようなトーンを適用。複数の写真を一括処理できる無料のオンライン画像編集ツール。商品写真、SNS投稿、ブログ記事に最適。
+              2ステップでかんたんに写真の色味を整えます。複数の写真を一括処理できる無料のオンライン画像編集ツール。商品写真、SNS投稿、ブログ記事に最適。色調整（色調補正）に対応。
             </p>
           </div>
 
@@ -187,7 +187,7 @@ const EasyToneApp: React.FC = () => {
                         ? 'text-gray-900' 
                         : 'text-gray-500'
                   }`}>
-                    {isProcessing ? '処理中...' : isTransitioning ? '完了中...' : 'フィルター選択・処理'}
+                    {isProcessing ? '処理中...' : isTransitioning ? '完了中...' : '仕上がり選択・実行'}
                   </span>
                 </div>
                 <div className={`w-12 h-0.5 transition-all duration-700 ${
@@ -258,7 +258,7 @@ const EasyToneApp: React.FC = () => {
                       <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold mr-3">
                         2
                       </div>
-                      <h2 className="text-2xl font-bold text-gray-900">フィルターを選択・処理実行</h2>
+                      <h2 className="text-2xl font-bold text-gray-900">仕上がりを選ぶ・実行</h2>
                     </div>
                     <PresetSelector
                       previewImages={images}
@@ -321,7 +321,7 @@ const EasyToneApp: React.FC = () => {
             <div className="text-center mb-16">
               <h2 className="text-3xl font-bold text-gray-900 mb-4">イージートーンの使い方ガイド</h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                たった2ステップで画像にプロのようなトーンを適用する基本的な手順を分かりやすく説明します。
+                たった2ステップで写真の色味を整える基本的な手順を分かりやすく説明します（色調整・色調補正）。
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -333,7 +333,7 @@ const EasyToneApp: React.FC = () => {
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2 text-center">1. 画像をアップロード</h3>
                 <p className="text-gray-600 text-center">
-                  トーン調整したい画像をアップロードエリアにドラッグ＆ドロップするか、クリックしてファイルを選択します。複数画像も同時に選択可能です。
+                  色味を整えたい画像をアップロードエリアにドラッグ＆ドロップするか、クリックしてファイルを選択します。複数画像も同時に選択可能です。
                 </p>
                 <div className="text-center mt-4">
                   <span className="text-blue-600 font-medium text-sm">対応形式: JPG, PNG, HEIC など</span>
@@ -346,9 +346,9 @@ const EasyToneApp: React.FC = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m-9 0h10m-10 0a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V6a2 2 0 00-2-2"></path>
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2 text-center">2. フィルター選択・処理実行</h3>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2 text-center">2. 仕上がりを選ぶ・実行</h3>
                 <p className="text-gray-600 text-center">
-                  プロが作成したプリセットフィルターから好みのトーンを選択し、「処理を開始」ボタンで一括処理。リアルタイムプレビューで仕上がりを確認できます。
+                  おすすめから好みの仕上がりを選び、「処理を開始」ボタンで一括処理。リアルタイムプレビューで仕上がりを確認できます。
                 </p>
                 <div className="text-center mt-4">
                   <span className="text-green-600 font-medium text-sm">6種類のプリセット・ワンクリック処理</span>
@@ -362,9 +362,9 @@ const EasyToneApp: React.FC = () => {
         <section className="py-16 px-4">
           <div className="container mx-auto max-w-3xl text-center">
             <div className="bg-blue-50 border border-blue-100 p-8 rounded-2xl">
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">トーン調整＋背景透過で完璧な仕上がり</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">色調整（色調補正）＋背景透過で仕上げ</h3>
               <p className="text-gray-700 mb-6">
-                画像のトーン調整だけでなく、背景透過も簡単に行えます。<br />
+                画像の色調整（色調補正）だけでなく、背景透過も簡単に行えます。<br />
                 SNSやECサイトに最適な画像に仕上げましょう。
               </p>
               <Link href="/">

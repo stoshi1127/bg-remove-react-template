@@ -239,7 +239,7 @@ const ResultViewer: React.FC<ResultViewerProps> = ({
                   <span className="font-medium">画像サイズ:</span> {selectedImage.originalImage.metadata.width} × {selectedImage.originalImage.metadata.height}
                 </div>
                 <div>
-                  <span className="font-medium">適用フィルター:</span> {selectedImage.appliedPreset}
+                  <span className="font-medium">適用設定:</span> {selectedImage.appliedPreset}
                 </div>
               </div>
 

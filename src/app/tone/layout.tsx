@@ -19,8 +19,8 @@ export default function ToneLayout({ children }: ToneLayoutProps) {
             "@context": "https://schema.org",
             "@type": "WebApplication",
             "name": "イージートーン",
-            "alternateName": "イージートーン - 簡単画像トーン調整",
-            "description": "3ステップで簡単に画像にプロのようなトーンを適用。複数の写真を一括処理できる無料のオンライン画像編集ツール。",
+            "alternateName": "イージートーン - かんたん色調整（色調補正）",
+            "description": "3ステップで写真の色味を整えます。複数の写真を一括処理できる無料のオンライン画像編集ツール。色調整（色調補正）に対応。",
             "url": "https://bg.quicktools.jp/tone",
             "applicationCategory": "MultimediaApplication",
             "operatingSystem": "Web Browser",
@@ -40,7 +40,7 @@ export default function ToneLayout({ children }: ToneLayoutProps) {
               "url": "https://bg.quicktools.jp"
             },
             "featureList": [
-              "画像トーン調整",
+              "画像の色調整（色調補正）",
               "複数画像一括処理",
               "プリセットフィルター",
               "リアルタイムプレビュー",

@@ -12,6 +12,15 @@ const customJestConfig = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
+  transform: {
+    '^.+\\.(ts|tsx|js|jsx)$': ['babel-jest', {
+      presets: [
+        '@babel/preset-env',
+        ['@babel/preset-react', { runtime: 'automatic' }],
+        '@babel/preset-typescript'
+      ]
+    }]
+  },
   // Exclude Playwright tests from Jest
   testPathIgnorePatterns: [
     '<rootDir>/.next/',
@@ -31,6 +40,15 @@ const customJestConfig = {
       displayName: 'unit',
       testEnvironment: 'jest-environment-jsdom',
       setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+      transform: {
+        '^.+\\.(ts|tsx|js|jsx)$': ['babel-jest', {
+          presets: [
+            '@babel/preset-env',
+            ['@babel/preset-react', { runtime: 'automatic' }],
+            '@babel/preset-typescript'
+          ]
+        }]
+      },
       testMatch: ['<rootDir>/src/**/__tests__/**/*.test.{js,jsx,ts,tsx}'],
       testPathIgnorePatterns: [
         '<rootDir>/src/__tests__/integration/',
@@ -40,6 +58,15 @@ const customJestConfig = {
       displayName: 'integration',
       testEnvironment: 'jest-environment-jsdom',
       setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+      transform: {
+        '^.+\\.(ts|tsx|js|jsx)$': ['babel-jest', {
+          presets: [
+            '@babel/preset-env',
+            ['@babel/preset-react', { runtime: 'automatic' }],
+            '@babel/preset-typescript'
+          ]
+        }]
+      },
       testMatch: ['<rootDir>/src/__tests__/integration/**/*.test.{js,jsx,ts,tsx}'],
       maxWorkers: 1, // Run integration tests serially
       testTimeout: 30000, // Longer timeout for integration tests
