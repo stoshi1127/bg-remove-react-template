@@ -46,7 +46,7 @@ const templates = [
   { name: "大理石", src: "/templates/marble.jpg" },
   { name: "自然光", src: "/templates/natural-light.jpg" },
   { name: "アート", src: "/templates/art01.jpg" },
-
+  { name: "コットン", src: "/templates/cotton.jpg" },
 ];
 
 const aspectRatios = [
