@@ -57,6 +57,10 @@ const aspectRatios = [
   { key: 'fit-subject', label: '被写体にフィット' }
 ];
 
+// Vercel Edge Function のボディ上限対策（約4MB）
+const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
+const MAX_UPLOAD_MB = 4;
+
 export default function BgRemoverMulti() {
   
   /* ------------ state --------------- */
@@ -577,12 +581,32 @@ export default function BgRemoverMulti() {
   
   /* ------------ ② 背景除去：API経由で並行実行 --------------- */
   const handleRemove = async () => {
-    const filesToProcess = inputs.filter(input => input.status === "ready" || input.status === "error");
-    if (busy || filesToProcess.length === 0) {
-      if(filesToProcess.length === 0 && inputs.length > 0) {
+    const candidates = inputs.filter(input => input.status === "ready" || input.status === "error");
+    if (busy || candidates.length === 0) {
+      if(candidates.length === 0 && inputs.length > 0) {
         setMsg("処理可能なファイルがありません。HEIC変換が完了しているか、エラーが解消されているか確認してください。");
       }
       return;
+    }
+
+    // Edge Function のリクエストボディ上限（約4MB）を超えるファイルを事前にブロック
+    const oversized = candidates.filter(file => file.blob.size > MAX_UPLOAD_BYTES);
+    if (oversized.length > 0) {
+      oversized.forEach(file => {
+        const sizeMb = (file.blob.size / 1024 / 1024).toFixed(1);
+        updateInputStatus(
+          file.id,
+          "error",
+          `ファイルサイズが大きすぎます (${sizeMb}MB)。${MAX_UPLOAD_MB}MB 以下に圧縮・リサイズして再アップロードしてください。`
+        );
+      });
+
+      setMsg(`送信上限 ${MAX_UPLOAD_MB}MB を超える画像があります。圧縮または解像度を下げて再度お試しください。（対象: ${oversized.length}件）`);
+    }
+
+    const filesToProcess = candidates.filter(file => file.blob.size <= MAX_UPLOAD_BYTES);
+    if (filesToProcess.length === 0) {
+      return; // 全て上限超過のため終了
     }
 
     // 大量ファイル処理時の自動調整
