@@ -1,60 +1,107 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## 概要
 
-## Getting Started
+`my-bg-remover` は、ブラウザから画像をアップロードして **AIで背景透過（切り抜き）** し、必要に応じて **背景テンプレート/単色に合成** してダウンロードできる Next.js アプリです。追加ツールとして **色調整（/tone）** と **画像トリミング（/trim）** も同梱しています。
 
-First, run the development server:
+## 主な機能
+
+- **イージーカット（`/`）**
+  - 複数画像の一括アップロード（ドラッグ&ドロップ対応）
+  - HEIC/HEIF を自動変換して処理
+  - 背景透過（`/api/remove-bg`）
+  - 出力サイズ（アスペクト比）: `1:1` / `16:9` / `4:3` / `元画像に合わせる` / `被写体にフィット`
+  - 背景のカスタマイズ（背景なし / テンプレート / カラーピッカー）
+  - 個別ダウンロード / ZIP一括ダウンロード
+  - 上限: **最大30枚**、**1ファイルあたり約4MBまで**（Edge Functionのリクエストボディ制限）
+
+- **イージートーン（`/tone`）**
+  - 写真の色調整（色調補正）を3ステップで実行
+  - 複数画像の一括処理に対応
+  - 上限: **最大ファイルサイズ 10MB**
+
+- **イージートリミング（`/trim`）**
+  - 画像をトリミング（比率プリセット + カスタム比率）
+  - PNGとしてダウンロード
+  - `/` 側の「イージートリミングで編集」導線から、画像とバウンディングボックスを引き継ぎ可能（localStorage経由）
+
+## 必要要件
+
+- Node.js（LTS 推奨）
+- pnpm
+
+## セットアップ
+
+依存関係をインストールします。
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
+```
+
+### 環境変数
+
+背景透過には Replicate の API トークンが必須です。
+
+- **必須**: `REPLICATE_API_TOKEN`
+- **任意**: `NEXT_PUBLIC_SITE_URL`（OGP/メタデータ用。未設定の場合は `http://localhost:3000` を使用）
+
+#### `.env` の作成（注意: `.env.example` のファイル名）
+
+このリポジトリには、**末尾にスペースが付いた `.env.example␠`** が含まれています。コピー時は引用符付きで指定してください。
+
+```bash
+cp ".env.example " .env
+```
+
+`.env` を開き、`REPLICATE_API_TOKEN` を自分のトークンに置き換えます。
+
+> 注意: `.env` はコミットしないでください（`.gitignore` で除外されています）。
+
+## 起動
+
+開発サーバーを起動します。
+
+```bash
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+ブラウザで `http://localhost:3000` を開きます。
 
-### Environment Variables
-
-This project requires a Replicate API token. Copy the `.env.example` file to `.env` and add your Replicate API token:
-
-```bash
-cp .env.example .env
-```
-
-Then, open `.env` and set the `REPLICATE_API_TOKEN` variable.
-
-### Building the project
-
-To build the project for production, run:
+## ビルド（本番）
 
 ```bash
 pnpm build
+pnpm start
 ```
 
-### Processing Details
+## API 仕様
 
-All background removal processing is handledサーバーサイド via the [Replicate API](https://replicate.com/). Uploaded images are processed by Replicate and are temporarily stored on their CDN for less than 60 minutes before being automatically deleted. 
+### `POST /api/remove-bg`
 
-Based on current Replicate pricing for the `rembg` model, the estimated cost for processing is approximately **$0.15 per 1000 images**.
+アップロードされた画像を Replicate のモデル（`cjwbw/rembg` の固定 version）で処理し、**PNG（背景透過）** を返します。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Runtime**: Edge（`export const runtime = 'edge'`）
+- **Request**: `multipart/form-data`
+  - **field**: `file`（画像ファイル）
+- **Response**:
+  - 成功時: `200` + `image/png`（バイナリ）
+  - 失敗時: `4xx/5xx` + JSON `{ error: string }`
+- **制限**: Edge Function の制約により、**1ファイルあたり約4MB** を超えるとクライアント側でエラー扱いになります。
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+#### curl 例
 
-## Learn More
+```bash
+curl -X POST -F "file=@./test.jpg" "http://localhost:3000/api/remove-bg" --output out.png
+```
 
-To learn more about Next.js, take a look at the following resources:
+## 簡易テスト（任意）
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+ローカルで `pnpm dev` を起動した状態で、以下のスクリプトでAPIの疎通確認ができます。
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+bash scripts/dev-test.sh
+```
 
-## Deploy on Vercel
+## プライバシー/データ取り扱い
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+画像は処理のために外部API（Replicate）へ送信されます。詳細はアプリ内のプライバシーポリシーをご確認ください。
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `src/app/privacy-policy/page.tsx`
