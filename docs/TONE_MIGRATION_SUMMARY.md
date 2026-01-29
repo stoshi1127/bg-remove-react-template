@@ -34,7 +34,6 @@
 - `useErrorHandler.ts` → `src/hooks/tone/useErrorHandler.ts`
 
 ### 6. 設定ファイル
-- `next.config.ts` → `tone-next.config.ts`
 - `jest.config.js` → `tone-jest.config.js`
 
 ## 実際に使用されているファイル（本番環境）
