@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  // Vercel's Neon integration sets these automatically:
+  // - POSTGRES_PRISMA_URL: pooled connection for runtime queries
+  // - POSTGRES_URL_NON_POOLING: direct connection for migrations
+  url       = env("POSTGRES_PRISMA_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
+}
+
+model User {
+  id          String      @id @default(cuid())
+  email       String      @unique
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  lastLoginAt DateTime?
+
+  authTokens    AuthToken[]
+  sessions      Session[]
+  stripeCustomer StripeCustomer?
+}
+
+model AuthToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model Session {
+  id               String   @id @default(cuid())
+  userId           String
+  sessionTokenHash String   @unique
+  expiresAt        DateTime
+  createdAt        DateTime @default(now())
+  revokedAt        DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model StripeCustomer {
+  id               String     @id @default(cuid())
+  userId           String     @unique
+  stripeCustomerId String     @unique
+  stripeMode       StripeMode
+  createdAt        DateTime   @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum StripeMode {
+  test
+  live
+}

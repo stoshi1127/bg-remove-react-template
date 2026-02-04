@@ -38,22 +38,31 @@ pnpm install
 
 ### 環境変数
 
-背景透過には Replicate の API トークンが必須です。
+背景透過・会員ログインには環境変数の設定が必要です。
 
-- **必須**: `REPLICATE_API_TOKEN`
-- **任意**: `NEXT_PUBLIC_SITE_URL`（OGP/メタデータ用。未設定の場合は `http://localhost:3000` を使用）
+- **必須（背景透過）**: `REPLICATE_API_TOKEN`
+- **必須（会員ログイン）**: `POSTGRES_PRISMA_URL`, `POSTGRES_URL_NON_POOLING`, `RESEND_API_KEY`, `EMAIL_FROM`
+- **推奨**: `NEXT_PUBLIC_SITE_URL`（OGP/ログインリンク生成用。未設定の場合は `http://localhost:3000` を使用）
+- **推奨**: `AUTH_SECRET`（将来の拡張用。現状はセッションをDBで管理）
 
-#### `.env` の作成（注意: `.env.example` のファイル名）
-
-このリポジトリには、**末尾にスペースが付いた `.env.example␠`** が含まれています。コピー時は引用符付きで指定してください。
+#### `.env` の作成
 
 ```bash
-cp ".env.example " .env
+cp .env.example .env
 ```
 
-`.env` を開き、`REPLICATE_API_TOKEN` を自分のトークンに置き換えます。
+`.env` を開き、各値を自分の環境に合わせて設定します（Neon/Resendのキー等）。
 
 > 注意: `.env` はコミットしないでください（`.gitignore` で除外されています）。
+
+### DB（Neon）セットアップ
+
+ローカルでマイグレーションを適用します（`POSTGRES_URL_NON_POOLING` が必須です）。
+
+```bash
+pnpm db:generate
+pnpm db:migrate
+```
 
 ## 起動
 
@@ -91,6 +100,16 @@ pnpm start
 ```bash
 curl -X POST -F "file=@./test.jpg" "http://localhost:3000/api/remove-bg" --output out.png
 ```
+
+### 認証（マジックリンク）
+
+- `POST /api/auth/request-link`
+  - 入力: JSON `{ "email": "you@example.com" }`
+  - 出力: `200`（アカウント有無は返しません）
+- `GET /auth/callback?token=...`
+  - マジックリンク着地。成功時はセッションCookieを設定して `/account` へリダイレクト
+- `POST /api/auth/logout`
+  - セッションを失効してCookieを削除します
 
 ## 簡易テスト（任意）
 

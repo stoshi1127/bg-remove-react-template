@@ -36,6 +36,12 @@ export default function Header() {
             <Link href="/trim" className="px-4 py-2 rounded-lg text-gray-700 hover:text-blue-600 hover:bg-gray-50 font-medium transition-colors duration-200">
               イージートリミング
             </Link>
+            <Link href="/login" className="px-4 py-2 rounded-lg text-gray-700 hover:text-blue-600 hover:bg-gray-50 font-medium transition-colors duration-200">
+              ログイン
+            </Link>
+            <Link href="/account" className="px-4 py-2 rounded-lg text-gray-700 hover:text-blue-600 hover:bg-gray-50 font-medium transition-colors duration-200">
+              アカウント
+            </Link>
             {/* X公式アカウントリンク（アイコンのみ） */}
             <a
               href="https://x.com/QuickToolsJP"
@@ -88,6 +94,20 @@ export default function Header() {
               onClick={toggleMenu}
             >
               イージートリミング
+            </Link>
+            <Link
+              href="/login"
+              className="block px-4 py-2 rounded-lg text-gray-700 hover:text-blue-600 hover:bg-gray-50 font-medium transition-colors duration-200"
+              onClick={toggleMenu}
+            >
+              ログイン
+            </Link>
+            <Link
+              href="/account"
+              className="block px-4 py-2 rounded-lg text-gray-700 hover:text-blue-600 hover:bg-gray-50 font-medium transition-colors duration-200"
+              onClick={toggleMenu}
+            >
+              アカウント
             </Link>
             {/* X公式アカウントリンク（スマホ版・アイコンのみ） */}
             <a
