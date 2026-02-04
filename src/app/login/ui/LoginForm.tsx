@@ -1,16 +1,13 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
 
-export default function LoginForm() {
-  const searchParams = useSearchParams();
-  const errorParam = searchParams.get('error');
+export default function LoginForm({ error }: { error?: string }) {
   const errorMessage = useMemo(() => {
-    if (errorParam === 'expired') return 'リンクの有効期限が切れています。もう一度お試しください。';
-    if (errorParam === 'invalid') return 'リンクが無効です。もう一度お試しください。';
+    if (error === 'expired') return 'リンクの有効期限が切れています。もう一度お試しください。';
+    if (error === 'invalid') return 'リンクが無効です。もう一度お試しください。';
     return null;
-  }, [errorParam]);
+  }, [error]);
 
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');

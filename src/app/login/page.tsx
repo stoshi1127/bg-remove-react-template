@@ -8,7 +8,20 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  // Next.js (15+) types this as Promise in generated PageProps
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const resolved = await searchParams;
+  const error =
+    typeof resolved?.error === 'string'
+      ? resolved.error
+      : Array.isArray(resolved?.error)
+        ? resolved?.error[0]
+        : undefined;
+
   return (
     <div className="container mx-auto px-4 py-12 max-w-lg">
       <h1 className="text-2xl font-bold text-gray-900 mb-2">ログイン</h1>
@@ -17,7 +30,7 @@ export default function LoginPage() {
       </p>
 
       <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-soft">
-        <LoginForm />
+        <LoginForm error={error} />
       </div>
 
       <p className="text-xs text-gray-500 mt-6 leading-relaxed">
