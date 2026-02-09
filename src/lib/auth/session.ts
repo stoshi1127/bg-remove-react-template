@@ -5,7 +5,7 @@ import { prisma } from '@/lib/db';
 import { SESSION_COOKIE_NAME, SESSION_TTL_DAYS } from '@/lib/auth/constants';
 import { generateRandomToken, sha256Hex } from '@/lib/auth/crypto';
 
-type CurrentUser = Pick<User, 'id' | 'email' | 'createdAt' | 'lastLoginAt'>;
+type CurrentUser = Pick<User, 'id' | 'email' | 'createdAt' | 'lastLoginAt' | 'plan' | 'isPro' | 'proValidUntil'>;
 
 export async function getCurrentUser(): Promise<CurrentUser | null> {
   const cookieStore = await cookies();
@@ -31,6 +31,9 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
     email: session.user.email,
     createdAt: session.user.createdAt,
     lastLoginAt: session.user.lastLoginAt,
+    plan: session.user.plan,
+    isPro: session.user.isPro,
+    proValidUntil: session.user.proValidUntil,
   };
 }
 

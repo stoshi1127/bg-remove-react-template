@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "postinstall": "prisma generate",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -27,7 +28,8 @@
     "react-dom": "^19.0.0",
     "react-easy-crop": "^5.4.2",
     "replicate": "^0.28.1",
-    "resend": "^6.9.1"
+    "resend": "^6.9.1",
+    "stripe": "^18.5.0"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.28.0",

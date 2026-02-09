@@ -124,6 +124,9 @@ export default function PrivacyPolicyPage() {
         <li>送信先事業者名：Resend, Inc.</li>
         <li>送信される情報の内容：メールアドレス、送信メール本文（ログインリンクを含みます）</li>
         <li>送信される情報の利用目的：ログインリンクの送信</li>
+        <li>送信先事業者名：Stripe, Inc.</li>
+        <li>送信される情報の内容：メールアドレス、購入/契約情報、決済に必要な情報（クレジットカード情報等はStripe社が直接取得します）</li>
+        <li>送信される情報の利用目的：Proサブスクリプションの購入、請求、支払い管理、カスタマーポータルの提供</li>
       </ul>
 
       <h2 className="text-2xl font-semibold mt-6 mb-3">6. 安全管理措置</h2>

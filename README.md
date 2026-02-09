@@ -42,8 +42,10 @@ pnpm install
 
 - **必須（背景透過）**: `REPLICATE_API_TOKEN`
 - **必須（会員ログイン）**: `POSTGRES_PRISMA_URL`, `POSTGRES_URL_NON_POOLING`, `RESEND_API_KEY`, `EMAIL_FROM`
+- **必須（Pro課金 / Stripe）**: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID_PRO_TEST`（本番は `STRIPE_PRICE_ID_PRO_LIVE`）
 - **推奨**: `NEXT_PUBLIC_SITE_URL`（OGP/ログインリンク生成用。未設定の場合は `http://localhost:3000` を使用）
 - **推奨**: `AUTH_SECRET`（将来の拡張用。現状はセッションをDBで管理）
+- **任意**: `BILLING_ENABLED`（課金導線の一括OFF。ロールバック用）, `STRIPE_MODE`（未指定時は `STRIPE_SECRET_KEY` のprefixから推定）
 
 #### `.env` の作成
 
@@ -110,6 +112,43 @@ curl -X POST -F "file=@./test.jpg" "http://localhost:3000/api/remove-bg" --outpu
   - マジックリンク着地。成功時はセッションCookieを設定して `/account` へリダイレクト
 - `POST /api/auth/logout`
   - セッションを失効してCookieを削除します
+
+### 課金（Stripe / Proサブスク）
+
+- `POST /api/billing/checkout`
+  - ログイン必須。Pro購読のCheckoutを開始し `{ ok: true, url }` を返します
+  - 既に有効購読がある場合は二重課金防止のためPortalへ誘導し `{ ok: true, kind: 'portal', url }` を返します
+- `POST /api/billing/portal`
+  - ログイン必須。Customer Portalを開くための `{ ok: true, url }` を返します
+- `POST /api/billing/webhook`
+  - Stripe Webhook受け口。署名検証＋冪等性（event.id）でDBへ同期します
+
+#### Webhook（ローカル検証の例）
+
+Stripe CLI を使い、ローカルへWebhookを転送します。
+
+```bash
+stripe listen --forward-to http://localhost:3000/api/billing/webhook
+```
+
+表示された `whsec_...` を `STRIPE_WEBHOOK_SECRET` に設定してください。
+
+テストの流れ（最小）:
+
+- `/login` でログイン → `/account` の「Proを購入する」からCheckoutへ
+- 決済完了後に `/account` へ戻り、プラン表示が `Pro` になること
+- 同じユーザーで再度「Proを購入する」を押した時、二重課金にならずPortalへ誘導されること
+- `stripe events resend <event_id> --webhook-endpoint <id>`（またはDashboardの再送）で同一eventを再送してもDBが壊れないこと（冪等性）
+
+#### テスト→本番移行の注意（モード混在防止）
+
+- **Price IDはモードごとに別**です（`STRIPE_PRICE_ID_PRO_TEST` / `STRIPE_PRICE_ID_PRO_LIVE`）。
+- `STRIPE_MODE` は任意です。未設定の場合は `STRIPE_SECRET_KEY` の `sk_test_` / `sk_live_` から推定します。
+- 既存ユーザーに紐づく `StripeCustomer/StripeSubscription` には `stripeMode` を保存しており、モード不一致（testのCustomerをliveで参照等）はAPI側で拒否します。
+
+#### ロールバック（緊急停止）
+
+課金導線を一括で止めたい場合は `BILLING_ENABLED=false` を設定してください（購入/管理ボタンは非表示、`/api/billing/*` は 403 を返します）。
 
 ## 簡易テスト（任意）
 
