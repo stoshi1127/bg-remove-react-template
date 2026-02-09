@@ -118,6 +118,10 @@ export async function POST() {
 
     // Mode mixing protection
     if (stripeCustomer && stripeCustomer.stripeMode !== stripeMode) {
+      console.warn('[billing.checkout] stripe_customer_mode_mismatch', {
+        stripeMode,
+        customerMode: stripeCustomer.stripeMode,
+      });
       const res = NextResponse.json(
         { ok: false, error: 'Stripe mode mismatch for this user' },
         { status: 409 },
@@ -128,6 +132,7 @@ export async function POST() {
 
     if (entitlement.isPro) {
       if (!stripeCustomer) {
+        console.info('[billing.checkout] already_pro_without_customer', { stripeMode });
         const res = NextResponse.json({ ok: true, kind: 'already_pro' }, { status: 200 });
         res.headers.set('Cache-Control', 'no-store');
         return res;
@@ -138,6 +143,7 @@ export async function POST() {
         return_url: `${siteUrl}/account`,
       });
 
+      console.info('[billing.checkout] already_pro_portal', { stripeMode, hasUrl: !!portal.url });
       const res = NextResponse.json({ ok: true, kind: 'portal', url: portal.url }, { status: 200 });
       res.headers.set('Cache-Control', 'no-store');
       return res;
@@ -167,11 +173,13 @@ export async function POST() {
     });
 
     if (!session.url) {
+      console.error('[billing.checkout] checkout_session_missing_url', { stripeMode, sessionId: session.id });
       const res = NextResponse.json({ ok: false, error: 'Failed to create checkout session' }, { status: 500 });
       res.headers.set('Cache-Control', 'no-store');
       return res;
     }
 
+    console.info('[billing.checkout] checkout_session_created', { stripeMode, sessionId: session.id });
     const res = NextResponse.json({ ok: true, url: session.url }, { status: 200 });
     res.headers.set('Cache-Control', 'no-store');
     return res;
