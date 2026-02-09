@@ -40,14 +40,51 @@ export async function POST() {
       fetch('http://127.0.0.1:7243/ingest/d5b9b24e-cf56-4f8e-b90c-eeb7b2ed6fe0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({runId:'pre-fix',hypothesisId:'H_env_or_mode',location:'src/app/api/billing/checkout/route.ts:entry',message:'billing.checkout.entry',data:{billingEnabled:isBillingEnabled(),stripeMode:getStripeMode(),stripeKeyKind:safeKeyKind(process.env.STRIPE_SECRET_KEY),hasPriceTest:!!process.env.STRIPE_PRICE_ID_PRO_TEST,hasPriceLive:!!process.env.STRIPE_PRICE_ID_PRO_LIVE,vercelEnv:process.env.VERCEL_ENV ?? null},timestamp:Date.now()})}).catch(()=>{});
     }
     // #endregion agent log
+    const vercelEnv = process.env.VERCEL_ENV ?? null;
+    const stripeKeyKind = safeKeyKind(process.env.STRIPE_SECRET_KEY);
+    const stripeMode = getStripeMode();
+
     console.info('[billing.checkout] entry', {
       billingEnabled: isBillingEnabled(),
-      stripeMode: getStripeMode(),
-      stripeKeyKind: safeKeyKind(process.env.STRIPE_SECRET_KEY),
+      stripeMode,
+      stripeKeyKind,
       hasPriceTest: !!process.env.STRIPE_PRICE_ID_PRO_TEST,
       hasPriceLive: !!process.env.STRIPE_PRICE_ID_PRO_LIVE,
-      vercelEnv: process.env.VERCEL_ENV ?? null,
+      vercelEnv,
     });
+
+    // Config guards: avoid confusing 500s from Stripe when env is mis-set.
+    if (vercelEnv === 'preview' && stripeKeyKind === 'live') {
+      console.error('[billing.checkout] blocked_live_key_in_preview', {
+        vercelEnv,
+        stripeMode,
+        stripeKeyKind,
+      });
+      const res = NextResponse.json(
+        {
+          ok: false,
+          error:
+            'Preview環境ではStripeのテストキー（sk_test_...）を設定してください（本番キーでは課金を作成できません）。',
+        },
+        { status: 400 },
+      );
+      res.headers.set('Cache-Control', 'no-store');
+      return res;
+    }
+
+    if (stripeKeyKind === 'test' && stripeMode === 'live') {
+      console.error('[billing.checkout] stripe_mode_mismatch', {
+        vercelEnv,
+        stripeMode,
+        stripeKeyKind,
+      });
+      const res = NextResponse.json(
+        { ok: false, error: 'Stripe設定が不整合です（STRIPE_MODE と STRIPE_SECRET_KEY が一致していません）。' },
+        { status: 500 },
+      );
+      res.headers.set('Cache-Control', 'no-store');
+      return res;
+    }
 
     if (!isBillingEnabled()) {
       const res = NextResponse.json({ ok: false, error: 'Billing is disabled' }, { status: 403 });
@@ -62,7 +99,7 @@ export async function POST() {
       return res;
     }
 
-    const stripeMode = getStripeMode();
+    // stripeMode computed earlier (and validated)
     const siteUrl = getSiteUrl();
     const stripe = getStripeClient();
     const priceId = getProPriceId();
