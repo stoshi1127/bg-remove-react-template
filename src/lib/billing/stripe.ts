@@ -12,7 +12,7 @@ export function getStripeClient(): Stripe {
 
   cachedStripe = new Stripe(secretKey, {
     // Keep this pinned for stability.
-    apiVersion: '2025-01-27.acacia',
+    apiVersion: '2025-08-27.basil',
     // Optional: allow TS to narrow.
     typescript: true,
   });

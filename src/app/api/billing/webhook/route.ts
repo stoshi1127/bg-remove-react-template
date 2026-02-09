@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import type Stripe from 'stripe';
 
 import { prisma } from '@/lib/db';
 import { getStripeClient } from '@/lib/billing/stripe';
@@ -16,6 +15,31 @@ function getWebhookSecret(): string {
 
 function asStringId(v: unknown): string | null {
   return typeof v === 'string' && v.length > 0 ? v : null;
+}
+
+function asRecord(v: unknown): Record<string, unknown> | null {
+  return v && typeof v === 'object' ? (v as Record<string, unknown>) : null;
+}
+
+function asStripeId(v: unknown): string | null {
+  const direct = asStringId(v);
+  if (direct) return direct;
+  const rec = asRecord(v);
+  return rec ? asStringId(rec.id) : null;
+}
+
+function getString(rec: Record<string, unknown>, key: string): string | null {
+  return asStringId(rec[key]);
+}
+
+function getNumber(rec: Record<string, unknown>, key: string): number | null {
+  const v = rec[key];
+  return typeof v === 'number' && Number.isFinite(v) ? v : null;
+}
+
+function getBoolean(rec: Record<string, unknown>, key: string): boolean | null {
+  const v = rec[key];
+  return typeof v === 'boolean' ? v : null;
 }
 
 function dateFromStripeTs(ts: unknown): Date | null {
@@ -57,9 +81,12 @@ export async function POST(req: Request) {
       }
 
       if (event.type === 'checkout.session.completed') {
-        const session = event.data.object as Stripe.Checkout.Session;
-        const userId = asStringId(session.metadata?.userId) ?? asStringId(session.client_reference_id);
-        const customerId = asStringId(session.customer);
+        const session = asRecord(event.data.object);
+        if (!session) return;
+
+        const metadata = asRecord(session.metadata) ?? {};
+        const userId = getString(metadata, 'userId') ?? getString(session, 'client_reference_id');
+        const customerId = asStripeId(session.customer);
 
         if (!userId || !customerId) return;
 
@@ -87,9 +114,14 @@ export async function POST(req: Request) {
       }
 
       if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.deleted') {
-        const subscription = event.data.object as Stripe.Subscription;
-        const customerId = asStringId(subscription.customer);
+        const subscription = asRecord(event.data.object);
+        if (!subscription) return;
+
+        const subscriptionId = getString(subscription, 'id');
+        const status = getString(subscription, 'status');
+        const customerId = asStripeId(subscription.customer);
         if (!customerId) return;
+        if (!subscriptionId || !status) return;
 
         // Find user by customer id.
         const stripeCustomer = await tx.stripeCustomer.findUnique({
@@ -99,42 +131,64 @@ export async function POST(req: Request) {
         if (!stripeCustomer) return;
         if (stripeCustomer.stripeMode !== stripeMode) return;
 
+        // Extract price/product IDs (best-effort, supports both snake and camel).
+        const items = asRecord(subscription.items);
+        const dataArr = items && Array.isArray(items.data) ? items.data : [];
+        const firstItem = dataArr.length > 0 ? asRecord(dataArr[0]) : null;
+        const price = firstItem ? asRecord(firstItem.price) : null;
+        const stripePriceId = price ? getString(price, 'id') : null;
+        const stripeProductId = price ? asStripeId(price.product) : null;
+
+        const cancelAtPeriodEnd =
+          getBoolean(subscription, 'cancel_at_period_end') ??
+          getBoolean(subscription, 'cancelAtPeriodEnd') ??
+          false;
+        const currentPeriodStart =
+          dateFromStripeTs(getNumber(subscription, 'current_period_start')) ??
+          dateFromStripeTs(getNumber(subscription, 'currentPeriodStart'));
+        const currentPeriodEnd =
+          dateFromStripeTs(getNumber(subscription, 'current_period_end')) ??
+          dateFromStripeTs(getNumber(subscription, 'currentPeriodEnd'));
+        const canceledAt =
+          dateFromStripeTs(getNumber(subscription, 'canceled_at')) ??
+          dateFromStripeTs(getNumber(subscription, 'canceledAt'));
+        const endedAt =
+          dateFromStripeTs(getNumber(subscription, 'ended_at')) ??
+          dateFromStripeTs(getNumber(subscription, 'endedAt'));
+        const trialEnd =
+          dateFromStripeTs(getNumber(subscription, 'trial_end')) ??
+          dateFromStripeTs(getNumber(subscription, 'trialEnd'));
+
         // Upsert subscription.
         const saved = await tx.stripeSubscription.upsert({
           where: { userId: stripeCustomer.userId },
           create: {
             userId: stripeCustomer.userId,
-            stripeSubscriptionId: subscription.id,
+            stripeSubscriptionId: subscriptionId,
             stripeCustomerId: customerId,
-            stripeProductId:
-              typeof subscription.items.data[0]?.price?.product === 'string'
-                ? subscription.items.data[0].price.product
-                : null,
-            stripePriceId: subscription.items.data[0]?.price?.id ?? null,
-            status: subscription.status,
-            currentPeriodStart: dateFromStripeTs(subscription.current_period_start) ?? undefined,
-            currentPeriodEnd: dateFromStripeTs(subscription.current_period_end) ?? undefined,
-            cancelAtPeriodEnd: subscription.cancel_at_period_end,
-            canceledAt: dateFromStripeTs(subscription.canceled_at) ?? undefined,
-            endedAt: dateFromStripeTs(subscription.ended_at) ?? undefined,
-            trialEnd: dateFromStripeTs(subscription.trial_end) ?? undefined,
+            stripeProductId,
+            stripePriceId,
+            status,
+            currentPeriodStart: currentPeriodStart ?? undefined,
+            currentPeriodEnd: currentPeriodEnd ?? undefined,
+            cancelAtPeriodEnd,
+            canceledAt: canceledAt ?? undefined,
+            endedAt: endedAt ?? undefined,
+            trialEnd: trialEnd ?? undefined,
             stripeMode,
           },
           update: {
-            stripeSubscriptionId: subscription.id,
+            stripeSubscriptionId: subscriptionId,
             stripeCustomerId: customerId,
-            stripeProductId:
-              typeof subscription.items.data[0]?.price?.product === 'string'
-                ? subscription.items.data[0].price.product
-                : null,
-            stripePriceId: subscription.items.data[0]?.price?.id ?? null,
-            status: subscription.status,
-            currentPeriodStart: dateFromStripeTs(subscription.current_period_start) ?? undefined,
-            currentPeriodEnd: dateFromStripeTs(subscription.current_period_end) ?? undefined,
-            cancelAtPeriodEnd: subscription.cancel_at_period_end,
-            canceledAt: dateFromStripeTs(subscription.canceled_at) ?? undefined,
-            endedAt: dateFromStripeTs(subscription.ended_at) ?? undefined,
-            trialEnd: dateFromStripeTs(subscription.trial_end) ?? undefined,
+            stripeProductId,
+            stripePriceId,
+            status,
+            currentPeriodStart: currentPeriodStart ?? undefined,
+            currentPeriodEnd: currentPeriodEnd ?? undefined,
+            cancelAtPeriodEnd,
+            canceledAt: canceledAt ?? undefined,
+            endedAt: endedAt ?? undefined,
+            trialEnd: trialEnd ?? undefined,
             stripeMode,
           },
         });
@@ -149,9 +203,11 @@ export async function POST(req: Request) {
       }
 
       if (event.type === 'invoice.payment_failed' || event.type === 'invoice.payment_succeeded') {
-        const invoice = event.data.object as Stripe.Invoice;
-        const customerId = asStringId(invoice.customer);
-        const subscriptionId = asStringId(invoice.subscription);
+        const invoice = asRecord(event.data.object);
+        if (!invoice) return;
+
+        const customerId = asStripeId(invoice.customer);
+        const subscriptionId = asStripeId(invoice.subscription);
         if (!customerId || !subscriptionId) return;
 
         const stripeCustomer = await tx.stripeCustomer.findUnique({
@@ -164,8 +220,8 @@ export async function POST(req: Request) {
         await tx.stripeSubscription.updateMany({
           where: { userId: stripeCustomer.userId, stripeMode, stripeSubscriptionId: subscriptionId },
           data: {
-            latestInvoiceId: invoice.id,
-            latestInvoiceStatus: typeof invoice.status === 'string' ? invoice.status : null,
+            latestInvoiceId: getString(invoice, 'id'),
+            latestInvoiceStatus: getString(invoice, 'status'),
           },
         });
 
