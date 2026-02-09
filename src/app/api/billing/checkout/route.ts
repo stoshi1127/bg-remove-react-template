@@ -10,8 +10,45 @@ import { computeEntitlementFromSubscription } from '@/lib/billing/entitlement';
 
 export const runtime = 'nodejs';
 
+function safeKeyKind(secretKey: string | undefined): 'live' | 'test' | 'unknown' | 'missing' {
+  if (!secretKey) return 'missing';
+  if (secretKey.startsWith('sk_live_')) return 'live';
+  if (secretKey.startsWith('sk_test_')) return 'test';
+  return 'unknown';
+}
+
+function stripeErrorToObject(error: unknown): Record<string, unknown> {
+  if (!error || typeof error !== 'object') return { type: typeof error };
+  const e = error as Record<string, unknown>;
+  // Do NOT include raw objects/headers; keep it small + safe.
+  return {
+    name: e.name,
+    type: e.type,
+    code: e.code,
+    message: e.message,
+    statusCode: e.statusCode,
+    requestId: e.requestId,
+    rawType: e.rawType,
+    param: e.param,
+  };
+}
+
 export async function POST() {
   try {
+    // #region agent log
+    if (process.env.NODE_ENV === 'development') {
+      fetch('http://127.0.0.1:7243/ingest/d5b9b24e-cf56-4f8e-b90c-eeb7b2ed6fe0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({runId:'pre-fix',hypothesisId:'H_env_or_mode',location:'src/app/api/billing/checkout/route.ts:entry',message:'billing.checkout.entry',data:{billingEnabled:isBillingEnabled(),stripeMode:getStripeMode(),stripeKeyKind:safeKeyKind(process.env.STRIPE_SECRET_KEY),hasPriceTest:!!process.env.STRIPE_PRICE_ID_PRO_TEST,hasPriceLive:!!process.env.STRIPE_PRICE_ID_PRO_LIVE,vercelEnv:process.env.VERCEL_ENV ?? null},timestamp:Date.now()})}).catch(()=>{});
+    }
+    // #endregion agent log
+    console.info('[billing.checkout] entry', {
+      billingEnabled: isBillingEnabled(),
+      stripeMode: getStripeMode(),
+      stripeKeyKind: safeKeyKind(process.env.STRIPE_SECRET_KEY),
+      hasPriceTest: !!process.env.STRIPE_PRICE_ID_PRO_TEST,
+      hasPriceLive: !!process.env.STRIPE_PRICE_ID_PRO_LIVE,
+      vercelEnv: process.env.VERCEL_ENV ?? null,
+    });
+
     if (!isBillingEnabled()) {
       const res = NextResponse.json({ ok: false, error: 'Billing is disabled' }, { status: 403 });
       res.headers.set('Cache-Control', 'no-store');
@@ -102,7 +139,12 @@ export async function POST() {
     res.headers.set('Cache-Control', 'no-store');
     return res;
   } catch (error) {
-    console.error('billing checkout error:', error);
+    // #region agent log
+    if (process.env.NODE_ENV === 'development') {
+      fetch('http://127.0.0.1:7243/ingest/d5b9b24e-cf56-4f8e-b90c-eeb7b2ed6fe0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({runId:'pre-fix',hypothesisId:'H_stripe_error',location:'src/app/api/billing/checkout/route.ts:catch',message:'billing.checkout.error',data:{error:stripeErrorToObject(error),stripeMode:getStripeMode(),stripeKeyKind:safeKeyKind(process.env.STRIPE_SECRET_KEY),hasPriceTest:!!process.env.STRIPE_PRICE_ID_PRO_TEST,hasPriceLive:!!process.env.STRIPE_PRICE_ID_PRO_LIVE,vercelEnv:process.env.VERCEL_ENV ?? null},timestamp:Date.now()})}).catch(()=>{});
+    }
+    // #endregion agent log
+    console.error('billing checkout error:', stripeErrorToObject(error));
     const res = NextResponse.json({ ok: false, error: 'Failed to start checkout' }, { status: 500 });
     res.headers.set('Cache-Control', 'no-store');
     return res;
