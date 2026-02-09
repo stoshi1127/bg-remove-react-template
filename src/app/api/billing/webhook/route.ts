@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { getStripeClient } from '@/lib/billing/stripe';
 import { getStripeMode } from '@/lib/billing/stripeMode';
@@ -66,7 +67,26 @@ export async function POST(req: Request) {
     const event = stripe.webhooks.constructEvent(rawBody, signature, getWebhookSecret());
 
     // Idempotency + sync in one transaction.
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      // TS servers can lag behind Prisma client generation for TransactionClient delegates.
+      // Define a minimal delegate shape locally (no secrets, no any).
+      type PendingCheckoutDelegate = {
+        updateMany: (args: {
+          where: {
+            id?: string;
+            stripeCheckoutSessionId?: string;
+            stripeMode: 'test' | 'live';
+            expiresAt: { gt: Date };
+            completedAt: null;
+          };
+          data: {
+            stripeCheckoutSessionId?: string;
+            completedAt?: Date;
+          };
+        }) => Promise<{ count: number }>;
+      };
+      const itx = tx as unknown as Prisma.TransactionClient & { pendingCheckout: PendingCheckoutDelegate };
+
       // Deduplicate on (eventId, stripeMode).
       try {
         await tx.stripeWebhookEvent.create({
@@ -87,6 +107,8 @@ export async function POST(req: Request) {
         const metadata = asRecord(session.metadata) ?? {};
         const userId = getString(metadata, 'userId') ?? getString(session, 'client_reference_id');
         const customerId = asStripeId(session.customer);
+        const sessionId = getString(session, 'id');
+        const pendingCheckoutId = getString(metadata, 'pendingCheckoutId');
 
         if (!userId || !customerId) return;
 
@@ -109,6 +131,33 @@ export async function POST(req: Request) {
           where: { id: userId },
           data: { plan: 'pro', isPro: true, proValidUntil: null },
         });
+
+        // Link/activate PendingCheckout (best-effort).
+        const now = new Date();
+        if (pendingCheckoutId) {
+          await itx.pendingCheckout.updateMany({
+            where: {
+              id: pendingCheckoutId,
+              stripeMode,
+              expiresAt: { gt: now },
+              completedAt: null,
+            },
+            data: {
+              stripeCheckoutSessionId: sessionId ?? undefined,
+              completedAt: now,
+            },
+          });
+        } else if (sessionId) {
+          await itx.pendingCheckout.updateMany({
+            where: {
+              stripeCheckoutSessionId: sessionId,
+              stripeMode,
+              expiresAt: { gt: now },
+              completedAt: null,
+            },
+            data: { completedAt: now },
+          });
+        }
 
         return;
       }

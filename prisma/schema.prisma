@@ -25,6 +25,7 @@ model User {
   sessions      Session[]
   stripeCustomer StripeCustomer?
   stripeSubscription StripeSubscription?
+  pendingCheckouts PendingCheckout[]
 }
 
 model AuthToken {
@@ -107,4 +108,21 @@ model StripeWebhookEvent {
 
   @@unique([eventId, stripeMode])
   @@index([stripeMode, receivedAt])
+}
+
+model PendingCheckout {
+  id                     String    @id @default(cuid())
+  userId                 String
+  tokenHash              String    @unique
+  stripeCheckoutSessionId String?  @unique
+  stripeMode             StripeMode
+  expiresAt              DateTime
+  completedAt            DateTime?
+  usedAt                 DateTime?
+  createdAt              DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([stripeMode, createdAt])
 }

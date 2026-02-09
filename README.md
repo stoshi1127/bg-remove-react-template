@@ -118,10 +118,14 @@ curl -X POST -F "file=@./test.jpg" "http://localhost:3000/api/remove-bg" --outpu
 - `POST /api/billing/checkout`
   - ログイン必須。Pro購読のCheckoutを開始し `{ ok: true, url }` を返します
   - 既に有効購読がある場合は二重課金防止のためPortalへ誘導し `{ ok: true, kind: 'portal', url }` を返します
+- `POST /api/billing/guest-checkout`
+  - ログイン不要。購入時にメールアドレスを入力してCheckoutを開始します（このタイミングでユーザーが作成されます）
 - `POST /api/billing/portal`
   - ログイン必須。Customer Portalを開くための `{ ok: true, url }` を返します
 - `POST /api/billing/webhook`
   - Stripe Webhook受け口。署名検証＋冪等性（event.id）でDBへ同期します
+- `GET /billing/success?session_id=...`
+  - Checkout成功後の戻り先。購入完了を確認し、自動ログインして `/account` へリダイレクトします
 
 #### Webhook（ローカル検証の例）
 

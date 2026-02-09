@@ -5,6 +5,7 @@ import BgRemoverMulti from "../components/BgRemover"; // '@/components/...' は 
 import type { Metadata } from 'next'; // コメントアウト解除
 import GuideCard from "../components/GuideCard";
 import Link from "next/link";
+import GuestProPurchase from "../components/GuestProPurchase";
 
 const siteName = 'イージーカット';
 
@@ -226,6 +227,16 @@ export default async function Home() {
                   </svg>
                   最大30枚一括処理
                 </span>
+              </div>
+
+              <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-3">
+                <GuestProPurchase />
+                <Link
+                  href="/login"
+                  className="inline-flex items-center px-5 py-3 rounded-xl font-medium border border-gray-300 text-gray-900 hover:bg-white transition-colors"
+                >
+                  ログインしてProを管理
+                </Link>
               </div>
             </div>
           </div>
