@@ -35,11 +35,6 @@ function stripeErrorToObject(error: unknown): Record<string, unknown> {
 
 export async function POST() {
   try {
-    // #region agent log
-    if (process.env.NODE_ENV === 'development') {
-      fetch('http://127.0.0.1:7243/ingest/d5b9b24e-cf56-4f8e-b90c-eeb7b2ed6fe0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({runId:'pre-fix',hypothesisId:'H_env_or_mode',location:'src/app/api/billing/checkout/route.ts:entry',message:'billing.checkout.entry',data:{billingEnabled:isBillingEnabled(),stripeMode:getStripeMode(),stripeKeyKind:safeKeyKind(process.env.STRIPE_SECRET_KEY),hasPriceTest:!!process.env.STRIPE_PRICE_ID_PRO_TEST,hasPriceLive:!!process.env.STRIPE_PRICE_ID_PRO_LIVE,vercelEnv:process.env.VERCEL_ENV ?? null},timestamp:Date.now()})}).catch(()=>{});
-    }
-    // #endregion agent log
     const vercelEnv = process.env.VERCEL_ENV ?? null;
     const stripeKeyKind = safeKeyKind(process.env.STRIPE_SECRET_KEY);
     const stripeMode = getStripeMode();
@@ -184,11 +179,6 @@ export async function POST() {
     res.headers.set('Cache-Control', 'no-store');
     return res;
   } catch (error) {
-    // #region agent log
-    if (process.env.NODE_ENV === 'development') {
-      fetch('http://127.0.0.1:7243/ingest/d5b9b24e-cf56-4f8e-b90c-eeb7b2ed6fe0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({runId:'pre-fix',hypothesisId:'H_stripe_error',location:'src/app/api/billing/checkout/route.ts:catch',message:'billing.checkout.error',data:{error:stripeErrorToObject(error),stripeMode:getStripeMode(),stripeKeyKind:safeKeyKind(process.env.STRIPE_SECRET_KEY),hasPriceTest:!!process.env.STRIPE_PRICE_ID_PRO_TEST,hasPriceLive:!!process.env.STRIPE_PRICE_ID_PRO_LIVE,vercelEnv:process.env.VERCEL_ENV ?? null},timestamp:Date.now()})}).catch(()=>{});
-    }
-    // #endregion agent log
     console.error('billing checkout error:', stripeErrorToObject(error));
     const res = NextResponse.json({ ok: false, error: 'Failed to start checkout' }, { status: 500 });
     res.headers.set('Cache-Control', 'no-store');
