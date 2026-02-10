@@ -62,7 +62,7 @@ export default function GuestProPurchase() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center px-5 py-3 rounded-xl font-semibold bg-gray-900 text-white hover:bg-black transition-colors"
+        className="inline-flex items-center px-5 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-colors shadow-sm"
       >
         Proを購入する
       </button>
@@ -117,7 +117,7 @@ export default function GuestProPurchase() {
                 disabled={loading}
                 className="w-full inline-flex items-center justify-center px-5 py-3 rounded-xl font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-60"
               >
-                {loading ? '起動中…' : 'Checkoutへ進む'}
+                {loading ? '準備中…' : '購入手続きへ進む'}
               </button>
 
               <p className="text-xs text-gray-500 leading-relaxed">

@@ -36,7 +36,8 @@ export default async function LoginPage({
 
       <div className="mt-6 bg-blue-50 border border-blue-100 rounded-2xl p-5">
         <p className="text-sm text-gray-700 leading-relaxed">
-          このサイトでは <span className="font-semibold">「会員＝Pro購入者」</span> です。まだ購入していない場合は、先にPro購入へ進んでください。
+          ログインできるのは <span className="font-semibold">Pro購入済み（会員）</span> の方のみです。
+          まだProを購入していない場合は、先に購入手続きへ進んでください。
         </p>
         <div className="mt-3">
           <Link

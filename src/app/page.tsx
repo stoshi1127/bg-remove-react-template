@@ -235,12 +235,6 @@ export default async function Home() {
               {!isLoggedIn ? (
                 <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-3">
                   <GuestProPurchase />
-                  <Link
-                    href="/login"
-                    className="inline-flex items-center px-5 py-3 rounded-xl font-medium border border-gray-300 text-gray-900 hover:bg-white transition-colors"
-                  >
-                    ログイン
-                  </Link>
                 </div>
               ) : (
                 <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-3">

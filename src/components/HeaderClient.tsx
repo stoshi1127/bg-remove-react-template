@@ -5,9 +5,10 @@ import Link from 'next/link';
 
 type HeaderClientProps = {
   isLoggedIn: boolean;
+  isPro?: boolean;
 };
 
-export default function HeaderClient({ isLoggedIn }: HeaderClientProps) {
+export default function HeaderClient({ isLoggedIn, isPro = false }: HeaderClientProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const toggleMenu = () => {
@@ -23,6 +24,16 @@ export default function HeaderClient({ isLoggedIn }: HeaderClientProps) {
     >
       Proを購入
     </Link>
+  );
+
+  const ProBadge = (
+    <span
+      className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 shadow-sm"
+      aria-label="Pro会員"
+      title="Pro会員"
+    >
+      PRO
+    </span>
   );
 
   return (
@@ -73,12 +84,15 @@ export default function HeaderClient({ isLoggedIn }: HeaderClientProps) {
                 </Link>
               </>
             ) : (
-              <Link
-                href="/account"
-                className="px-4 py-2 rounded-lg text-gray-700 hover:text-blue-600 hover:bg-gray-50 font-medium transition-colors duration-200"
-              >
-                アカウント
-              </Link>
+              <div className="flex items-center gap-2">
+                {isPro ? ProBadge : null}
+                <Link
+                  href="/account"
+                  className="px-4 py-2 rounded-lg text-gray-700 hover:text-blue-600 hover:bg-gray-50 font-medium transition-colors duration-200"
+                >
+                  アカウント
+                </Link>
+              </div>
             )}
 
             {/* X公式アカウントリンク（アイコンのみ） */}
@@ -165,13 +179,17 @@ export default function HeaderClient({ isLoggedIn }: HeaderClientProps) {
                 </Link>
               </>
             ) : (
-              <Link
-                href="/account"
-                className="block px-4 py-2 rounded-lg text-gray-700 hover:text-blue-600 hover:bg-gray-50 font-medium transition-colors duration-200"
-                onClick={closeMenu}
-              >
-                アカウント
-              </Link>
+              <div className="px-4 py-2" onClick={closeMenu}>
+                <div className="flex items-center justify-between">
+                  <Link
+                    href="/account"
+                    className="rounded-lg text-gray-700 hover:text-blue-600 hover:bg-gray-50 font-medium transition-colors duration-200 px-2 py-2 -mx-2"
+                  >
+                    アカウント
+                  </Link>
+                  {isPro ? ProBadge : null}
+                </div>
+              </div>
             )}
 
             {/* X公式アカウントリンク（スマホ版） */}
