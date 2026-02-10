@@ -73,6 +73,8 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function Home() {
   const user = await getCurrentUser();
   const isLoggedIn = !!user;
+  const isPro = !!user?.isPro;
+  const adUserPlan: 'pro' | 'free' | 'guest' = !user ? 'guest' : user.isPro ? 'pro' : 'free';
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
@@ -198,7 +200,7 @@ export default async function Home() {
           {/* アップロードエリア - メイン */}
           <div className="animate-fade-in-up mb-12" style={{animationDelay: '0.1s'}}>
             <div className="bg-white border-2 border-blue-200 rounded-2xl py-3 shadow-lg">
-              <BgRemoverMulti />
+              <BgRemoverMulti isPro={isPro} adUserPlan={adUserPlan} />
             </div>
           </div>
           

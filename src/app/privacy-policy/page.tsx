@@ -11,7 +11,7 @@ export default function PrivacyPolicyPage() {
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">プライバシーポリシー</h1>
 
-      <p>制定日：2025年5月19日<br />最終改定日：2026年1月30日</p>
+      <p>制定日：2025年5月19日<br />最終改定日：2026年2月10日</p>
 
       <p className="mt-4">
         QuickTools（以下「当サイト」といいます）は、当サイトが提供するイージーカットサービスおよびイージートリミングサービス（以下「本サービス」といいます）における、ユーザーの個人情報を含む利用者情報の取扱いについて、以下のとおりプライバシーポリシー（以下「本ポリシー」といいます）を定めます。
@@ -100,6 +100,9 @@ export default function PrivacyPolicyPage() {
       <p>
         当サイトは、Google社が提供する広告配信サービス「Google AdSense」を利用しています。Google AdSenseは、Cookieを利用して、ユーザーの興味に応じたパーソナライズ広告を表示することがあります。これには、ユーザーの当サイトや他のウェブサイトへのアクセス情報が含まれる場合がありますが、氏名、住所、メールアドレス、電話番号などの個人を特定できる情報は含まれません。
         ユーザーは、Googleの広告設定ページ（<a href="https://adssettings.google.com/authenticated" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">https://adssettings.google.com/authenticated</a>）で、パーソナライズ広告を無効にすることができます。また、<a href="http://www.aboutads.info" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">www.aboutads.info</a> にアクセスすれば、パーソナライズ広告に使われる第三者配信事業者の Cookie を無効にできます。
+      </p>
+      <p className="mt-2">
+        本サービスでは、Freeプランまたは未ログイン（ゲスト）利用時に、処理結果エリアへ広告枠を表示する場合があります。Proプラン利用時には当該広告枠は表示されません。
       </p>
       <ul className="list-disc list-inside ml-4">
         <li>送信される情報：閲覧ページURL、IPアドレス、ユーザーエージェント、Cookie情報、広告の表示・クリック情報など</li>

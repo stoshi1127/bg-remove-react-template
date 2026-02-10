@@ -34,6 +34,10 @@ type InFile  = {
 import UploadArea from "./UploadArea";
 import PrimaryButton from "./PrimaryButton";
 import RatioButton from "./RatioButton";
+import AdSlot from "./AdSlot";
+
+type AdUserPlan = 'pro' | 'free' | 'guest';
+type AdPlacement = 'after_cta' | 'bottom';
 
 // 背景テンプレートの定義
 const templates = [
@@ -61,7 +65,12 @@ const aspectRatios = [
 const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
 const MAX_UPLOAD_MB = 4;
 
-export default function BgRemoverMulti() {
+type BgRemoverMultiProps = {
+  isPro?: boolean;
+  adUserPlan?: AdUserPlan;
+};
+
+export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: BgRemoverMultiProps) {
   
   /* ------------ state --------------- */
   const [inputs,  setInputs]  = useState<InFile[]>([]);
@@ -93,6 +102,16 @@ export default function BgRemoverMulti() {
     details?: string;
     responseTime?: number;
   }>>([]);
+
+  const adsEnabled = process.env.NEXT_PUBLIC_ADS_ENABLED !== 'false';
+  const adPlacement: AdPlacement = process.env.NEXT_PUBLIC_AD_PLACEMENT === 'bottom' ? 'bottom' : 'after_cta';
+  const adHref = process.env.NEXT_PUBLIC_AD_RESULT_URL;
+  const adTitle = process.env.NEXT_PUBLIC_AD_RESULT_TITLE || '画像作業に役立つおすすめサービス';
+  const adDescription =
+    process.env.NEXT_PUBLIC_AD_RESULT_DESCRIPTION || '背景透過の次の作業に使える関連ツールを紹介しています。';
+  const adCtaLabel = process.env.NEXT_PUBLIC_AD_RESULT_CTA_LABEL || '詳細を見る';
+  const hasCompletedResults = inputs.some(input => input.status === 'completed');
+  const shouldShowResultAd = adsEnabled && !isPro && hasCompletedResults;
 
   // 隠し機能：デバッグモード切り替え（Ctrl+Shift+D）
   useEffect(() => {
@@ -1500,6 +1519,20 @@ export default function BgRemoverMulti() {
         )}
       </div>
 
+      {shouldShowResultAd && adPlacement === 'after_cta' && (
+        <div className="border-t border-gray-100 pt-4">
+          <AdSlot
+            slotId="bgremover_result"
+            variant="A"
+            userPlan={adUserPlan}
+            href={adHref}
+            title={adTitle}
+            description={adDescription}
+            ctaLabel={adCtaLabel}
+          />
+        </div>
+      )}
+
       {/* シンプルな進捗表示（複数ファイル時のみ） */}
       {busy && inputs.length > 1 && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -1543,6 +1576,20 @@ export default function BgRemoverMulti() {
               )}
             </div>
           </div>
+        </div>
+      )}
+
+      {shouldShowResultAd && adPlacement === 'bottom' && (
+        <div className="border-t border-gray-100 pt-4">
+          <AdSlot
+            slotId="bgremover_result"
+            variant="B"
+            userPlan={adUserPlan}
+            href={adHref}
+            title={adTitle}
+            description={adDescription}
+            ctaLabel={adCtaLabel}
+          />
         </div>
       )}
 

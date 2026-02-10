@@ -11,6 +11,7 @@
   - 出力サイズ（アスペクト比）: `1:1` / `16:9` / `4:3` / `元画像に合わせる` / `被写体にフィット`
   - 背景のカスタマイズ（背景なし / テンプレート / カラーピッカー）
   - 個別ダウンロード / ZIP一括ダウンロード
+  - 広告表示（Free/ゲストのみ、結果エリアに1枠。Proは非表示）
   - 上限: **最大30枚**、**1ファイルあたり約4MBまで**（Edge Functionのリクエストボディ制限）
 
 - **イージートーン（`/tone`）**
@@ -46,6 +47,12 @@ pnpm install
 - **推奨**: `NEXT_PUBLIC_SITE_URL`（OGP/ログインリンク生成用。未設定の場合は `http://localhost:3000` を使用）
 - **必須（ゲスト購入）**: `AUTH_SECRET`（ゲスト購入時の一時データ（`PendingCheckout`）を暗号化して保存するため）
 - **任意**: `BILLING_ENABLED`（課金導線の一括OFF。ロールバック用）, `STRIPE_MODE`（未指定時は `STRIPE_SECRET_KEY` のprefixから推定）
+- **任意（広告表示）**:
+  - `NEXT_PUBLIC_ADS_ENABLED`（`false` で広告枠を非表示）
+  - `NEXT_PUBLIC_AD_PLACEMENT`（`after_cta` または `bottom`、未指定時は `after_cta`）
+  - `NEXT_PUBLIC_AD_RESULT_URL`（広告リンク先URL）
+  - `NEXT_PUBLIC_AD_RESULT_TITLE` / `NEXT_PUBLIC_AD_RESULT_DESCRIPTION` / `NEXT_PUBLIC_AD_RESULT_CTA_LABEL`（広告枠文言の上書き）
+  - 注意: 本リポジトリは `Cross-Origin-Embedder-Policy: require-corp` を有効化しています。第三者広告スクリプトを導入する場合は配信可否を事前検証してください。
 
 #### `.env` の作成
 
@@ -165,5 +172,7 @@ bash scripts/dev-test.sh
 ## プライバシー/データ取り扱い
 
 画像は処理のために外部API（Replicate）へ送信されます。詳細はアプリ内のプライバシーポリシーをご確認ください。
+
+Free/ゲスト向け広告を表示する場合、広告表示・クリックに関する情報が計測されることがあります（Google Analytics / Google AdSense の利用方針を含む）。
 
 - `src/app/privacy-policy/page.tsx`
