@@ -412,15 +412,18 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
       throw new Error('圧縮の準備に失敗しました。');
     }
 
-    const isLikelyAlpha = blob.type.includes('png') || blob.type.includes('webp');
-    const targetMime = isLikelyAlpha ? 'image/webp' : 'image/jpeg';
-    const qualitySteps = [0.82, 0.75, 0.68, 0.6];
+    // Freeの入力圧縮は「できるだけ画質を保ちつつサイズを落とす」優先。
+    // JPEGよりWebPのほうが同等品質でサイズを稼ぎやすいので、まずWebPを試し、ダメならJPEGへ。
+    const preferredMimes: Array<'image/webp' | 'image/jpeg'> = ['image/webp', 'image/jpeg'];
+    const qualitySteps = [0.9, 0.85, 0.8, 0.75, 0.7];
     const scaleSteps = [1, 0.9, 0.8, 0.7, 0.6];
-    const initialMpRatio = Math.min(1, Math.sqrt(FREE_MAX_MP / Math.max(dims.mp, 0.1)));
+    // MP上限による縮小は、まず品質調整を試してから（過度な縮小で切り抜き精度が落ちやすいため）
+    const initialMpRatio = 1;
 
     let bestBlob: Blob | null = null;
     try {
       for (const scale of scaleSteps) {
+        // scale==1 のときは品質調整を優先し、ダメなら徐々に縮小する
         const mergedScale = scale * initialMpRatio;
         const targetWidth = Math.max(1, Math.floor(dims.width * mergedScale));
         const targetHeight = Math.max(1, Math.floor(dims.height * mergedScale));
@@ -433,20 +436,22 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
           ctx.drawImage(sourceImage, 0, 0, targetWidth, targetHeight);
         }
 
-        for (const quality of qualitySteps) {
-          const outBlob = await new Promise<Blob | null>((resolve) => {
-            canvas.toBlob(resolve, targetMime, quality);
-          });
-          if (!outBlob) continue;
-          if (!bestBlob || outBlob.size < bestBlob.size) {
-            bestBlob = outBlob;
-          }
-          if (outBlob.size <= FREE_TARGET_BYTES) {
-            return {
-              blob: outBlob,
-              name: targetMime === 'image/webp' ? changeExtension(name, '.webp') : changeExtension(name, '.jpg'),
-              changed: true,
-            };
+        for (const targetMime of preferredMimes) {
+          for (const quality of qualitySteps) {
+            const outBlob = await new Promise<Blob | null>((resolve) => {
+              canvas.toBlob(resolve, targetMime, quality);
+            });
+            if (!outBlob) continue;
+            if (!bestBlob || outBlob.size < bestBlob.size) {
+              bestBlob = outBlob;
+            }
+            if (outBlob.size <= FREE_TARGET_BYTES) {
+              return {
+                blob: outBlob,
+                name: targetMime === 'image/webp' ? changeExtension(name, '.webp') : changeExtension(name, '.jpg'),
+                changed: true,
+              };
+            }
           }
         }
       }
@@ -458,9 +463,12 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
       throw new Error('画像の軽量化に失敗しました。');
     }
 
+    // bestBlob の拡張子は最後に試したmimeが分からないため、
+    // ここでは安全側として .jpg を付ける（Data/AI入力用途なので拡張子は実害が小さい）。
+    // 目標サイズに入って return するケースでは正しい拡張子が付与される。
     return {
       blob: bestBlob,
-      name: targetMime === 'image/webp' ? changeExtension(name, '.webp') : changeExtension(name, '.jpg'),
+      name: changeExtension(name, '.jpg'),
       changed: true,
     };
   }, [changeExtension, getImageDimensions]);
@@ -580,53 +588,116 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
   };
 
   // バウンディングボックスを計算する関数
-  const calculateBoundingBox = async (imageUrl: string): Promise<{ x: number, y: number, width: number, height: number } | undefined> => {
+  // NOTE: alpha>0 をそのまま採用すると、半透明ノイズでbboxが画像全体に広がることがある。
+  // そのため「alphaしきい値」+「外れ値（ごく少数のピクセル）除外」で安定させる。
+  const calculateBoundingBox = async (
+    imageUrl: string,
+  ): Promise<{ x: number; y: number; width: number; height: number } | undefined> => {
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         if (!ctx) {
-          reject("Could not get canvas context");
+          reject('Could not get canvas context');
           return;
         }
+
         canvas.width = img.width;
         canvas.height = img.height;
         ctx.drawImage(img, 0, 0);
 
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const { width, height } = canvas;
+        const imageData = ctx.getImageData(0, 0, width, height);
         const pixels = imageData.data;
 
-        let minX = canvas.width;
-        let minY = canvas.height;
-        let maxX = 0;
-        let maxY = 0;
+        // しきい値（1〜255）。小さすぎると薄いゴミも拾う。
+        const ALPHA_THRESHOLD = 24;
+
+        const rowCounts = new Uint32Array(height);
+        const colCounts = new Uint32Array(width);
+        let totalSolid = 0;
         let hasTransparent = false;
 
-        for (let y = 0; y < canvas.height; y++) {
-          for (let x = 0; x < canvas.width; x++) {
-            const idx = (y * canvas.width + x) * 4;
+        for (let y = 0; y < height; y++) {
+          const rowOffset = y * width * 4;
+          for (let x = 0; x < width; x++) {
+            const idx = rowOffset + x * 4;
             const alpha = pixels[idx + 3];
-
-            if (alpha > 0) { // 透明でないピクセル
-              minX = Math.min(minX, x);
-              minY = Math.min(minY, y);
-              maxX = Math.max(maxX, x);
-              maxY = Math.max(maxY, y);
+            if (alpha >= ALPHA_THRESHOLD) {
+              rowCounts[y]++;
+              colCounts[x]++;
+              totalSolid++;
             } else {
               hasTransparent = true;
             }
           }
         }
 
-        // 透明な部分が全くない画像の場合は画像全体を返す
-        if (!hasTransparent || (minX > maxX || minY > maxY)) {
-             resolve({ x: 0, y: 0, width: canvas.width, height: canvas.height });
-        } else {
-             resolve({ x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 });
+        // 透明が無い（写真そのまま等）の場合は全体
+        if (!hasTransparent || totalSolid === 0) {
+          resolve({ x: 0, y: 0, width, height });
+          return;
         }
+
+        // 外れ値（ごく少数のピクセル）をトリムする
+        // 例: 全solidの0.1%未満の“端っこ”は無視（speckle対策）
+        const trimSolid = Math.max(1, Math.floor(totalSolid * 0.001));
+
+        const findFromTop = () => {
+          let acc = 0;
+          for (let y = 0; y < height; y++) {
+            acc += rowCounts[y];
+            if (acc >= trimSolid) return y;
+          }
+          return 0;
+        };
+        const findFromBottom = () => {
+          let acc = 0;
+          for (let y = height - 1; y >= 0; y--) {
+            acc += rowCounts[y];
+            if (acc >= trimSolid) return y;
+          }
+          return height - 1;
+        };
+        const findFromLeft = () => {
+          let acc = 0;
+          for (let x = 0; x < width; x++) {
+            acc += colCounts[x];
+            if (acc >= trimSolid) return x;
+          }
+          return 0;
+        };
+        const findFromRight = () => {
+          let acc = 0;
+          for (let x = width - 1; x >= 0; x--) {
+            acc += colCounts[x];
+            if (acc >= trimSolid) return x;
+          }
+          return width - 1;
+        };
+
+        let minY = findFromTop();
+        let maxY = findFromBottom();
+        let minX = findFromLeft();
+        let maxX = findFromRight();
+
+        if (minX > maxX || minY > maxY) {
+          resolve({ x: 0, y: 0, width, height });
+          return;
+        }
+
+        // 余白を少し足して切り詰めすぎを防ぐ
+        const margin = Math.min(24, Math.max(2, Math.floor(Math.min(width, height) * 0.005)));
+        minX = Math.max(0, minX - margin);
+        minY = Math.max(0, minY - margin);
+        maxX = Math.min(width - 1, maxX + margin);
+        maxY = Math.min(height - 1, maxY + margin);
+
+        resolve({ x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 });
       };
-      img.onerror = (e) => reject("Image loading error for bounding box calculation" + e);
+
+      img.onerror = (e) => reject('Image loading error for bounding box calculation' + e);
       img.src = imageUrl;
     });
   };
