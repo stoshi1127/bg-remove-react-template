@@ -39,6 +39,11 @@ import AdSlot from "./AdSlot";
 
 type AdUserPlan = 'pro' | 'free' | 'guest';
 type AdPlacement = 'after_cta' | 'bottom';
+type OversizedPromptItem = {
+  id: string;
+  name: string;
+  issues: string[];
+};
 
 // 背景テンプレートの定義
 const templates = [
@@ -89,7 +94,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
   const [msg,     setMsg]     = useState<string | null>(null);
   const [progress, setProgress] = useState<number>(0);
   const [processedCount, setProcessedCount] = useState<number>(0);
-  const [oversizedPromptCount, setOversizedPromptCount] = useState<number>(0);
+  const [oversizedPromptItems, setOversizedPromptItems] = useState<OversizedPromptItem[]>([]);
   
   // 並行処理制限の設定（ユーザーには見せず、完全自動）
   const [maxConcurrentProcesses, setMaxConcurrentProcesses] = useState<number>(5); // デフォルト5並行
@@ -803,15 +808,37 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
       return;
     }
 
-    const oversized = candidates.filter(file => file.blob.size > MAX_UPLOAD_BYTES);
-    if (!isPro && oversized.length > 0 && !forceFreeCompress) {
-      console.info('[upload_too_large]', { count: oversized.length });
-      setOversizedPromptCount(oversized.length);
-      setMsg('大きめの画像があります。無料で軽くして続けるか、Proで元画像のまま続けるか選べます。');
-      return;
+    if (!isPro && !forceFreeCompress) {
+      const oversizedWithReasons = (
+        await Promise.all(
+          candidates.map(async (file): Promise<OversizedPromptItem | null> => {
+            const issues: string[] = [];
+
+            if (file.blob.size > MAX_UPLOAD_BYTES) {
+              const sizeMb = (file.blob.size / 1024 / 1024).toFixed(1);
+              issues.push(`サイズ: ${sizeMb}MB（上限 ${MAX_UPLOAD_MB}MB）`);
+            }
+
+            const meta = await getImageDimensions(file.blob).catch(() => null);
+            if (meta && meta.mp > FREE_MAX_MP) {
+              issues.push(`解像度: ${meta.width}×${meta.height}（${meta.mp.toFixed(1)}MP / 上限 ${FREE_MAX_MP}MP）`);
+            }
+
+            if (issues.length === 0) return null;
+            return { id: file.id, name: file.name, issues };
+          }),
+        )
+      ).filter((item): item is OversizedPromptItem => item !== null);
+
+      if (oversizedWithReasons.length > 0) {
+        console.info('[upload_too_large]', { count: oversizedWithReasons.length, files: oversizedWithReasons.map((i) => i.name) });
+        setOversizedPromptItems(oversizedWithReasons);
+        setMsg('大きい画像があります。圧縮して無料で続けるか、圧縮せずPROで続けるか選んでください。');
+        return;
+      }
     }
 
-    setOversizedPromptCount(0);
+    setOversizedPromptItems([]);
     const filesToProcess = candidates;
 
     // 大量ファイル処理時の自動調整
@@ -1346,37 +1373,53 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
   /* ------------ UI --------------- */
   return (
     <div className="w-full max-w-3xl mx-auto p-6 space-y-6 bg-white rounded-xl">
-      {oversizedPromptCount > 0 && (
+      {oversizedPromptItems.length > 0 && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setOversizedPromptCount(0)} aria-hidden="true" />
+          <div className="absolute inset-0 bg-black/40" onClick={() => setOversizedPromptItems([])} aria-hidden="true" />
           <div className="relative w-full max-w-md bg-white rounded-2xl shadow-xl border border-gray-200 p-6">
-            <h3 className="text-lg font-bold text-gray-900">この画像は大きめです</h3>
+            <h3 className="text-lg font-bold text-gray-900">{oversizedPromptItems.length}件の画像が大きいです</h3>
             <p className="text-sm text-gray-600 mt-2">
-              無料でも続けられます。画像を軽くして進むか、Proで元画像のまま進むか選んでください。
+              下記の画像は、サイズまたは解像度が上限を超えています。
             </p>
-            <p className="text-xs text-gray-500 mt-2">対象: {oversizedPromptCount}件</p>
-            <div className="mt-5 space-y-2">
+            <ul className="mt-3 max-h-44 overflow-auto rounded-lg border border-gray-200 bg-gray-50 p-3 space-y-2">
+              {oversizedPromptItems.map((item) => (
+                <li key={item.id} className="text-xs text-gray-700 leading-relaxed">
+                  <p className="font-semibold text-gray-900">{item.name}</p>
+                  {item.issues.map((issue) => (
+                    <p key={issue}>- {issue}</p>
+                  ))}
+                </li>
+              ))}
+            </ul>
+            <div className="mt-5 space-y-3">
               <button
                 type="button"
-                className="w-full inline-flex items-center justify-center px-4 py-3 rounded-xl font-semibold bg-blue-600 text-white hover:bg-blue-700"
+                className="w-full inline-flex items-center justify-center px-4 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-colors shadow-sm"
                 onClick={() => {
-                  console.info('[free_compress_chosen]', { count: oversizedPromptCount });
-                  setOversizedPromptCount(0);
-                  void handleRemove(true);
-                }}
-              >
-                無料で続ける（軽くして送る）
-              </button>
-              <button
-                type="button"
-                className="w-full inline-flex items-center justify-center px-4 py-3 rounded-xl font-semibold border border-gray-300 text-gray-800 hover:bg-gray-50"
-                onClick={() => {
-                  console.info('[pro_original_chosen]', { count: oversizedPromptCount });
+                  console.info('[pro_original_chosen]', { count: oversizedPromptItems.length });
+                  setOversizedPromptItems([]);
+                  setMsg(null);
                   window.location.href = '/?buyPro=1#pro';
                 }}
               >
-                元のまま続ける（Pro）
+                圧縮せずPROで続ける
               </button>
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  className="w-full inline-flex items-center justify-center px-4 py-3 rounded-xl font-semibold border border-gray-300 text-gray-800 hover:bg-gray-50"
+                  onClick={() => {
+                    console.info('[free_compress_chosen]', { count: oversizedPromptItems.length });
+                    setOversizedPromptItems([]);
+                  void handleRemove(true);
+                  }}
+                >
+                  圧縮して無料で続ける
+                </button>
+                <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1">
+                  圧縮されるため、画像が少し荒くなる可能性があります。
+                </p>
+              </div>
             </div>
           </div>
         </div>
