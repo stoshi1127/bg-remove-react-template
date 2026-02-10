@@ -25,7 +25,6 @@ model User {
   sessions      Session[]
   stripeCustomer StripeCustomer?
   stripeSubscription StripeSubscription?
-  pendingCheckouts PendingCheckout[]
 }
 
 model AuthToken {
@@ -112,7 +111,11 @@ model StripeWebhookEvent {
 
 model PendingCheckout {
   id                     String    @id @default(cuid())
-  userId                 String
+  // Email is stored encrypted to minimize PII exposure in DB.
+  // This record is short-lived and is deleted/ignored after expiry/consumption.
+  emailEnc               String
+  // Normalized email hash (peppered) for lightweight lookups without storing plaintext.
+  emailHash              String
   tokenHash              String    @unique
   stripeCheckoutSessionId String?  @unique
   stripeMode             StripeMode
@@ -120,9 +123,7 @@ model PendingCheckout {
   completedAt            DateTime?
   usedAt                 DateTime?
   createdAt              DateTime  @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId, createdAt])
+ 
+  @@index([emailHash, stripeMode, createdAt])
   @@index([stripeMode, createdAt])
 }

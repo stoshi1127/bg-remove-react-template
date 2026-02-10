@@ -37,13 +37,17 @@ export async function POST(req: Request) {
       return res;
     }
 
-    // Upsert user by email.
-    const user = await prisma.user.upsert({
+    // “会員＝課金者” のため、ログイン時に User を新規作成しない。
+    // 存在しない場合もプライバシーのため常に 200 を返す（メール送信もしない）。
+    const user = await prisma.user.findUnique({
       where: { email },
-      create: { email },
-      update: {},
       select: { id: true, email: true },
     });
+    if (!user) {
+      const res = NextResponse.json({ ok: true }, { status: 200 });
+      res.headers.set('Cache-Control', 'no-store');
+      return res;
+    }
 
     // Basic throttle: if the last token was created within 60s, do nothing.
     const lastToken = await prisma.authToken.findFirst({

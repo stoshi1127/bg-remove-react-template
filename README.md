@@ -44,7 +44,7 @@ pnpm install
 - **必須（会員ログイン）**: `POSTGRES_PRISMA_URL`, `POSTGRES_URL_NON_POOLING`, `RESEND_API_KEY`, `EMAIL_FROM`
 - **必須（Pro課金 / Stripe）**: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID_PRO_TEST`（本番は `STRIPE_PRICE_ID_PRO_LIVE`）
 - **推奨**: `NEXT_PUBLIC_SITE_URL`（OGP/ログインリンク生成用。未設定の場合は `http://localhost:3000` を使用）
-- **推奨**: `AUTH_SECRET`（将来の拡張用。現状はセッションをDBで管理）
+- **必須（ゲスト購入）**: `AUTH_SECRET`（ゲスト購入時の一時データ（`PendingCheckout`）を暗号化して保存するため）
 - **任意**: `BILLING_ENABLED`（課金導線の一括OFF。ロールバック用）, `STRIPE_MODE`（未指定時は `STRIPE_SECRET_KEY` のprefixから推定）
 
 #### `.env` の作成
@@ -119,7 +119,7 @@ curl -X POST -F "file=@./test.jpg" "http://localhost:3000/api/remove-bg" --outpu
   - ログイン必須。Pro購読のCheckoutを開始し `{ ok: true, url }` を返します
   - 既に有効購読がある場合は二重課金防止のためPortalへ誘導し `{ ok: true, kind: 'portal', url }` を返します
 - `POST /api/billing/guest-checkout`
-  - ログイン不要。購入時にメールアドレスを入力してCheckoutを開始します（このタイミングでユーザーが作成されます）
+  - ログイン不要。購入時にメールアドレスを入力してCheckoutを開始します（**決済完了後**にユーザー（会員）が作成されます）
 - `POST /api/billing/portal`
   - ログイン必須。Customer Portalを開くための `{ ok: true, url }` を返します
 - `POST /api/billing/webhook`

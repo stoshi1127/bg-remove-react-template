@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/db';
+import { normalizeEmail } from '@/lib/auth/email';
 import { createSession } from '@/lib/auth/session';
 import { SESSION_COOKIE_NAME } from '@/lib/auth/constants';
 import { getStripeClient } from '@/lib/billing/stripe';
 import { getStripeMode } from '@/lib/billing/stripeMode';
+import { decryptEmail } from '@/lib/billing/pendingCheckoutEmail';
 
 export const runtime = 'nodejs';
 
@@ -46,28 +48,41 @@ export async function GET(req: Request) {
       return NextResponse.redirect(new URL('/?billing=not_paid', url));
     }
 
-    const userId =
-      (typeof session.metadata?.userId === 'string' ? session.metadata.userId : null) ??
+    // New flow: "会員＝課金者" -> create user only after successful payment.
+    const pendingCheckoutId =
+      (typeof session.metadata?.pendingCheckoutId === 'string' ? session.metadata.pendingCheckoutId : null) ??
       (typeof session.client_reference_id === 'string' ? session.client_reference_id : null);
 
-    if (!userId) {
-      return NextResponse.redirect(new URL('/login?error=missing_user', url));
+    if (!pendingCheckoutId) {
+      return NextResponse.redirect(new URL('/login?error=missing_checkout', url));
     }
 
-    // Ensure user exists (it should; guest-checkout upserts it).
-    await prisma.user.update({
-      where: { id: userId },
-      data: { lastLoginAt: new Date(), plan: 'pro', isPro: true, proValidUntil: null },
-    }).catch(async () => {
-      // If user does not exist, create from email if available.
-      const email = typeof session.customer_details?.email === 'string' ? session.customer_details.email : null;
-      if (!email) throw new Error('missing user and email');
-      await prisma.user.create({ data: { id: userId, email } });
+    // Reduce PII retention (best-effort).
+    const now = new Date();
+    await prisma.pendingCheckout.deleteMany({
+      where: {
+        OR: [{ expiresAt: { lte: now } }, { usedAt: { not: null } }],
+      },
+    });
+
+    const pending = await prisma.pendingCheckout.findUnique({
+      where: { id: pendingCheckoutId },
+      select: { id: true, emailEnc: true, stripeMode: true, expiresAt: true, usedAt: true },
+    });
+
+    if (!pending || pending.stripeMode !== stripeMode || pending.expiresAt.getTime() <= now.getTime() || pending.usedAt) {
+      return NextResponse.redirect(new URL('/login?error=expired_checkout', url));
+    }
+
+    const email = normalizeEmail(decryptEmail(pending.emailEnc));
+    const user = await prisma.user.upsert({
+      where: { email },
+      create: { email, plan: 'pro', isPro: true, proValidUntil: null, lastLoginAt: now },
+      update: { plan: 'pro', isPro: true, proValidUntil: null, lastLoginAt: now },
+      select: { id: true },
     });
 
     // Mark pending checkout consumed (best-effort).
-    const pendingCheckoutId =
-      typeof session.metadata?.pendingCheckoutId === 'string' ? session.metadata.pendingCheckoutId : null;
     if (pendingCheckoutId) {
       await prisma.pendingCheckout.updateMany({
         where: { id: pendingCheckoutId, stripeMode, usedAt: null },
@@ -80,7 +95,7 @@ export async function GET(req: Request) {
       });
     }
 
-    const { token, expiresAt } = await createSession(userId);
+    const { token, expiresAt } = await createSession(user.id);
     const res = NextResponse.redirect(new URL('/account?billing=success', url));
     res.headers.set('Cache-Control', 'no-store');
     setSessionCookie(res, token, expiresAt);

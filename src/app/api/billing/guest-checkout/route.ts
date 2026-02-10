@@ -8,6 +8,7 @@ import { getStripeClient } from '@/lib/billing/stripe';
 import { getStripeMode } from '@/lib/billing/stripeMode';
 import { getProPriceId, isBillingEnabled } from '@/lib/billing/config';
 import { computeEntitlementFromSubscription } from '@/lib/billing/entitlement';
+import { encryptEmail, hashNormalizedEmail } from '@/lib/billing/pendingCheckoutEmail';
 
 export const runtime = 'nodejs';
 
@@ -46,38 +47,56 @@ export async function POST(req: Request) {
       return res;
     }
 
-    // Create/attach user by email (becomes “member” at purchase start).
-    const user = await prisma.user.upsert({
+    // “会員＝課金者” のため、購入開始時点では User を作らない。
+    // 既に課金者（Pro）なら二重課金防止として購入は開始せず、ログイン導線へ。
+    const existingUser = await prisma.user.findUnique({
       where: { email },
-      create: { email },
-      update: {},
-      select: { id: true, email: true },
+      select: { id: true, email: true, plan: true, isPro: true },
     });
-
-    // Double-charge prevention (DB is source of truth).
-    const existingSub = await prisma.stripeSubscription.findFirst({
-      where: { userId: user.id, stripeMode },
-      orderBy: { updatedAt: 'desc' },
-    });
-    const entitlement = computeEntitlementFromSubscription({ subscription: existingSub, stripeMode });
-    if (entitlement.isPro) {
+    if (existingUser?.isPro) {
       const res = NextResponse.json({ ok: true, kind: 'already_pro' }, { status: 200 });
       res.headers.set('Cache-Control', 'no-store');
       return res;
+    }
+
+    // Additional guard: if a stale free user exists (e.g. created by older logic),
+    // still prevent double charge if their subscription indicates Pro.
+    if (existingUser?.id) {
+      const existingSub = await prisma.stripeSubscription.findFirst({
+        where: { userId: existingUser.id, stripeMode },
+        orderBy: { updatedAt: 'desc' },
+      });
+      const entitlement = computeEntitlementFromSubscription({ subscription: existingSub, stripeMode });
+      if (entitlement.isPro) {
+        const res = NextResponse.json({ ok: true, kind: 'already_pro' }, { status: 200 });
+        res.headers.set('Cache-Control', 'no-store');
+        return res;
+      }
     }
 
     const stripe = getStripeClient();
     const siteUrl = getSiteUrl();
     const priceId = getProPriceId();
 
-    // Create pending checkout proof (hash only).
+    // Cleanup expired/consumed pending records (best-effort, reduces PII retention).
+    const now = new Date();
+    await prisma.pendingCheckout.deleteMany({
+      where: {
+        OR: [{ expiresAt: { lte: now } }, { usedAt: { not: null } }],
+      },
+    });
+
+    // Create pending checkout proof.
     const token = generateRandomToken(32);
     const tokenHash = sha256Hex(token);
     const expiresAt = new Date(Date.now() + PENDING_TTL_MINUTES * 60 * 1000);
+    const emailEnc = encryptEmail(email);
+    const emailHash = hashNormalizedEmail(email);
 
     const pending = await prisma.pendingCheckout.create({
       data: {
-        userId: user.id,
+        emailEnc,
+        emailHash,
         tokenHash,
         stripeMode,
         expiresAt,
@@ -93,17 +112,15 @@ export async function POST(req: Request) {
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: successUrl,
       cancel_url: cancelUrl,
-      customer_email: user.email,
-      client_reference_id: user.id,
+      customer_email: email,
+      client_reference_id: pending.id,
       metadata: {
-        userId: user.id,
         plan: 'pro',
         stripeMode,
         pendingCheckoutId: pending.id,
       },
       subscription_data: {
         metadata: {
-          userId: user.id,
           plan: 'pro',
           stripeMode,
           pendingCheckoutId: pending.id,

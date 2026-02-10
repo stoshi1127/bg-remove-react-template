@@ -2,9 +2,11 @@ import { NextResponse } from 'next/server';
 
 import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
+import { normalizeEmail } from '@/lib/auth/email';
 import { getStripeClient } from '@/lib/billing/stripe';
 import { getStripeMode } from '@/lib/billing/stripeMode';
 import { computeEntitlementFromSubscription } from '@/lib/billing/entitlement';
+import { decryptEmail } from '@/lib/billing/pendingCheckoutEmail';
 
 export const runtime = 'nodejs';
 
@@ -71,6 +73,7 @@ export async function POST(req: Request) {
       // TS servers can lag behind Prisma client generation for TransactionClient delegates.
       // Define a minimal delegate shape locally (no secrets, no any).
       type PendingCheckoutDelegate = {
+        findUnique: (args: unknown) => Promise<unknown>;
         updateMany: (args: {
           where: {
             id?: string;
@@ -84,6 +87,7 @@ export async function POST(req: Request) {
             completedAt?: Date;
           };
         }) => Promise<{ count: number }>;
+        deleteMany: (args: unknown) => Promise<{ count: number }>;
       };
       const itx = tx as unknown as Prisma.TransactionClient & { pendingCheckout: PendingCheckoutDelegate };
 
@@ -105,12 +109,64 @@ export async function POST(req: Request) {
         if (!session) return;
 
         const metadata = asRecord(session.metadata) ?? {};
-        const userId = getString(metadata, 'userId') ?? getString(session, 'client_reference_id');
+        const pendingCheckoutId =
+          getString(metadata, 'pendingCheckoutId') ?? getString(session, 'client_reference_id');
         const customerId = asStripeId(session.customer);
         const sessionId = getString(session, 'id');
-        const pendingCheckoutId = getString(metadata, 'pendingCheckoutId');
+        const legacyUserId = getString(metadata, 'userId');
 
-        if (!userId || !customerId) return;
+        if (!customerId) return;
+
+        const now = new Date();
+        // Reduce PII retention (best-effort).
+        await itx.pendingCheckout.deleteMany({
+          where: {
+            OR: [{ expiresAt: { lte: now } }, { usedAt: { not: null } }],
+          },
+        });
+
+        // New flow: "会員＝課金者" -> create user only after successful payment (using PendingCheckout email).
+        let userId: string | null = null;
+        if (pendingCheckoutId) {
+          const pendingUnknown = await itx.pendingCheckout.findUnique({
+            where: { id: pendingCheckoutId },
+            select: {
+              id: true,
+              emailEnc: true,
+              stripeMode: true,
+              expiresAt: true,
+              completedAt: true,
+              usedAt: true,
+            },
+          });
+          const pending = asRecord(pendingUnknown);
+          const pendingStripeMode = pending ? getString(pending, 'stripeMode') : null;
+          const expiresAt = pending && pending.expiresAt instanceof Date ? pending.expiresAt : null;
+          const usedAt = pending && pending.usedAt instanceof Date ? pending.usedAt : null;
+          const emailEnc = pending ? getString(pending, 'emailEnc') : null;
+
+          if (
+            pending &&
+            pendingStripeMode === stripeMode &&
+            expiresAt &&
+            expiresAt.getTime() > now.getTime() &&
+            !usedAt &&
+            emailEnc
+          ) {
+            const email = normalizeEmail(decryptEmail(emailEnc));
+            const user = await tx.user.upsert({
+              where: { email },
+              create: { email, plan: 'pro', isPro: true, proValidUntil: null },
+              update: { plan: 'pro', isPro: true, proValidUntil: null },
+              select: { id: true },
+            });
+            userId = user.id;
+          }
+        }
+
+        // Legacy fallback (older flow wrote userId into metadata).
+        userId ??= legacyUserId;
+        if (!userId) return;
 
         // Mode mixing protection: only upsert in current mode.
         await tx.stripeCustomer.upsert({
@@ -133,7 +189,6 @@ export async function POST(req: Request) {
         });
 
         // Link/activate PendingCheckout (best-effort).
-        const now = new Date();
         if (pendingCheckoutId) {
           await itx.pendingCheckout.updateMany({
             where: {
