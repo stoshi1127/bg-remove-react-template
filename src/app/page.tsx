@@ -6,6 +6,7 @@ import type { Metadata } from 'next'; // コメントアウト解除
 import GuideCard from "../components/GuideCard";
 import Link from "next/link";
 import GuestProPurchase from "../components/GuestProPurchase";
+import { getCurrentUser } from '@/lib/auth/session';
 
 const siteName = 'イージーカット';
 
@@ -70,6 +71,8 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Home() {
+  const user = await getCurrentUser();
+  const isLoggedIn = !!user;
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
@@ -200,7 +203,7 @@ export default async function Home() {
           </div>
           
           {/* CTAセクション */}
-          <div className="animate-fade-in-up mb-8" style={{animationDelay: '0.2s'}}>
+          <div id="pro" className="animate-fade-in-up mb-8 scroll-mt-28" style={{animationDelay: '0.2s'}}>
             <div className="bg-blue-50 border border-blue-100 p-4 rounded-2xl">
               <div className="flex flex-wrap justify-center gap-3">
                 <span className="inline-flex items-center px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
@@ -229,15 +232,27 @@ export default async function Home() {
                 </span>
               </div>
 
-              <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-3">
-                <GuestProPurchase />
-                <Link
-                  href="/login"
-                  className="inline-flex items-center px-5 py-3 rounded-xl font-medium border border-gray-300 text-gray-900 hover:bg-white transition-colors"
-                >
-                  ログインしてProを管理
-                </Link>
-              </div>
+              {!isLoggedIn ? (
+                <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-3">
+                  <GuestProPurchase />
+                  <Link
+                    href="/login"
+                    className="inline-flex items-center px-5 py-3 rounded-xl font-medium border border-gray-300 text-gray-900 hover:bg-white transition-colors"
+                  >
+                    ログイン
+                  </Link>
+                </div>
+              ) : (
+                <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-3">
+                  <Link
+                    href="/account"
+                    className="inline-flex items-center px-6 py-3 rounded-xl font-semibold bg-gray-900 text-white hover:bg-black transition-colors"
+                  >
+                    アカウントへ
+                  </Link>
+                  <p className="text-sm text-gray-600">プラン/請求の確認・管理はアカウントから行えます。</p>
+                </div>
+              )}
             </div>
           </div>
         </div>

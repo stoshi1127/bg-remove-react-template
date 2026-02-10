@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 
 type GuestCheckoutResponse =
   | { ok: true; url: string }
@@ -12,6 +13,17 @@ export default function GuestProPurchase() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const autoOpenedRef = useRef(false);
+
+  useEffect(() => {
+    if (autoOpenedRef.current) return;
+    const v = searchParams.get('buyPro');
+    if (v === '1') {
+      autoOpenedRef.current = true;
+      setOpen(true);
+    }
+  }, [searchParams]);
 
   const extractError = (v: unknown): string | null => {
     if (!v || typeof v !== 'object') return null;

@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import Link from 'next/link';
 
 export default function LoginForm({ error }: { error?: string }) {
   const errorMessage = useMemo(() => {
@@ -70,6 +71,14 @@ export default function LoginForm({ error }: { error?: string }) {
           メールを確認してください。ログインリンクを送信しました。
         </div>
       ) : null}
+
+      <p className="text-xs text-gray-500 leading-relaxed">
+        ※ 会員（Pro購入者）登録済みのメールアドレスにのみ、ログインリンクが届きます。届かない場合は{' '}
+        <Link href="/?buyPro=1#pro" className="text-blue-700 hover:underline font-medium">
+          Proを購入
+        </Link>
+        {' '}してください。
+      </p>
 
       {status === 'error' ? (
         <div className="bg-red-50 border border-red-200 text-red-900 px-4 py-3 rounded-xl text-sm">

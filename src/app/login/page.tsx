@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 
 import LoginForm from './ui/LoginForm';
 
@@ -31,6 +32,20 @@ export default async function LoginPage({
 
       <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-soft">
         <LoginForm error={error} />
+      </div>
+
+      <div className="mt-6 bg-blue-50 border border-blue-100 rounded-2xl p-5">
+        <p className="text-sm text-gray-700 leading-relaxed">
+          このサイトでは <span className="font-semibold">「会員＝Pro購入者」</span> です。まだ購入していない場合は、先にPro購入へ進んでください。
+        </p>
+        <div className="mt-3">
+          <Link
+            href="/?buyPro=1#pro"
+            className="inline-flex items-center px-5 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-colors"
+          >
+            Proを購入する
+          </Link>
+        </div>
       </div>
 
       <p className="text-xs text-gray-500 mt-6 leading-relaxed">
