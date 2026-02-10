@@ -11,7 +11,7 @@ export default function PrivacyPolicyPage() {
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">プライバシーポリシー</h1>
 
-      <p>制定日：2025年5月19日<br />最終改定日：2026年2月10日</p>
+      <p>制定日：2025年5月19日<br />最終改定日：2026年2月11日</p>
 
       <p className="mt-4">
         QuickTools（以下「当サイト」といいます）は、当サイトが提供するイージーカットサービスおよびイージートリミングサービス（以下「本サービス」といいます）における、ユーザーの個人情報を含む利用者情報の取扱いについて、以下のとおりプライバシーポリシー（以下「本ポリシー」といいます）を定めます。
@@ -60,7 +60,7 @@ export default function PrivacyPolicyPage() {
           アップロード画像は、背景除去やトリミング等の画像処理目的でのみ利用し、Replicate社が提供するAPIに送信されます。
         </li>
         <li>
-          Replicate社へ送信されたアップロード画像及び処理結果の画像データは、Replicate社のシステム上で処理後、同社のプライバシーポリシーに基づき、サービス提供に必要な期間、一時的に保存されることがあります。当サイト（QuickTools）は、Replicateサーバー上での一時保存を除き、ユーザーがアップロードした画像データ及び処理結果の画像データを、当サイト独自のサーバーやストレージに意図的に保存することはありません。Replicate社におけるデータの取り扱いについては、Replicate社のプライバシーポリシー（<a href="https://replicate.com/privacy" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">https://replicate.com/privacy</a>）をご確認ください。
+          Replicate社へ送信されたアップロード画像及び処理結果の画像データは、Replicate社のシステム上で処理後、同社のプライバシーポリシーに基づき、サービス提供に必要な期間、一時的に保存されることがあります。また、Proプランでは大きい画像のアップロード安定化のため、当サイトが管理するオブジェクトストレージへ画像を一時保存する場合があります。この一時保存データは処理完了後に削除を試行し、残存した場合も短期間で削除される運用とします。Replicate社におけるデータの取り扱いについては、Replicate社のプライバシーポリシー（<a href="https://replicate.com/privacy" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">https://replicate.com/privacy</a>）をご確認ください。
         </li>
         <li>
           当サイトは、アップロード画像及び処理結果の画像データを、上記処理目的以外で利用したり、第三者に不当に開示したりすることはありません。ただし、法令に基づく場合や、人の生命、身体または財産の保護のために必要がある場合であって、本人の同意を得ることが困難であるときなどを除きます。
@@ -131,6 +131,9 @@ export default function PrivacyPolicyPage() {
         <li>送信先事業者名：Stripe, Inc.</li>
         <li>送信される情報の内容：メールアドレス、購入/契約情報、決済に必要な情報（クレジットカード情報等はStripe社が直接取得します）</li>
         <li>送信される情報の利用目的：Proサブスクリプションの購入、請求、支払い管理、カスタマーポータルの提供</li>
+        <li>送信先事業者名：Vercel Inc.（Vercel Blob）</li>
+        <li>送信される情報の内容：アップロード画像（Proプランの大容量画像を安定して処理するための一時保存）</li>
+        <li>送信される情報の利用目的：画像処理前の一時保管および処理完了後の削除運用</li>
       </ul>
 
       <h2 className="text-2xl font-semibold mt-6 mb-3">6. 安全管理措置</h2>

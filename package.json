@@ -19,6 +19,7 @@
     "@emotion/styled": "^11.14.0",
     "@mui/material": "^7.1.0",
     "@prisma/client": "^6.19.2",
+    "@vercel/blob": "^2.2.0",
     "file-saver": "^2.0.5",
     "formidable": "^3.5.4",
     "heic2any": "^0.0.4",

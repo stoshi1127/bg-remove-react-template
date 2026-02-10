@@ -5,6 +5,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import Link from "next/link";
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
+import { upload as uploadToBlob } from '@vercel/blob/client';
 
 // ファイルステータスの型定義
 type FileStatus = 
@@ -61,9 +62,15 @@ const aspectRatios = [
   { key: 'fit-subject', label: '被写体にフィット' }
 ];
 
-// Vercel Edge Function のボディ上限対策（約4MB）
+// Freeの安全上限（Edge経由ルート互換）
 const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
 const MAX_UPLOAD_MB = 4;
+const FREE_TARGET_BYTES = Math.floor(3.5 * 1024 * 1024);
+const FREE_MAX_MP = 12;
+const PRO_MAX_UPLOAD_BYTES = (Number(process.env.NEXT_PUBLIC_PRO_MAX_UPLOAD_MB || '25')) * 1024 * 1024;
+const PRO_MAX_MP = Number(process.env.NEXT_PUBLIC_PRO_MAX_MP || '48');
+const PRO_MAX_SIDE = Number(process.env.NEXT_PUBLIC_PRO_MAX_SIDE_PX || '10000');
+const USE_DIRECT_UPLOAD_FOR_PRO = process.env.NEXT_PUBLIC_UPLOAD_DIRECT_ENABLED !== 'false';
 
 type BgRemoverMultiProps = {
   isPro?: boolean;
@@ -82,6 +89,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
   const [msg,     setMsg]     = useState<string | null>(null);
   const [progress, setProgress] = useState<number>(0);
   const [processedCount, setProcessedCount] = useState<number>(0);
+  const [oversizedPromptCount, setOversizedPromptCount] = useState<number>(0);
   
   // 並行処理制限の設定（ユーザーには見せず、完全自動）
   const [maxConcurrentProcesses, setMaxConcurrentProcesses] = useState<number>(5); // デフォルト5並行
@@ -341,6 +349,122 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
     );
   }, []);
 
+  const getImageDimensions = useCallback(async (blob: Blob): Promise<{ width: number; height: number; mp: number }> => {
+    if ('createImageBitmap' in window) {
+      const bitmap = await createImageBitmap(blob);
+      const width = bitmap.width;
+      const height = bitmap.height;
+      bitmap.close();
+      return { width, height, mp: (width * height) / 1_000_000 };
+    }
+
+    const objectUrl = URL.createObjectURL(blob);
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const width = img.naturalWidth;
+        const height = img.naturalHeight;
+        URL.revokeObjectURL(objectUrl);
+        resolve({ width, height, mp: (width * height) / 1_000_000 });
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error('画像サイズの取得に失敗しました。'));
+      };
+      img.src = objectUrl;
+    });
+  }, []);
+
+  const changeExtension = useCallback((name: string, ext: string) => {
+    return name.replace(/\.[^.]+$/, ext);
+  }, []);
+
+  const compressForFree = useCallback(async (blob: Blob, name: string) => {
+    if (blob.size <= FREE_TARGET_BYTES) {
+      return { blob, name, changed: false };
+    }
+
+    const dims = await getImageDimensions(blob);
+    const useBitmap = 'createImageBitmap' in window;
+    let sourceBitmap: ImageBitmap | null = null;
+    let sourceImage: HTMLImageElement | null = null;
+    if (useBitmap) {
+      sourceBitmap = await createImageBitmap(blob);
+    } else {
+      const objectUrl = URL.createObjectURL(blob);
+      sourceImage = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+          URL.revokeObjectURL(objectUrl);
+          resolve(img);
+        };
+        img.onerror = () => {
+          URL.revokeObjectURL(objectUrl);
+          reject(new Error('画像の読み込みに失敗しました。'));
+        };
+        img.src = objectUrl;
+      });
+    }
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      sourceBitmap?.close();
+      throw new Error('圧縮の準備に失敗しました。');
+    }
+
+    const isLikelyAlpha = blob.type.includes('png') || blob.type.includes('webp');
+    const targetMime = isLikelyAlpha ? 'image/webp' : 'image/jpeg';
+    const qualitySteps = [0.82, 0.75, 0.68, 0.6];
+    const scaleSteps = [1, 0.9, 0.8, 0.7, 0.6];
+    const initialMpRatio = Math.min(1, Math.sqrt(FREE_MAX_MP / Math.max(dims.mp, 0.1)));
+
+    let bestBlob: Blob | null = null;
+    try {
+      for (const scale of scaleSteps) {
+        const mergedScale = scale * initialMpRatio;
+        const targetWidth = Math.max(1, Math.floor(dims.width * mergedScale));
+        const targetHeight = Math.max(1, Math.floor(dims.height * mergedScale));
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+        ctx.clearRect(0, 0, targetWidth, targetHeight);
+        if (sourceBitmap) {
+          ctx.drawImage(sourceBitmap, 0, 0, targetWidth, targetHeight);
+        } else if (sourceImage) {
+          ctx.drawImage(sourceImage, 0, 0, targetWidth, targetHeight);
+        }
+
+        for (const quality of qualitySteps) {
+          const outBlob = await new Promise<Blob | null>((resolve) => {
+            canvas.toBlob(resolve, targetMime, quality);
+          });
+          if (!outBlob) continue;
+          if (!bestBlob || outBlob.size < bestBlob.size) {
+            bestBlob = outBlob;
+          }
+          if (outBlob.size <= FREE_TARGET_BYTES) {
+            return {
+              blob: outBlob,
+              name: targetMime === 'image/webp' ? changeExtension(name, '.webp') : changeExtension(name, '.jpg'),
+              changed: true,
+            };
+          }
+        }
+      }
+    } finally {
+      sourceBitmap?.close();
+    }
+
+    if (!bestBlob) {
+      throw new Error('画像の軽量化に失敗しました。');
+    }
+
+    return {
+      blob: bestBlob,
+      name: targetMime === 'image/webp' ? changeExtension(name, '.webp') : changeExtension(name, '.jpg'),
+      changed: true,
+    };
+  }, [changeExtension, getImageDimensions]);
+
   // 画像合成関数
   const applyTemplate = async (
     originalImageUrl: string, 
@@ -599,7 +723,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
   };
   
   /* ------------ ② 背景除去：API経由で並行実行 --------------- */
-  const handleRemove = async () => {
+  const handleRemove = async (forceFreeCompress = false) => {
     const candidates = inputs.filter(input => input.status === "ready" || input.status === "error");
     if (busy || candidates.length === 0) {
       if(candidates.length === 0 && inputs.length > 0) {
@@ -608,25 +732,16 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
       return;
     }
 
-    // Edge Function のリクエストボディ上限（約4MB）を超えるファイルを事前にブロック
     const oversized = candidates.filter(file => file.blob.size > MAX_UPLOAD_BYTES);
-    if (oversized.length > 0) {
-      oversized.forEach(file => {
-        const sizeMb = (file.blob.size / 1024 / 1024).toFixed(1);
-        updateInputStatus(
-          file.id,
-          "error",
-          `ファイルサイズが大きすぎます (${sizeMb}MB)。${MAX_UPLOAD_MB}MB 以下に圧縮・リサイズして再アップロードしてください。`
-        );
-      });
-
-      setMsg(`送信上限 ${MAX_UPLOAD_MB}MB を超える画像があります。圧縮または解像度を下げて再度お試しください。（対象: ${oversized.length}件）`);
+    if (!isPro && oversized.length > 0 && !forceFreeCompress) {
+      console.info('[upload_too_large]', { count: oversized.length });
+      setOversizedPromptCount(oversized.length);
+      setMsg('大きめの画像があります。無料で軽くして続けるか、Proで元画像のまま続けるか選べます。');
+      return;
     }
 
-    const filesToProcess = candidates.filter(file => file.blob.size <= MAX_UPLOAD_BYTES);
-    if (filesToProcess.length === 0) {
-      return; // 全て上限超過のため終了
-    }
+    setOversizedPromptCount(0);
+    const filesToProcess = candidates;
 
     // 大量ファイル処理時の自動調整
     if (filesToProcess.length > 20 && adaptiveConcurrency) {
@@ -696,8 +811,27 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
         }
         
         updateInputStatus(input.id, "uploading");
-        const formData = new FormData();
-        formData.append("file", input.blob, input.name);
+        let blobForRequest: Blob = input.blob;
+        let nameForRequest = input.name;
+        const imageMeta = await getImageDimensions(blobForRequest);
+
+        if (!isPro) {
+          if (blobForRequest.size > MAX_UPLOAD_BYTES || imageMeta.mp > FREE_MAX_MP) {
+            const compressed = await compressForFree(blobForRequest, nameForRequest);
+            blobForRequest = compressed.blob;
+            nameForRequest = compressed.name;
+          }
+          if (blobForRequest.size > MAX_UPLOAD_BYTES) {
+            throw new Error(`無料プランの送信上限 ${MAX_UPLOAD_MB}MB を超えています。別の画像でお試しください。`);
+          }
+        } else {
+          if (blobForRequest.size > PRO_MAX_UPLOAD_BYTES) {
+            throw new Error(`Pro上限を超えています（最大 ${Math.round(PRO_MAX_UPLOAD_BYTES / 1024 / 1024)}MB）。`);
+          }
+          if (imageMeta.mp > PRO_MAX_MP || imageMeta.width > PRO_MAX_SIDE || imageMeta.height > PRO_MAX_SIDE) {
+            throw new Error(`画像が大きすぎます（最大 ${PRO_MAX_MP}MP / ${PRO_MAX_SIDE}px）。`);
+          }
+        }
 
         // ログ記録：API リクエスト開始
         addLog({
@@ -737,11 +871,40 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
           combinedSignal = timeoutController.signal;
         }
 
-        const response = await fetch("/api/remove-bg", {
-          method: "POST",
-          body: formData,
-          signal: combinedSignal,
-        });
+        let response: Response;
+        if (isPro && USE_DIRECT_UPLOAD_FOR_PRO) {
+          const uploadFile = blobForRequest instanceof File
+            ? blobForRequest
+            : new File([blobForRequest], nameForRequest, { type: blobForRequest.type || 'application/octet-stream' });
+          const blobResult = await uploadToBlob(uploadFile.name, uploadFile, {
+            access: 'public',
+            handleUploadUrl: '/api/upload/blob',
+            clientPayload: JSON.stringify({
+              sizeBytes: uploadFile.size,
+              mimeType: uploadFile.type,
+              width: imageMeta.width,
+              height: imageMeta.height,
+            }),
+          });
+
+          response = await fetch("/api/remove-bg", {
+            method: "POST",
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              imageUrl: blobResult.url,
+              sourceBlobUrl: blobResult.url,
+            }),
+            signal: combinedSignal,
+          });
+        } else {
+          const formData = new FormData();
+          formData.append("file", blobForRequest, nameForRequest);
+          response = await fetch("/api/remove-bg", {
+            method: "POST",
+            body: formData,
+            signal: combinedSignal,
+          });
+        }
 
         // レスポンス時間を測定
         const responseTime = Date.now() - requestStartTime;
@@ -857,7 +1020,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                 ...stats,
                 totalProcessed: stats.totalProcessed + 1,
                 totalTime: stats.totalTime + totalDuration,
-                avgFileSize: (stats.avgFileSize * stats.totalProcessed + input.blob.size) / (stats.totalProcessed + 1)
+                avgFileSize: (stats.avgFileSize * stats.totalProcessed + blobForRequest.size) / (stats.totalProcessed + 1)
               }));
               
               // 完了カウントと進捗を更新
@@ -1112,6 +1275,42 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
   /* ------------ UI --------------- */
   return (
     <div className="w-full max-w-3xl mx-auto p-6 space-y-6 bg-white rounded-xl">
+      {oversizedPromptCount > 0 && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setOversizedPromptCount(0)} aria-hidden="true" />
+          <div className="relative w-full max-w-md bg-white rounded-2xl shadow-xl border border-gray-200 p-6">
+            <h3 className="text-lg font-bold text-gray-900">この画像は大きめです</h3>
+            <p className="text-sm text-gray-600 mt-2">
+              無料でも続けられます。画像を軽くして進むか、Proで元画像のまま進むか選んでください。
+            </p>
+            <p className="text-xs text-gray-500 mt-2">対象: {oversizedPromptCount}件</p>
+            <div className="mt-5 space-y-2">
+              <button
+                type="button"
+                className="w-full inline-flex items-center justify-center px-4 py-3 rounded-xl font-semibold bg-blue-600 text-white hover:bg-blue-700"
+                onClick={() => {
+                  console.info('[free_compress_chosen]', { count: oversizedPromptCount });
+                  setOversizedPromptCount(0);
+                  void handleRemove(true);
+                }}
+              >
+                無料で続ける（軽くして送る）
+              </button>
+              <button
+                type="button"
+                className="w-full inline-flex items-center justify-center px-4 py-3 rounded-xl font-semibold border border-gray-300 text-gray-800 hover:bg-gray-50"
+                onClick={() => {
+                  console.info('[pro_original_chosen]', { count: oversizedPromptCount });
+                  window.location.href = '/?buyPro=1#pro';
+                }}
+              >
+                元のまま続ける（Pro）
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {busy && (
         <div className="flex items-center justify-center my-4">
           <div className="animate-spin rounded-full h-6 w-6 border-t-4 border-blue-500 border-opacity-60"></div>
@@ -1453,7 +1652,9 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
       <div className="flex flex-wrap items-center justify-center gap-4">
         {inputs.length > 0 && inputs.some(i => i.status === 'ready' || i.status === 'error') && !busy && (
           <PrimaryButton
-            onClick={handleRemove}
+            onClick={() => {
+              void handleRemove();
+            }}
             disabled={busy || inputs.filter(i => i.status === 'ready').length === 0}
           >
             {busy ? (

@@ -1,70 +1,108 @@
-// import Replicate from 'replicate'; // Removed
 import { NextRequest, NextResponse } from 'next/server';
+import { del } from '@vercel/blob';
 
-export const runtime = 'edge'; // Re-enable Edge runtime
+export const runtime = 'nodejs';
 
-// Helper function to convert ArrayBuffer to Base64 string for Data URI
+type JsonBody = {
+  imageUrl?: string;
+  sourceBlobUrl?: string;
+};
+
+function asString(v: unknown): string | null {
+  return typeof v === 'string' && v.length > 0 ? v : null;
+}
+
 async function arrayBufferToBase64(buffer: ArrayBuffer): Promise<string> {
-  let binary = '';
-  const bytes = new Uint8Array(buffer);
-  const len = bytes.byteLength;
-  for (let i = 0; i < len; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  // Use btoa for base64 encoding in Edge runtime
-  return btoa(binary);
+  return Buffer.from(buffer).toString('base64');
+}
+
+async function startPrediction(args: {
+  replicateApiKey: string;
+  modelVersion: string;
+  imageInput: string;
+}) {
+  return fetch('https://api.replicate.com/v1/predictions', {
+    method: 'POST',
+    headers: {
+      Authorization: `Token ${args.replicateApiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      version: args.modelVersion,
+      input: { image: args.imageInput },
+    }),
+  });
 }
 
 export async function POST(req: NextRequest) {
   const replicateApiKey = process.env.REPLICATE_API_TOKEN;
+  let sourceBlobUrl: string | null = null;
 
   if (!replicateApiKey) {
-    // This will be caught by the Next.js runtime and result in a 500 error
     throw new Error('REPLICATE_API_TOKEN is not set');
   }
 
-  const formData = await req.formData();
-  const file = formData.get('file') as File | null;
-
-  if (!file) {
-    return NextResponse.json({ error: 'File is required' }, { status: 400 });
-  }
-
-  // Convert File to a data URL for Replicate API
-  const fileBuffer = await file.arrayBuffer();
-  const mimeType = file.type || 'application/octet-stream'; // Fallback MIME type
-  const base64String = await arrayBufferToBase64(fileBuffer);
-  const dataURI = `data:${mimeType};base64,${base64String}`;
-
-  const modelVersion = '851-labs/background-remover:a029dff38972b5fda4ec5d75d7d1cd25aeff621d2cf4946a41055d7db66b80bc'; 
-
   try {
-    // Step 1: Start the prediction
-    const startPredictionResponse = await fetch('https://api.replicate.com/v1/predictions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Token ${replicateApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        version: modelVersion,
-        input: {
-          image: dataURI,
-        },
-      }),
-    });
+    const modelVersion = '851-labs/background-remover:a029dff38972b5fda4ec5d75d7d1cd25aeff621d2cf4946a41055d7db66b80bc';
+    const contentType = req.headers.get('content-type') ?? '';
+    let imageInput: string | null = null;
+
+    if (contentType.includes('application/json')) {
+      const body = (await req.json().catch(() => null)) as JsonBody | null;
+      imageInput = asString(body?.imageUrl);
+      sourceBlobUrl = asString(body?.sourceBlobUrl);
+    } else {
+      const formData = await req.formData();
+      const file = formData.get('file') as File | null;
+      if (!file) {
+        return NextResponse.json({ error: 'File is required' }, { status: 400 });
+      }
+      const fileBuffer = await file.arrayBuffer();
+      const mimeType = file.type || 'application/octet-stream';
+      const base64String = await arrayBufferToBase64(fileBuffer);
+      imageInput = `data:${mimeType};base64,${base64String}`;
+    }
+
+    if (!imageInput) {
+      return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
+    }
+
+    let startPredictionResponse = await startPrediction({ replicateApiKey, modelVersion, imageInput });
+
+    // URL入力が失敗した場合だけData URIへフォールバック（既存互換）
+    if (!startPredictionResponse.ok && contentType.includes('application/json')) {
+      const fallbackSource = imageInput;
+      if (fallbackSource.startsWith('http://') || fallbackSource.startsWith('https://')) {
+        const fallbackImageRes = await fetch(fallbackSource);
+        if (fallbackImageRes.ok) {
+          const mimeType = fallbackImageRes.headers.get('content-type') || 'application/octet-stream';
+          const fileBuffer = await fallbackImageRes.arrayBuffer();
+          const base64String = await arrayBufferToBase64(fileBuffer);
+          const fallbackDataURI = `data:${mimeType};base64,${base64String}`;
+          startPredictionResponse = await startPrediction({
+            replicateApiKey,
+            modelVersion,
+            imageInput: fallbackDataURI,
+          });
+        }
+      }
+    }
 
     if (!startPredictionResponse.ok) {
-      const errorData = await startPredictionResponse.json().catch(() => ({ detail: "Unknown error starting prediction." }));
+      const errorData = await startPredictionResponse
+        .json()
+        .catch(() => ({ detail: 'Unknown error starting prediction.' }));
       console.error('Replicate API error (starting prediction):', errorData);
-      return NextResponse.json({ error: `Failed to start prediction: ${errorData.detail || startPredictionResponse.statusText}` }, { status: startPredictionResponse.status });
+      return NextResponse.json(
+        { error: `Failed to start prediction: ${errorData.detail || startPredictionResponse.statusText}` },
+        { status: startPredictionResponse.status },
+      );
     }
 
     let prediction = await startPredictionResponse.json();
 
-    // Step 2: Poll for the result
     let attempts = 0;
-    const maxAttempts = 60; // Poll for a maximum of ~60 seconds
+    const maxAttempts = 60;
 
     while (
       prediction.status !== 'succeeded' &&
@@ -73,26 +111,23 @@ export async function POST(req: NextRequest) {
       attempts < maxAttempts
     ) {
       attempts++;
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for 1 second
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       if (!prediction.urls || !prediction.urls.get) {
         console.error('Replicate API error: Polling URL not found in prediction response.', prediction);
         return NextResponse.json({ error: 'Failed to get polling URL for prediction.' }, { status: 500 });
       }
 
-      const pollResponse = await fetch(prediction.urls.get, {
+      const pollResponse = await fetch(prediction.urls.get as string, {
         headers: {
-          'Authorization': `Token ${replicateApiKey}`,
+          Authorization: `Token ${replicateApiKey}`,
           'Content-Type': 'application/json',
         },
       });
 
       if (!pollResponse.ok) {
-        const errorData = await pollResponse.json().catch(() => ({ detail: "Unknown error polling prediction." }));
+        const errorData = await pollResponse.json().catch(() => ({ detail: 'Unknown error polling prediction.' }));
         console.error('Replicate API error (polling):', errorData);
-        // If polling fails, it might be a temporary issue, but we'll return an error after some retries.
-        // For now, we let the loop continue until maxAttempts or status changes.
-        // If critical, one could return an error here directly.
       } else {
         prediction = await pollResponse.json();
       }
@@ -109,7 +144,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: userError }, { status: 500 });
     }
 
-    // Ensure the output is a string URL (or an array with a string URL)
     let outputUrl: string | undefined;
     if (Array.isArray(prediction.output) && typeof prediction.output[0] === 'string') {
       outputUrl = prediction.output[0];
@@ -122,7 +156,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Failed to get processed image URL from Replicate' }, { status: 500 });
     }
 
-    // Step 3: Fetch the processed image from the output URL
     const imageResponse = await fetch(outputUrl);
 
     if (!imageResponse.ok) {
@@ -141,7 +174,14 @@ export async function POST(req: NextRequest) {
 
   } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
     console.error('Error in remove-bg API route:', error);
-    // Ensure a generic error is returned to the client for unhandled exceptions
     return NextResponse.json({ error: error.message || 'An unexpected error occurred' }, { status: 500 });
+  } finally {
+    if (sourceBlobUrl) {
+      try {
+        await del(sourceBlobUrl);
+      } catch (cleanupError) {
+        console.warn('[remove-bg] source blob cleanup failed:', cleanupError);
+      }
+    }
   }
-} 
+}

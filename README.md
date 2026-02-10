@@ -12,7 +12,9 @@
   - 背景のカスタマイズ（背景なし / テンプレート / カラーピッカー）
   - 個別ダウンロード / ZIP一括ダウンロード
   - 広告表示（Free/ゲストのみ、結果エリアに1枠。Proは非表示）
-  - 上限: **最大30枚**、**1ファイルあたり約4MBまで**（Edge Functionのリクエストボディ制限）
+  - 上限: **最大30枚**
+  - Free: 4MB超は「無料で続ける（自動圧縮）」で継続可能（目安: 4MB/12MP）
+  - Pro: 元画像のままアップロード可能（目安: 25MB/48MP、安全弁あり）
 
 - **イージートーン（`/tone`）**
   - 写真の色調整（色調補正）を3ステップで実行
@@ -44,9 +46,15 @@ pnpm install
 - **必須（背景透過）**: `REPLICATE_API_TOKEN`
 - **必須（会員ログイン）**: `POSTGRES_PRISMA_URL`, `POSTGRES_URL_NON_POOLING`, `RESEND_API_KEY`, `EMAIL_FROM`
 - **必須（Pro課金 / Stripe）**: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID_PRO_TEST`（本番は `STRIPE_PRICE_ID_PRO_LIVE`）
+- **必須（Pro直送アップロード）**: `BLOB_READ_WRITE_TOKEN`
 - **推奨**: `NEXT_PUBLIC_SITE_URL`（OGP/ログインリンク生成用。未設定の場合は `http://localhost:3000` を使用）
 - **必須（ゲスト購入）**: `AUTH_SECRET`（ゲスト購入時の一時データ（`PendingCheckout`）を暗号化して保存するため）
 - **任意**: `BILLING_ENABLED`（課金導線の一括OFF。ロールバック用）, `STRIPE_MODE`（未指定時は `STRIPE_SECRET_KEY` のprefixから推定）
+- **任意（アップロード制御）**:
+  - `UPLOAD_DIRECT_ENABLED` / `NEXT_PUBLIC_UPLOAD_DIRECT_ENABLED`（Proの直送経路ON/OFF）
+  - `PRO_MAX_UPLOAD_MB` / `NEXT_PUBLIC_PRO_MAX_UPLOAD_MB`（Proサイズ上限、既定25）
+  - `PRO_MAX_MP` / `NEXT_PUBLIC_PRO_MAX_MP`（Proメガピクセル上限、既定48）
+  - `PRO_MAX_SIDE_PX` / `NEXT_PUBLIC_PRO_MAX_SIDE_PX`（長辺上限、既定10000）
 - **任意（広告表示）**:
   - `NEXT_PUBLIC_ADS_ENABLED`（`false` で広告枠を非表示）
   - `NEXT_PUBLIC_AD_PLACEMENT`（`after_cta` または `bottom`、未指定時は `after_cta`）
@@ -96,13 +104,27 @@ pnpm start
 
 アップロードされた画像を Replicate のモデル（`cjwbw/rembg` の固定 version）で処理し、**PNG（背景透過）** を返します。
 
-- **Runtime**: Edge（`export const runtime = 'edge'`）
-- **Request**: `multipart/form-data`
-  - **field**: `file`（画像ファイル）
+- **Runtime**: Node.js（`export const runtime = 'nodejs'`）
+- **Request**:
+  - `multipart/form-data`（Free/既存互換）:
+    - **field**: `file`（画像ファイル）
+  - `application/json`（Pro直送）:
+    - **field**: `imageUrl`（オブジェクトストレージ上の一時URL）
+    - **field**: `sourceBlobUrl`（処理後に削除する一時URL）
 - **Response**:
   - 成功時: `200` + `image/png`（バイナリ）
   - 失敗時: `4xx/5xx` + JSON `{ error: string }`
-- **制限**: Edge Function の制約により、**1ファイルあたり約4MB** を超えるとクライアント側でエラー扱いになります。
+- **制限**:
+  - Freeは4MB超を選択しても、クライアント側で自動圧縮して継続できます
+  - Proは直送アップロードにより、巨大ボディをFunctionへ送らない経路で処理します
+
+### `POST /api/upload/blob`
+
+Pro向けの直送アップロード用トークンを発行します（Vercel Blobのclient upload）。
+
+- **Runtime**: Node.js
+- **認証**: ログイン済みかつ `isPro=true` のみ許可
+- **用途**: ブラウザからオブジェクトストレージへ直接アップロードし、Function/Edgeに巨大バイナリを通さない
 
 #### curl 例
 
