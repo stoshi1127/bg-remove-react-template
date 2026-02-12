@@ -73,7 +73,7 @@ const MAX_UPLOAD_MB = 4;
 const FREE_TARGET_BYTES = Math.floor(3.5 * 1024 * 1024);
 const FREE_MAX_MP = 12;
 const PRO_MAX_UPLOAD_BYTES = (Number(process.env.NEXT_PUBLIC_PRO_MAX_UPLOAD_MB || '25')) * 1024 * 1024;
-const PRO_MAX_MP = Number(process.env.NEXT_PUBLIC_PRO_MAX_MP || '48');
+const PRO_MAX_MP = Number(process.env.NEXT_PUBLIC_PRO_MAX_MP || '90');
 const PRO_MAX_SIDE = Number(process.env.NEXT_PUBLIC_PRO_MAX_SIDE_PX || '10000');
 const USE_DIRECT_UPLOAD_FOR_PRO = process.env.NEXT_PUBLIC_UPLOAD_DIRECT_ENABLED !== 'false';
 
@@ -385,11 +385,10 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
   }, []);
 
   const compressForFree = useCallback(async (blob: Blob, name: string) => {
-    if (blob.size <= FREE_TARGET_BYTES) {
+    const dims = await getImageDimensions(blob);
+    if (blob.size <= FREE_TARGET_BYTES && dims.mp <= FREE_MAX_MP) {
       return { blob, name, changed: false };
     }
-
-    const dims = await getImageDimensions(blob);
     const useBitmap = 'createImageBitmap' in window;
     let sourceBitmap: ImageBitmap | null = null;
     let sourceImage: HTMLImageElement | null = null;
@@ -420,12 +419,13 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
     // Freeの入力圧縮は「できるだけ画質を保ちつつサイズを落とす」優先。
     // JPEGよりWebPのほうが同等品質でサイズを稼ぎやすいので、まずWebPを試し、ダメならJPEGへ。
     const preferredMimes: Array<'image/webp' | 'image/jpeg'> = ['image/webp', 'image/jpeg'];
-    const qualitySteps = [0.9, 0.85, 0.8, 0.75, 0.7];
-    const scaleSteps = [1, 0.9, 0.8, 0.7, 0.6];
-    // MP上限による縮小は、まず品質調整を試してから（過度な縮小で切り抜き精度が落ちやすいため）
-    const initialMpRatio = 1;
+    const qualitySteps = [0.88, 0.8, 0.72];
+    // まず12MP付近まで落としてから、最小限の追加縮小のみ行う。
+    const initialMpRatio = Math.min(1, Math.sqrt((FREE_MAX_MP * 1.05) / Math.max(dims.mp, 0.1)));
+    const scaleSteps = [1, 0.95, 0.88];
 
     let bestBlob: Blob | null = null;
+    let bestExt = '.jpg';
     try {
       for (const scale of scaleSteps) {
         // scale==1 のときは品質調整を優先し、ダメなら徐々に縮小する
@@ -449,6 +449,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
             if (!outBlob) continue;
             if (!bestBlob || outBlob.size < bestBlob.size) {
               bestBlob = outBlob;
+              bestExt = targetMime === 'image/webp' ? '.webp' : '.jpg';
             }
             if (outBlob.size <= FREE_TARGET_BYTES) {
               return {
@@ -473,7 +474,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
     // 目標サイズに入って return するケースでは正しい拡張子が付与される。
     return {
       blob: bestBlob,
-      name: changeExtension(name, '.jpg'),
+      name: changeExtension(name, bestExt),
       changed: true,
     };
   }, [changeExtension, getImageDimensions]);

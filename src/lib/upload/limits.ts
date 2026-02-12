@@ -12,7 +12,7 @@ export const FREE_TARGET_BYTES = Math.floor(3.5 * MB);
 export const FREE_MAX_MP = 12;
 
 export const PRO_MAX_UPLOAD_BYTES = numFromEnv('PRO_MAX_UPLOAD_MB', 25) * MB;
-export const PRO_MAX_MP = numFromEnv('PRO_MAX_MP', 48);
+export const PRO_MAX_MP = numFromEnv('PRO_MAX_MP', 90);
 export const PRO_MAX_SIDE = numFromEnv('PRO_MAX_SIDE_PX', 10000);
 
 export const UPLOAD_DIRECT_ENABLED =

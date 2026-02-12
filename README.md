@@ -14,7 +14,7 @@
   - 広告表示（Free/ゲストのみ、結果エリアに1枠。Proは非表示）
   - 上限: **最大30枚**
   - Free: 4MB超は「無料で続ける（自動圧縮）」で継続可能（目安: 4MB/12MP）
-  - Pro: 元画像のままアップロード可能（目安: 25MB/48MP、安全弁あり）
+  - Pro: 元画像のままアップロード可能（目安: 25MB/90MP、安全弁あり）
 
 - **イージートーン（`/tone`）**
   - 写真の色調整（色調補正）を3ステップで実行
@@ -53,7 +53,7 @@ pnpm install
 - **任意（アップロード制御）**:
   - `UPLOAD_DIRECT_ENABLED` / `NEXT_PUBLIC_UPLOAD_DIRECT_ENABLED`（Proの直送経路ON/OFF）
   - `PRO_MAX_UPLOAD_MB` / `NEXT_PUBLIC_PRO_MAX_UPLOAD_MB`（Proサイズ上限、既定25）
-  - `PRO_MAX_MP` / `NEXT_PUBLIC_PRO_MAX_MP`（Proメガピクセル上限、既定48）
+  - `PRO_MAX_MP` / `NEXT_PUBLIC_PRO_MAX_MP`（Proメガピクセル上限、既定90）
   - `PRO_MAX_SIDE_PX` / `NEXT_PUBLIC_PRO_MAX_SIDE_PX`（長辺上限、既定10000）
 - **任意（広告表示）**:
   - `NEXT_PUBLIC_ADS_ENABLED`（`false` で広告枠を非表示）
