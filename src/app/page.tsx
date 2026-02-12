@@ -169,6 +169,22 @@ export default async function Home() {
           "@type": "Answer",
           "text": "複数枚の一括処理に対応しており、ドラッグ&ドロップで簡単にアップロードできます。"
         }
+      },
+      {
+        "@type": "Question",
+        "name": "無料とProで画像サイズの上限は違いますか？",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "はい。無料は送信時に4MB/8MPを目安に自動圧縮して続行できます。Proはより大きい画像（目安25MB/90MP）をそのまま処理できます。"
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "最終出力画像が大きすぎる場合はどうなりますか？",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "最終出力は自動で長辺を調整します。無料は長辺3200px、Proは長辺7000pxを上限の目安として、比率を保ったまま縮小します。"
+        }
       }
     ]
   };
@@ -437,6 +453,14 @@ export default async function Home() {
               <div className="bg-white p-6 rounded-xl shadow-soft">
                 <h4 className="text-lg font-semibold text-gray-900 mb-2">複数の画像を一度に処理できますか？</h4>
                 <p className="text-gray-600">はい、複数の画像を一括でアップロードして同時に背景透過処理ができます。完了した画像が2枚以上ある場合は「すべてダウンロード」ボタンからZIP形式で一括保存が可能です。</p>
+              </div>
+              <div className="bg-white p-6 rounded-xl shadow-soft">
+                <h4 className="text-lg font-semibold text-gray-900 mb-2">無料とProで画像サイズの上限は違いますか？</h4>
+                <p className="text-gray-600">はい。無料は送信時に4MB/8MPを目安に自動圧縮して続行できます。Proはより大きい画像（目安25MB/90MP）をそのまま処理できます。</p>
+              </div>
+              <div className="bg-white p-6 rounded-xl shadow-soft">
+                <h4 className="text-lg font-semibold text-gray-900 mb-2">最終出力画像が大きすぎる場合はどうなりますか？</h4>
+                <p className="text-gray-600">最終出力は自動で長辺を調整します。無料は長辺3200px、Proは長辺7000pxを上限の目安として、比率を保ったまま縮小します。</p>
               </div>
               <div className="bg-white p-6 rounded-xl shadow-soft">
                 <h4 className="text-lg font-semibold text-gray-900 mb-2">どのような出力サイズが選べますか？</h4>

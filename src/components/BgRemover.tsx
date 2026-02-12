@@ -71,10 +71,12 @@ const aspectRatios = [
 const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
 const MAX_UPLOAD_MB = 4;
 const FREE_TARGET_BYTES = Math.floor(3.5 * 1024 * 1024);
-const FREE_MAX_MP = 12;
+const FREE_MAX_MP = Number(process.env.NEXT_PUBLIC_FREE_MAX_MP || '8');
 const PRO_MAX_UPLOAD_BYTES = (Number(process.env.NEXT_PUBLIC_PRO_MAX_UPLOAD_MB || '25')) * 1024 * 1024;
 const PRO_MAX_MP = Number(process.env.NEXT_PUBLIC_PRO_MAX_MP || '90');
 const PRO_MAX_SIDE = Number(process.env.NEXT_PUBLIC_PRO_MAX_SIDE_PX || '10000');
+const FREE_OUTPUT_MAX_SIDE = Number(process.env.NEXT_PUBLIC_FREE_OUTPUT_MAX_SIDE_PX || '3200');
+const PRO_OUTPUT_MAX_SIDE = Number(process.env.NEXT_PUBLIC_PRO_OUTPUT_MAX_SIDE_PX || '7000');
 const USE_DIRECT_UPLOAD_FOR_PRO = process.env.NEXT_PUBLIC_UPLOAD_DIRECT_ENABLED !== 'false';
 
 type BgRemoverMultiProps = {
@@ -520,6 +522,15 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
             targetHeight = Math.round(baseWidth * 3 / 4);
           }
           // '1:1' はデフォルトの baseWidth x baseWidth
+
+          // 最終出力の長辺をプラン別でクランプ（巨大PNG化と端末負荷を抑える）
+          const outputMaxSide = isPro ? PRO_OUTPUT_MAX_SIDE : FREE_OUTPUT_MAX_SIDE;
+          const longestSide = Math.max(targetWidth, targetHeight);
+          if (longestSide > outputMaxSide) {
+            const scale = outputMaxSide / longestSide;
+            targetWidth = Math.max(1, Math.round(targetWidth * scale));
+            targetHeight = Math.max(1, Math.round(targetHeight * scale));
+          }
 
           canvas.width = targetWidth;
           canvas.height = targetHeight;

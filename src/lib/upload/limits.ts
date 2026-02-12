@@ -9,7 +9,7 @@ function numFromEnv(name: string, fallback: number): number {
 
 export const EDGE_SAFE_UPLOAD_BYTES = 4 * MB;
 export const FREE_TARGET_BYTES = Math.floor(3.5 * MB);
-export const FREE_MAX_MP = 12;
+export const FREE_MAX_MP = numFromEnv('FREE_MAX_MP', 8);
 
 export const PRO_MAX_UPLOAD_BYTES = numFromEnv('PRO_MAX_UPLOAD_MB', 25) * MB;
 export const PRO_MAX_MP = numFromEnv('PRO_MAX_MP', 90);

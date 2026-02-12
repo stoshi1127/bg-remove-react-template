@@ -13,7 +13,7 @@
   - 個別ダウンロード / ZIP一括ダウンロード
   - 広告表示（Free/ゲストのみ、結果エリアに1枠。Proは非表示）
   - 上限: **最大30枚**
-  - Free: 4MB超は「無料で続ける（自動圧縮）」で継続可能（目安: 4MB/12MP）
+  - Free: 4MB超は「無料で続ける（自動圧縮）」で継続可能（目安: 4MB/8MP）
   - Pro: 元画像のままアップロード可能（目安: 25MB/90MP、安全弁あり）
 
 - **イージートーン（`/tone`）**
@@ -55,6 +55,9 @@ pnpm install
   - `PRO_MAX_UPLOAD_MB` / `NEXT_PUBLIC_PRO_MAX_UPLOAD_MB`（Proサイズ上限、既定25）
   - `PRO_MAX_MP` / `NEXT_PUBLIC_PRO_MAX_MP`（Proメガピクセル上限、既定90）
   - `PRO_MAX_SIDE_PX` / `NEXT_PUBLIC_PRO_MAX_SIDE_PX`（長辺上限、既定10000）
+  - `FREE_MAX_MP` / `NEXT_PUBLIC_FREE_MAX_MP`（Freeメガピクセル上限、既定8）
+  - `NEXT_PUBLIC_FREE_OUTPUT_MAX_SIDE_PX`（Free最終出力の長辺上限、既定3200）
+  - `NEXT_PUBLIC_PRO_OUTPUT_MAX_SIDE_PX`（Pro最終出力の長辺上限、既定7000）
 - **任意（広告表示）**:
   - `NEXT_PUBLIC_ADS_ENABLED`（`false` で広告枠を非表示）
   - `NEXT_PUBLIC_AD_PLACEMENT`（`after_cta` または `bottom`、未指定時は `after_cta`）
