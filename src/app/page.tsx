@@ -172,18 +172,18 @@ export default async function Home() {
       },
       {
         "@type": "Question",
-        "name": "無料とProで画像サイズの上限は違いますか？",
+        "name": "大きな写真でも処理できますか？",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "はい。無料は送信時に4MB/8MPを目安に自動圧縮して続行できます。Proはより大きい画像（目安25MB/90MP）をそのまま処理できます。"
+          "text": "はい。無料プランでも、大きな写真は自動で軽くしてから処理するので、そのまま使えます。ただし仕上がりの画質が少し下がることがあります。Proプランなら、大きな写真でもそのままキレイに処理できます。"
         }
       },
       {
         "@type": "Question",
-        "name": "最終出力画像が大きすぎる場合はどうなりますか？",
+        "name": "仕上がりの画像サイズが大きくなりすぎることはありますか？",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "最終出力は自動で長辺を調整します。無料は長辺3200px、Proは長辺7000pxを上限の目安として、比率を保ったまま縮小します。"
+          "text": "いいえ。仕上がりの画像は、大きすぎる場合に自動で見た目の比率を保ったまま縮小されます。無料プランとProプランで上限が異なり、Proの方がより大きなサイズで出力できます。"
         }
       }
     ]
@@ -455,12 +455,12 @@ export default async function Home() {
                 <p className="text-gray-600">はい、複数の画像を一括でアップロードして同時に背景透過処理ができます。完了した画像が2枚以上ある場合は「すべてダウンロード」ボタンからZIP形式で一括保存が可能です。</p>
               </div>
               <div className="bg-white p-6 rounded-xl shadow-soft">
-                <h4 className="text-lg font-semibold text-gray-900 mb-2">無料とProで画像サイズの上限は違いますか？</h4>
-                <p className="text-gray-600">はい。無料は送信時に4MB/8MPを目安に自動圧縮して続行できます。Proはより大きい画像（目安25MB/90MP）をそのまま処理できます。</p>
+                <h4 className="text-lg font-semibold text-gray-900 mb-2">大きな写真でも処理できますか？</h4>
+                <p className="text-gray-600">はい。無料プランでも、大きな写真は自動で軽くしてから処理するので、そのまま使えます。ただし仕上がりの画質が少し下がることがあります。Proプランなら、大きな写真でもそのままキレイに処理できます。</p>
               </div>
               <div className="bg-white p-6 rounded-xl shadow-soft">
-                <h4 className="text-lg font-semibold text-gray-900 mb-2">最終出力画像が大きすぎる場合はどうなりますか？</h4>
-                <p className="text-gray-600">最終出力は自動で長辺を調整します。無料は長辺3200px、Proは長辺7000pxを上限の目安として、比率を保ったまま縮小します。</p>
+                <h4 className="text-lg font-semibold text-gray-900 mb-2">仕上がりの画像サイズが大きくなりすぎることはありますか？</h4>
+                <p className="text-gray-600">いいえ。仕上がりの画像は、大きすぎる場合に自動で見た目の比率を保ったまま縮小されます。無料プランとProプランで上限が異なり、Proの方がより大きなサイズで出力できます。</p>
               </div>
               <div className="bg-white p-6 rounded-xl shadow-soft">
                 <h4 className="text-lg font-semibold text-gray-900 mb-2">どのような出力サイズが選べますか？</h4>

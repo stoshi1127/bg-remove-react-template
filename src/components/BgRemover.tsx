@@ -727,7 +727,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
     let filesToProcess = Array.from(files);
     
     if (filesToProcess.length > MAX_FILES) {
-      setMsg(`選択されたファイル数（${filesToProcess.length}枚）が上限を超えています。最初の${MAX_FILES}枚のみ処理します。`);
+      setMsg(`一度に処理できるのは${MAX_FILES}枚までです。最初の${MAX_FILES}枚だけを処理します。`);
       filesToProcess = filesToProcess.slice(0, MAX_FILES);
     }
 
@@ -815,7 +815,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
     const candidates = inputs.filter(input => input.status === "ready" || input.status === "error");
     if (busy || candidates.length === 0) {
       if(candidates.length === 0 && inputs.length > 0) {
-        setMsg("処理可能なファイルがありません。HEIC変換が完了しているか、エラーが解消されているか確認してください。");
+        setMsg("処理できるファイルがありません。写真の準備が終わっているかご確認ください。");
       }
       return;
     }
@@ -828,12 +828,12 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
 
             if (file.blob.size > MAX_UPLOAD_BYTES) {
               const sizeMb = (file.blob.size / 1024 / 1024).toFixed(1);
-              issues.push(`サイズ: ${sizeMb}MB（上限 ${MAX_UPLOAD_MB}MB）`);
+              issues.push(`データが大きい（${sizeMb}MB → 無料は${MAX_UPLOAD_MB}MBまで）`);
             }
 
             const meta = await getImageDimensions(file.blob).catch(() => null);
             if (meta && meta.mp > FREE_MAX_MP) {
-              issues.push(`解像度: ${meta.width}×${meta.height}（${meta.mp.toFixed(1)}MP / 上限 ${FREE_MAX_MP}MP）`);
+              issues.push(`画質がとても高い（${meta.width}×${meta.height}px）`);
             }
 
             if (issues.length === 0) return null;
@@ -845,7 +845,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
       if (oversizedWithReasons.length > 0) {
         console.info('[upload_too_large]', { count: oversizedWithReasons.length, files: oversizedWithReasons.map((i) => i.name) });
         setOversizedPromptItems(oversizedWithReasons);
-        setMsg('大きい画像があります。圧縮して無料で続けるか、圧縮せずPROで続けるか選んでください。');
+        setMsg('大きな写真があります。処理方法を選んでください。');
         return;
       }
     }
@@ -856,7 +856,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
     // 大量ファイル処理時の自動調整
     if (filesToProcess.length > 20 && adaptiveConcurrency) {
       setMaxConcurrentProcesses(Math.min(3, maxConcurrentProcesses)); // 大量処理時は保守的に開始
-      setMsg("大量ファイル処理のため、並行数を自動調整します。");
+      setMsg("ファイルが多いため、処理速度を自動で調整しています。");
     }
 
     setBusy(true);
@@ -936,10 +936,10 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
           }
         } else {
           if (blobForRequest.size > PRO_MAX_UPLOAD_BYTES) {
-            throw new Error(`Pro上限を超えています（最大 ${Math.round(PRO_MAX_UPLOAD_BYTES / 1024 / 1024)}MB）。`);
+            throw new Error(`Proプランでも処理できるサイズを超えています（最大${Math.round(PRO_MAX_UPLOAD_BYTES / 1024 / 1024)}MBまで）。`);
           }
           if (imageMeta.mp > PRO_MAX_MP || imageMeta.width > PRO_MAX_SIDE || imageMeta.height > PRO_MAX_SIDE) {
-            throw new Error(`画像が大きすぎます（最大 ${PRO_MAX_MP}MP / ${PRO_MAX_SIDE}px）。`);
+            throw new Error('この写真は大きすぎるため、Proプランでも処理できません。もう少し小さい写真をお試しください。');
           }
         }
 
@@ -1071,7 +1071,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
         
         // メモリ効率のためのサイズチェック
         if (imageBlob.size > 50 * 1024 * 1024) { // 50MB制限
-          throw new Error(`処理後画像が大きすぎます (${Math.round(imageBlob.size / 1024 / 1024)}MB)`);
+          throw new Error(`仕上がりのデータが大きすぎるため保存できませんでした（${Math.round(imageBlob.size / 1024 / 1024)}MB）`);
         }
         
         // BlobをData URLに変換し、必要であればテンプレートを適用
@@ -1310,26 +1310,26 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
           if (totalProcessed > 0) {
             if (anyErrors && actualCompletedCount > 0) {
                 // 一部成功、一部エラー
-                setMsg(`並行処理完了: ${actualCompletedCount}枚成功、${actualErrorCount}枚エラー。詳細は各ファイルを確認してください。`);
+                setMsg(`処理が終わりました：${actualCompletedCount}枚 成功、${actualErrorCount}枚 失敗。各ファイルの状態をご確認ください。`);
             } else if (anyErrors && actualCompletedCount === 0) {
                 // 全てエラー
-                setMsg("すべてのファイルでエラーが発生しました。詳細は各ファイルを確認してください。");
+                setMsg("すべてのファイルで問題が発生しました。各ファイルの状態をご確認ください。");
             } else if (actualCompletedCount === totalProcessed) {
                 // 全て成功
-                setMsg(`すべてのファイル（${actualCompletedCount}枚）の並行処理が正常に完了しました。`);
+                setMsg(`すべてのファイル（${actualCompletedCount}枚）の処理が完了しました！`);
             } else {
                 // 処理中や準備完了状態のファイルがある場合
                 const processingCount = currentInputs.filter(input => 
                   input.status === "processing" || input.status === "uploading"
                 ).length;
                 if (processingCount > 0) {
-                  setMsg(`処理中のファイルがあります。完了: ${actualCompletedCount}枚、処理中: ${processingCount}枚。`);
+                  setMsg(`${actualCompletedCount}枚 完了、あと${processingCount}枚 処理中です。`);
                 } else {
-                  setMsg(`並行処理完了: ${actualCompletedCount}枚。残りのファイルの状況を確認してください。`);
+                  setMsg(`${actualCompletedCount}枚の処理が完了しました。残りの状態をご確認ください。`);
                 }
             }
           } else if (currentInputs.length > 0 && totalProcessed === 0) {
-            setMsg("処理対象となるファイルがありません。");
+            setMsg("処理できるファイルがありません。");
           }
           
           return currentInputs; // 状態は変更せず、メッセージのみ更新
@@ -1344,7 +1344,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
     const completedFiles = inputs.filter(input => input.status === 'completed' && input.outputUrl);
 
     if (completedFiles.length === 0) {
-      setMsg("ダウンロード対象のファイルがありません。");
+      setMsg("ダウンロードできるファイルがまだありません。");
       return;
     }
 
@@ -1389,9 +1389,9 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
           <div className="absolute inset-0 bg-black/40" onClick={() => setOversizedPromptItems([])} aria-hidden="true" />
           <div className="relative w-full max-w-md bg-white rounded-2xl shadow-xl border border-gray-200 p-6">
-            <h3 className="text-lg font-bold text-gray-900">{oversizedPromptItems.length}件の画像が大きいです</h3>
+            <h3 className="text-lg font-bold text-gray-900">{oversizedPromptItems.length}枚の写真がそのままでは処理できません</h3>
             <p className="text-sm text-gray-600 mt-2">
-              下記の画像は、サイズまたは解像度が上限を超えています。
+              以下の写真は無料プランの上限より大きいため、処理方法を選んでください。
             </p>
             <ul className="mt-3 max-h-44 overflow-auto rounded-lg border border-gray-200 bg-gray-50 p-3 space-y-2">
               {oversizedPromptItems.map((item) => (
@@ -1414,7 +1414,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                   window.location.href = '/?buyPro=1#pro';
                 }}
               >
-                圧縮せずPROで続ける
+                そのままキレイに処理する（Pro）
               </button>
               <div className="space-y-2">
                 <button
@@ -1426,10 +1426,10 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                   void handleRemove(true);
                   }}
                 >
-                  圧縮して無料で続ける
+                  自動で軽くして無料で処理する
                 </button>
                 <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1">
-                  圧縮されるため、画像が少し荒くなる可能性があります。
+                  写真を自動で軽くするため、仕上がりが少し粗くなることがあります。
                 </p>
               </div>
             </div>
@@ -1473,7 +1473,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
       {/* アスペクト比選択エリア */}
       {inputs.length > 0 && (
         <div className="space-y-3 pt-4">
-          <h3 className="text-lg font-semibold text-gray-800">出力サイズを選択:</h3>
+          <h3 className="text-lg font-semibold text-gray-800">仕上がりのサイズ:</h3>
           <div className="flex flex-wrap gap-3">
             {aspectRatios.map(ratio => (
               <RatioButton
@@ -1666,7 +1666,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                           {input.status === 'converting' && (
                             <span className="flex items-center">
                               <div className="animate-spin rounded-full h-3 w-3 border border-blue-500 border-t-transparent mr-1"></div>
-                              HEIC変換中...
+                              写真を準備中...
                             </span>
                           )}
                           {input.status === 'ready' && (
@@ -1825,7 +1825,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
               errorFiles.forEach(file => {
                 updateInputStatus(file.id, 'ready', undefined);
               });
-              setMsg(`${errorFiles.length}件のエラーファイルを再処理準備しました。`);
+              setMsg(`${errorFiles.length}件のやり直し準備ができました。`);
             }}
             variant="secondary"
             className="bg-yellow-500 hover:bg-yellow-600 text-white"
