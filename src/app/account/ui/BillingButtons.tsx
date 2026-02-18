@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { trackAnalyticsEvent } from '@/lib/analytics/events';
 
 type CheckoutResponse =
   | { ok: true; url: string }
@@ -32,6 +33,7 @@ export default function BillingButtons({ isPro }: { isPro: boolean }) {
       }
 
       if ('url' in data && typeof data.url === 'string') {
+        trackAnalyticsEvent('checkout_started', { source: 'account_page' });
         window.location.href = data.url;
         return;
       }

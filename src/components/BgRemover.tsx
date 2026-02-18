@@ -26,19 +26,34 @@ type InFile  = {
   previewUrl?: string; // 追加: 元ファイルのプレビュー用URL
   errorMessage?: string; // エラーメッセージ
   outputUrl?: string;   // 処理後の画像URL (背景除去成功時)
+  standardOutputUrl?: string; // 標準保存向けURL（Pro時に軽量版を併置）
+  highQualityOutputUrl?: string; // 高画質保存向けURL（Pro時）
   boundingBox?: { x: number, y: number, width: number, height: number }; // 追加: 対象物のバウンディングボックス
   startTime?: number;   // 処理開始時刻
   endTime?: number;     // 処理完了時刻
   processingOrder?: number; // 並行処理での順序
+  sourceQualityMode?: ProcessingMode;
+  lastProcessingMode?: ProcessingMode;
+  wasCompressedForFree?: boolean;
+  wasEnhanced?: boolean;
 };
 
 import UploadArea from "./UploadArea";
 import PrimaryButton from "./PrimaryButton";
 import RatioButton from "./RatioButton";
 import AdSlot from "./AdSlot";
+import {
+  normalizeDataUrlLongSide,
+  resizeDataUrlLongSide,
+  pickEsrganScaleForTarget,
+  toEnhanceLongSide,
+} from '@/lib/image/enhance';
+import { trackAnalyticsEvent } from '@/lib/analytics/events';
 
 type AdUserPlan = 'pro' | 'free' | 'guest';
 type AdPlacement = 'after_cta' | 'bottom';
+type ProcessingMode = 'standard' | 'pro_high_precision';
+type EnhanceTarget = '1k' | '2k' | '4k';
 type OversizedPromptItem = {
   id: string;
   name: string;
@@ -78,6 +93,7 @@ const PRO_MAX_SIDE = Number(process.env.NEXT_PUBLIC_PRO_MAX_SIDE_PX || '10000');
 const FREE_OUTPUT_MAX_SIDE = Number(process.env.NEXT_PUBLIC_FREE_OUTPUT_MAX_SIDE_PX || '3200');
 const PRO_OUTPUT_MAX_SIDE = Number(process.env.NEXT_PUBLIC_PRO_OUTPUT_MAX_SIDE_PX || '7000');
 const USE_DIRECT_UPLOAD_FOR_PRO = process.env.NEXT_PUBLIC_UPLOAD_DIRECT_ENABLED !== 'false';
+const PROCESSING_MODE_SESSION_KEY = 'bgremover_processing_mode';
 
 type BgRemoverMultiProps = {
   isPro?: boolean;
@@ -97,6 +113,12 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
   const [progress, setProgress] = useState<number>(0);
   const [processedCount, setProcessedCount] = useState<number>(0);
   const [oversizedPromptItems, setOversizedPromptItems] = useState<OversizedPromptItem[]>([]);
+  const [selectedProcessingMode, setSelectedProcessingMode] = useState<ProcessingMode>(() =>
+    isPro ? 'pro_high_precision' : 'standard'
+  );
+  const [enhanceTarget, setEnhanceTarget] = useState<EnhanceTarget>('2k');
+  const [enhancingFileId, setEnhancingFileId] = useState<string | null>(null);
+  const proOfferImpressionTrackedRef = useRef(false);
   
   // 並行処理制限の設定（ユーザーには見せず、完全自動）
   const [maxConcurrentProcesses, setMaxConcurrentProcesses] = useState<number>(5); // デフォルト5並行
@@ -128,6 +150,14 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
   const hasCompletedResults = inputs.some(input => input.status === 'completed');
   const shouldShowResultAd = adsEnabled && !isPro && hasCompletedResults;
 
+  useEffect(() => {
+    if (isPro) return;
+    if (!hasCompletedResults) return;
+    if (proOfferImpressionTrackedRef.current) return;
+    trackAnalyticsEvent('pro_high_precision_impression', { section: 'result' });
+    proOfferImpressionTrackedRef.current = true;
+  }, [hasCompletedResults, isPro]);
+
   // 隠し機能：デバッグモード切り替え（Ctrl+Shift+D）
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -140,6 +170,32 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [debugMode]);
+
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem(PROCESSING_MODE_SESSION_KEY);
+      if (saved === 'standard' || saved === 'pro_high_precision') {
+        if (saved === 'pro_high_precision' && !isPro) {
+          setSelectedProcessingMode('standard');
+        } else {
+          setSelectedProcessingMode(saved);
+        }
+        return;
+      }
+    } catch {
+      // ignore sessionStorage errors
+    }
+
+    setSelectedProcessingMode(isPro ? 'pro_high_precision' : 'standard');
+  }, [isPro]);
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(PROCESSING_MODE_SESSION_KEY, selectedProcessingMode);
+    } catch {
+      // ignore sessionStorage errors
+    }
+  }, [selectedProcessingMode]);
 
   // ログ記録関数（デバッグモード時のみ動作）
   const addLog = useCallback((log: {
@@ -481,6 +537,69 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
     };
   }, [changeExtension, getImageDimensions]);
 
+  const goToProPurchase = useCallback((reason: string) => {
+    trackAnalyticsEvent('pro_high_precision_click', { reason, isPro });
+    window.location.href = '/?buyPro=1#pro';
+  }, [isPro]);
+
+  const handleSelectProcessingMode = useCallback((nextMode: ProcessingMode) => {
+    if (nextMode === 'pro_high_precision' && !isPro) {
+      goToProPurchase('pre_mode_selector');
+      return;
+    }
+    setSelectedProcessingMode(nextMode);
+    trackAnalyticsEvent('processing_mode_selected', { mode: nextMode, isPro });
+  }, [goToProPurchase, isPro]);
+
+  const createStandardOutputFromDataUrl = useCallback(async (dataUrl: string) => {
+    return resizeDataUrlLongSide(dataUrl, 1600);
+  }, []);
+
+  const runEnhance = useCallback(async (sourceDataUrl: string, target: EnhanceTarget) => {
+    const targetLongSide = toEnhanceLongSide(target);
+    const normalized = await normalizeDataUrlLongSide(sourceDataUrl, 1440);
+    const scale = pickEsrganScaleForTarget(normalized.longSide, targetLongSide);
+
+    trackAnalyticsEvent('enhance_started', { target, targetLongSide, scale });
+    const startedAt = Date.now();
+
+    const response = await fetch('/api/enhance', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        imageDataUrl: normalized.dataUrl,
+        scale,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'くっきり処理に失敗しました。' }));
+      trackAnalyticsEvent('enhance_failed', {
+        target,
+        status: response.status,
+        message: errorData?.error ?? 'unknown',
+        durationMs: Date.now() - startedAt,
+      });
+      throw new Error(errorData?.error || 'くっきり処理に失敗しました。');
+    }
+
+    const blob = await response.blob();
+    const enhancedDataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = () => reject(new Error('くっきり画像の読み込みに失敗しました。'));
+      reader.readAsDataURL(blob);
+    });
+
+    const finalDataUrl = await resizeDataUrlLongSide(enhancedDataUrl, targetLongSide);
+    trackAnalyticsEvent('enhance_succeeded', {
+      target,
+      targetLongSide,
+      durationMs: Date.now() - startedAt,
+    });
+    return finalDataUrl;
+  }, []);
+
   // 画像合成関数
   const applyTemplate = async (
     originalImageUrl: string, 
@@ -760,6 +879,10 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
         name: file.name, 
         status: isHeic ? "pending" : "ready",
         previewUrl, // 追加
+        sourceQualityMode: selectedProcessingMode,
+        lastProcessingMode: selectedProcessingMode,
+        wasCompressedForFree: false,
+        wasEnhanced: false,
       });
     }
     setInputs(newInputs);
@@ -795,7 +918,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
         }
       }
     }
-  }, [updateInputStatus, cleanupObjectUrls]); // cleanupObjectUrls を依存配列に追加
+  }, [updateInputStatus, cleanupObjectUrls, selectedProcessingMode]); // cleanupObjectUrls を依存配列に追加
 
   /* ------------ ① ファイル選択（複数 OK） --------------- */
   // handleFileSelect: UploadArea用（単一ファイル向け、後方互換性のため残す）
@@ -923,6 +1046,10 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
         updateInputStatus(input.id, "uploading");
         let blobForRequest: Blob = input.blob;
         let nameForRequest = input.name;
+        let wasCompressedForFree = false;
+        const requestedProcessingMode: ProcessingMode = isPro
+          ? selectedProcessingMode
+          : 'standard';
         const imageMeta = await getImageDimensions(blobForRequest);
 
         if (!isPro) {
@@ -930,6 +1057,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
             const compressed = await compressForFree(blobForRequest, nameForRequest);
             blobForRequest = compressed.blob;
             nameForRequest = compressed.name;
+            wasCompressedForFree = compressed.changed;
           }
           if (blobForRequest.size > MAX_UPLOAD_BYTES) {
             throw new Error(`無料プランの送信上限 ${MAX_UPLOAD_MB}MB を超えています。別の画像でお試しください。`);
@@ -1003,12 +1131,14 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
             body: JSON.stringify({
               imageUrl: blobResult.url,
               sourceBlobUrl: blobResult.url,
+              processingMode: requestedProcessingMode,
             }),
             signal: combinedSignal,
           });
         } else {
           const formData = new FormData();
           formData.append("file", blobForRequest, nameForRequest);
+          formData.append("processingMode", requestedProcessingMode);
           response = await fetch("/api/remove-bg", {
             method: "POST",
             body: formData,
@@ -1060,6 +1190,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
 
         updateInputStatus(input.id, "processing");
         const imageBlob = await response.blob();
+        const appliedProcessingMode = (response.headers.get('x-processing-mode') as ProcessingMode | null) ?? requestedProcessingMode;
         
         // ログ記録：後処理開始
         addLog({
@@ -1112,6 +1243,33 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
               }
 
               updateInputStatus(input.id, "completed", undefined, finalUrl);
+              setInputs(prev => prev.map(i => {
+                if (i.id !== input.id) return i;
+                const next = { ...i } as InFile;
+                next.sourceQualityMode = selectedProcessingMode;
+                next.lastProcessingMode = appliedProcessingMode;
+                next.wasCompressedForFree = wasCompressedForFree;
+                next.highQualityOutputUrl = finalUrl;
+                next.wasEnhanced = false;
+                if (isPro) {
+                  void createStandardOutputFromDataUrl(finalUrl).then((standardUrl) => {
+                    setInputs(current => current.map(item => item.id === input.id ? {
+                      ...item,
+                      standardOutputUrl: standardUrl,
+                    } : item));
+                  }).catch(() => {
+                    // fallback to same data
+                    setInputs(current => current.map(item => item.id === input.id ? {
+                      ...item,
+                      standardOutputUrl: finalUrl,
+                    } : item));
+                  });
+                  next.standardOutputUrl = finalUrl;
+                } else {
+                  next.standardOutputUrl = finalUrl;
+                }
+                return next;
+              }));
               
               // 処理時間を計算
               const totalDuration = Date.now() - startTime;
@@ -1338,6 +1496,124 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
     }
   };
 
+  const handleRemakeWithOriginal = async (input: InFile, reason: 'result_remake' | 'edge_cleanup') => {
+    if (!isPro) {
+      goToProPurchase(reason);
+      return;
+    }
+
+    setEnhancingFileId(input.id);
+    setMsg(null);
+    updateInputStatus(input.id, 'processing', undefined);
+
+    try {
+      const imageMeta = await getImageDimensions(input.originalFile);
+      const processingMode: ProcessingMode = reason === 'edge_cleanup' ? 'pro_high_precision' : selectedProcessingMode;
+      let response: Response;
+
+      if (USE_DIRECT_UPLOAD_FOR_PRO) {
+        const uploadFile = input.originalFile;
+        const blobResult = await uploadToBlob(uploadFile.name, uploadFile, {
+          access: 'public',
+          handleUploadUrl: '/api/upload/blob',
+          clientPayload: JSON.stringify({
+            sizeBytes: uploadFile.size,
+            mimeType: uploadFile.type,
+            width: imageMeta.width,
+            height: imageMeta.height,
+          }),
+        });
+
+        response = await fetch('/api/remove-bg', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            imageUrl: blobResult.url,
+            sourceBlobUrl: blobResult.url,
+            processingMode,
+          }),
+        });
+      } else {
+        const formData = new FormData();
+        formData.append('file', input.originalFile, input.name);
+        formData.append('processingMode', processingMode);
+        response = await fetch('/api/remove-bg', {
+          method: 'POST',
+          body: formData,
+        });
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: '作り直しに失敗しました。' }));
+        throw new Error(errorData.error || '作り直しに失敗しました。');
+      }
+
+      const imageBlob = await response.blob();
+      const remadeDataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error('画像の読み込みに失敗しました。'));
+        reader.readAsDataURL(imageBlob);
+      });
+
+      updateInputStatus(input.id, 'completed', undefined, remadeDataUrl);
+      trackAnalyticsEvent('post_upgrade_remake_succeeded', {
+        reason,
+        mode: processingMode,
+      });
+
+      const standardUrl = await createStandardOutputFromDataUrl(remadeDataUrl).catch(() => remadeDataUrl);
+      setInputs(prev => prev.map(item => item.id === input.id ? {
+        ...item,
+        sourceQualityMode: selectedProcessingMode,
+        lastProcessingMode: processingMode,
+        wasCompressedForFree: false,
+        highQualityOutputUrl: remadeDataUrl,
+        standardOutputUrl: standardUrl,
+        wasEnhanced: false,
+      } : item));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '作り直しに失敗しました。';
+      setMsg(message);
+      updateInputStatus(input.id, 'error', message);
+    } finally {
+      setEnhancingFileId(null);
+    }
+  };
+
+  const handleEnhanceForFile = async (input: InFile, target: EnhanceTarget) => {
+    if (!isPro) {
+      goToProPurchase('result_enhance');
+      return;
+    }
+
+    setEnhanceTarget(target);
+    setEnhancingFileId(input.id);
+    setMsg(null);
+
+    try {
+      trackAnalyticsEvent('enhance_target_selected', { target });
+      const sourceDataUrl = input.highQualityOutputUrl || input.outputUrl;
+      if (!sourceDataUrl) {
+        throw new Error('くっきり処理する画像が見つかりません。');
+      }
+      const enhancedDataUrl = await runEnhance(sourceDataUrl, target);
+      updateInputStatus(input.id, 'completed', undefined, enhancedDataUrl);
+      const standardUrl = await createStandardOutputFromDataUrl(enhancedDataUrl).catch(() => enhancedDataUrl);
+      setInputs(prev => prev.map(item => item.id === input.id ? {
+        ...item,
+        highQualityOutputUrl: enhancedDataUrl,
+        standardOutputUrl: standardUrl,
+        wasEnhanced: true,
+      } : item));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'くっきり処理に失敗しました。';
+      setMsg(message);
+    } finally {
+      setEnhancingFileId(null);
+    }
+  };
+
   /* ------------ ③ 全てダウンロード --------------- */
   const handleDownloadAll = async () => {
     const zip = new JSZip();
@@ -1411,7 +1687,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                   console.info('[pro_original_chosen]', { count: oversizedPromptItems.length });
                   setOversizedPromptItems([]);
                   setMsg(null);
-                  window.location.href = '/?buyPro=1#pro';
+                  goToProPurchase('oversized_modal');
                 }}
               >
                 そのままキレイに処理する（Pro）
@@ -1454,6 +1730,43 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
         shadow="shadow-2xl"
         disabled={busy}
       />
+
+      {/* 処理モード選択 */}
+      <div className="space-y-2">
+        <h3 className="text-sm font-semibold text-gray-800">仕上がりモード</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => handleSelectProcessingMode('standard')}
+            className={`rounded-xl border px-4 py-3 text-left transition-colors ${
+              selectedProcessingMode === 'standard'
+                ? 'border-blue-500 bg-blue-50'
+                : 'border-gray-200 hover:border-blue-300'
+            }`}
+          >
+            <p className="font-semibold text-gray-900">標準（速い）</p>
+            <p className="text-xs text-gray-600 mt-1">はやく仕上げたいときにおすすめ</p>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSelectProcessingMode('pro_high_precision')}
+            className={`rounded-xl border px-4 py-3 text-left transition-colors relative ${
+              selectedProcessingMode === 'pro_high_precision'
+                ? 'border-purple-500 bg-purple-50'
+                : 'border-gray-200 hover:border-purple-300'
+            } ${!isPro ? 'opacity-80' : ''}`}
+          >
+            <span className="absolute top-2 right-2 inline-flex items-center rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-semibold text-purple-700">
+              Pro
+            </span>
+            <p className="font-semibold text-gray-900">高精度（Pro）</p>
+            <p className="text-xs text-gray-600 mt-1">人物のフチまでていねいに仕上げる</p>
+            {!isPro && (
+              <p className="text-[11px] text-purple-700 mt-2">Proで選べます</p>
+            )}
+          </button>
+        </div>
+      </div>
       
       {/* ファイル数制限の案内 */}
       <div className="flex items-center justify-center">
@@ -1723,13 +2036,90 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                   {(input.outputUrl && input.status === 'completed') || input.status === 'error' ? (
                     <div className="mt-3 pt-2 border-t border-gray-100">
                       {input.outputUrl && input.status === 'completed' && (
+                        <div className={`mb-3 rounded-xl border p-3 ${
+                          isPro ? 'border-purple-200 bg-purple-50' : 'border-blue-200 bg-blue-50'
+                        }`}>
+                          <p className="text-sm font-semibold text-gray-900">
+                            {isPro ? 'もっときれいに仕上げる' : (input.wasCompressedForFree ? '元の画質で作り直せます' : 'さらにきれいにできます')}
+                          </p>
+                          <p className="text-xs text-gray-600 mt-1">
+                            {isPro
+                              ? 'くっきり高画質とフチ改善をここから実行できます。'
+                              : (input.wasCompressedForFree
+                                ? '無料処理では写真を軽くしているため、Proなら元の画質で作り直せます。'
+                                : 'Proにすると、くっきり高画質やフチ改善が使えます。')}
+                          </p>
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {!isPro && (
+                              <button
+                                type="button"
+                                onClick={() => goToProPurchase('result_remake')}
+                                className="inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                              >
+                                Proで元の画質で作り直す
+                              </button>
+                            )}
+                            {isPro && (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => { void handleRemakeWithOriginal(input, 'result_remake'); }}
+                                  disabled={enhancingFileId === input.id}
+                                  className="inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-60"
+                                >
+                                  {enhancingFileId === input.id ? '作り直し中…' : '元の画質で作り直す'}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => { void handleRemakeWithOriginal(input, 'edge_cleanup'); }}
+                                  disabled={enhancingFileId === input.id}
+                                  className="inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-medium border border-purple-300 text-purple-700 hover:bg-purple-100 disabled:opacity-60"
+                                >
+                                  フチをきれいに
+                                </button>
+                                <div className="inline-flex rounded-lg border border-purple-200 overflow-hidden">
+                                  {(['1k', '2k', '4k'] as EnhanceTarget[]).map((target) => (
+                                    <button
+                                      key={target}
+                                      type="button"
+                                      onClick={() => { void handleEnhanceForFile(input, target); }}
+                                      disabled={enhancingFileId === input.id}
+                                      className={`px-3 py-2 text-sm font-medium border-r last:border-r-0 border-purple-200 ${
+                                        enhanceTarget === target ? 'bg-purple-600 text-white' : 'bg-white text-purple-700 hover:bg-purple-100'
+                                      } disabled:opacity-60`}
+                                    >
+                                      {target === '1k' ? '1K' : target === '2k' ? '2K' : '4K'}
+                                    </button>
+                                  ))}
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      {input.outputUrl && input.status === 'completed' && (
                         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                           {/* ダウンロードボタン */}
-                          <a href={input.outputUrl} download={`processed_${input.name.replace(/\.[^.]+$/, ".png")}`} className="flex-1 sm:flex-none">
+                          <a
+                            href={isPro ? (input.standardOutputUrl || input.outputUrl) : input.outputUrl}
+                            download={`processed_${input.name.replace(/\.[^.]+$/, ".png")}`}
+                            className="flex-1 sm:flex-none"
+                          >
                             <PrimaryButton variant="outline" size="sm" className="w-full sm:w-auto">
-                              ダウンロード
+                              {isPro ? '保存（標準）' : '保存（標準）'}
                             </PrimaryButton>
                           </a>
+                          {isPro && (
+                            <a
+                              href={input.highQualityOutputUrl || input.outputUrl}
+                              download={`processed_hq_${input.name.replace(/\.[^.]+$/, ".png")}`}
+                              className="flex-1 sm:flex-none"
+                            >
+                              <PrimaryButton size="sm" className="w-full sm:w-auto">
+                                保存（高画質）
+                              </PrimaryButton>
+                            </a>
+                          )}
                           {/* イージートリミングで編集ボタン - Linkを使用 */}
                           {input.boundingBox && input.outputUrl && (
                             <Link 

@@ -11,6 +11,8 @@
   - 出力サイズ（アスペクト比）: `1:1` / `16:9` / `4:3` / `元画像に合わせる` / `被写体にフィット`
   - 背景のカスタマイズ（背景なし / テンプレート / カラーピッカー）
   - 個別ダウンロード / ZIP一括ダウンロード
+  - 処理モード選択（`標準（速い）` / `高精度（Pro）`）
+  - 結果画面のPro改善ブロック（`元の画質で作り直す` / `くっきり高画質に 1K/2K/4K` / `フチをきれいに`）
   - 広告表示（Free/ゲストのみ、結果エリアに1枠。Proは非表示）
   - 上限: **最大30枚**
   - Free: 4MB超は「無料で続ける（自動圧縮）」で継続可能（目安: 4MB/8MP）
@@ -58,6 +60,9 @@ pnpm install
   - `FREE_MAX_MP` / `NEXT_PUBLIC_FREE_MAX_MP`（Freeメガピクセル上限、既定8）
   - `NEXT_PUBLIC_FREE_OUTPUT_MAX_SIDE_PX`（Free最終出力の長辺上限、既定3200）
   - `NEXT_PUBLIC_PRO_OUTPUT_MAX_SIDE_PX`（Pro最終出力の長辺上限、既定7000）
+- **任意（モデルバージョン固定）**:
+  - `REPLICATE_REMOVE_BG_2_VERSION`（高精度透過モデルのバージョン/モデル指定）
+  - `REPLICATE_REAL_ESRGAN_VERSION`（くっきり高画質モデルのバージョン/モデル指定）
 - **任意（広告表示）**:
   - `NEXT_PUBLIC_ADS_ENABLED`（`false` で広告枠を非表示）
   - `NEXT_PUBLIC_AD_PLACEMENT`（`after_cta` または `bottom`、未指定時は `after_cta`）
@@ -105,21 +110,42 @@ pnpm start
 
 ### `POST /api/remove-bg`
 
-アップロードされた画像を Replicate のモデル（`cjwbw/rembg` の固定 version）で処理し、**PNG（背景透過）** を返します。
+アップロードされた画像を Replicate で処理し、**PNG（背景透過）** を返します。
+- 標準: `851-labs/background-remover`（固定version）
+- 高精度（Proのみ）: `fottoai/remove-bg-2`（固定versionまたは環境変数指定）
 
 - **Runtime**: Node.js（`export const runtime = 'nodejs'`）
 - **Request**:
   - `multipart/form-data`（Free/既存互換）:
     - **field**: `file`（画像ファイル）
+    - **field**: `processingMode`（任意。`standard` / `pro_high_precision`）
   - `application/json`（Pro直送）:
     - **field**: `imageUrl`（オブジェクトストレージ上の一時URL）
     - **field**: `sourceBlobUrl`（処理後に削除する一時URL）
+    - **field**: `processingMode`（任意。`standard` / `pro_high_precision`）
 - **Response**:
   - 成功時: `200` + `image/png`（バイナリ）
   - 失敗時: `4xx/5xx` + JSON `{ error: string }`
 - **制限**:
   - Freeは4MB超を選択しても、クライアント側で自動圧縮して継続できます
   - Proは直送アップロードにより、巨大ボディをFunctionへ送らない経路で処理します
+  - `processingMode=pro_high_precision` は **Pro会員のみ**（サーバー側で403ガード）
+
+### `POST /api/enhance`
+
+Pro専用の「くっきり高画質に」処理です。内部で `nightmareai/real-esrgan` を使い、UIは `1K / 2K / 4K` を提供します。
+
+- **Runtime**: Node.js
+- **認証**: ログイン済みかつ `isPro=true` のみ許可
+- **Request（application/json）**:
+  - `imageDataUrl`: 入力画像（Data URL）
+  - `scale`: `2` または `4`（UI非表示・内部決定）
+- **Response**:
+  - 成功時: `200` + `image/png`
+  - 失敗時: `4xx/5xx` + JSON `{ error: string }`
+- **処理方針**:
+  - 入力は長辺1440px以下に正規化
+  - 目標出力は 1K/2K/4K（長辺1024/2048/3840）に最終リサイズ
 
 ### `POST /api/upload/blob`
 

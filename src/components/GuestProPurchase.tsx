@@ -2,6 +2,7 @@
 
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
+import { trackAnalyticsEvent } from '@/lib/analytics/events';
 
 type GuestCheckoutResponse =
   | { ok: true; url: string }
@@ -47,6 +48,7 @@ export default function GuestProPurchase() {
         return;
       }
       if ('url' in data && typeof data.url === 'string') {
+        trackAnalyticsEvent('checkout_started', { source: 'guest_modal' });
         window.location.href = data.url;
         return;
       }

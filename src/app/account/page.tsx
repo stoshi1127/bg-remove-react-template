@@ -7,6 +7,7 @@ import { getStripeMode } from '@/lib/billing/stripeMode';
 import { isBillingEnabled } from '@/lib/billing/config';
 import LogoutButton from './ui/LogoutButton';
 import BillingButtons from './ui/BillingButtons';
+import BillingTracking from './ui/BillingTracking';
 
 export const metadata: Metadata = {
   title: 'アカウント | QuickTools',
@@ -32,6 +33,7 @@ export default async function AccountPage() {
 
   return (
     <div className="container mx-auto px-4 py-12 max-w-2xl">
+      <BillingTracking />
       <h1 className="text-2xl font-bold text-gray-900 mb-6">アカウント</h1>
 
       <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-soft">

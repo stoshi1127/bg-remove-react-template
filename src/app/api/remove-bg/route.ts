@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { del } from '@vercel/blob';
+import { getCurrentUser } from '@/lib/auth/session';
 
 export const runtime = 'nodejs';
 
 type JsonBody = {
   imageUrl?: string;
   sourceBlobUrl?: string;
+  processingMode?: string;
 };
+
+type ProcessingMode = 'standard' | 'pro_high_precision';
 
 function asString(v: unknown): string | null {
   return typeof v === 'string' && v.length > 0 ? v : null;
@@ -43,17 +47,23 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const modelVersion = '851-labs/background-remover:a029dff38972b5fda4ec5d75d7d1cd25aeff621d2cf4946a41055d7db66b80bc';
+    const standardModelVersion = '851-labs/background-remover:a029dff38972b5fda4ec5d75d7d1cd25aeff621d2cf4946a41055d7db66b80bc';
+    const proHighPrecisionModelVersion =
+      process.env.REPLICATE_REMOVE_BG_2_VERSION || 'fottoai/remove-bg-2';
     const contentType = req.headers.get('content-type') ?? '';
     let imageInput: string | null = null;
+    let requestedProcessingMode: ProcessingMode = 'standard';
 
     if (contentType.includes('application/json')) {
       const body = (await req.json().catch(() => null)) as JsonBody | null;
       imageInput = asString(body?.imageUrl);
       sourceBlobUrl = asString(body?.sourceBlobUrl);
+      requestedProcessingMode = body?.processingMode === 'pro_high_precision' ? 'pro_high_precision' : 'standard';
     } else {
       const formData = await req.formData();
       const file = formData.get('file') as File | null;
+      const processingMode = formData.get('processingMode');
+      requestedProcessingMode = processingMode === 'pro_high_precision' ? 'pro_high_precision' : 'standard';
       if (!file) {
         return NextResponse.json({ error: 'File is required' }, { status: 400 });
       }
@@ -66,6 +76,18 @@ export async function POST(req: NextRequest) {
     if (!imageInput) {
       return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
     }
+
+    if (requestedProcessingMode === 'pro_high_precision') {
+      const user = await getCurrentUser();
+      if (!user?.isPro) {
+        return NextResponse.json({ error: '高精度モードはPro会員のみ利用できます。' }, { status: 403 });
+      }
+    }
+
+    const modelVersion =
+      requestedProcessingMode === 'pro_high_precision'
+        ? proHighPrecisionModelVersion
+        : standardModelVersion;
 
     let startPredictionResponse = await startPrediction({ replicateApiKey, modelVersion, imageInput });
 
@@ -169,6 +191,7 @@ export async function POST(req: NextRequest) {
       status: 200,
       headers: {
         'Content-Type': 'image/png',
+        'x-processing-mode': requestedProcessingMode,
       },
     });
 
