@@ -24,7 +24,13 @@ async function startPrediction(args: {
   replicateApiKey: string;
   modelVersion: string;
   imageInput: string;
+  processingMode: ProcessingMode;
 }) {
+  const input =
+    args.processingMode === 'pro_high_precision'
+      ? { image_url: args.imageInput }
+      : { image: args.imageInput };
+
   return fetch('https://api.replicate.com/v1/predictions', {
     method: 'POST',
     headers: {
@@ -33,7 +39,7 @@ async function startPrediction(args: {
     },
     body: JSON.stringify({
       version: args.modelVersion,
-      input: { image: args.imageInput },
+      input,
     }),
   });
 }
@@ -89,7 +95,12 @@ export async function POST(req: NextRequest) {
         ? proHighPrecisionModelVersion
         : standardModelVersion;
 
-    let startPredictionResponse = await startPrediction({ replicateApiKey, modelVersion, imageInput });
+    let startPredictionResponse = await startPrediction({
+      replicateApiKey,
+      modelVersion,
+      imageInput,
+      processingMode: requestedProcessingMode,
+    });
 
     // URL入力が失敗した場合だけData URIへフォールバック（既存互換）
     if (!startPredictionResponse.ok && contentType.includes('application/json')) {
@@ -105,6 +116,7 @@ export async function POST(req: NextRequest) {
             replicateApiKey,
             modelVersion,
             imageInput: fallbackDataURI,
+            processingMode: requestedProcessingMode,
           });
         }
       }
