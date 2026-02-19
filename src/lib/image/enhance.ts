@@ -73,6 +73,21 @@ export async function resizeDataUrlLongSide(dataUrl: string, targetLongSide: num
   return renderToDataUrl(dataUrl, width, height);
 }
 
+export function computeUpscaledDimensions(
+  width: number,
+  height: number,
+  target: EnhanceTarget,
+): { width: number; height: number } {
+  const targetLongSide = toEnhanceLongSide(target);
+  const longSide = Math.max(width, height);
+  if (longSide <= 0) return { width: targetLongSide, height: targetLongSide };
+  const ratio = targetLongSide / longSide;
+  return {
+    width: Math.max(1, Math.round(width * ratio)),
+    height: Math.max(1, Math.round(height * ratio)),
+  };
+}
+
 export function pickEsrganScaleForTarget(currentLongSide: number, targetLongSide: number): 2 | 4 {
   if (currentLongSide <= 0) return 2;
   const ratio = targetLongSide / currentLongSide;

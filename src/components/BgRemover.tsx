@@ -37,6 +37,8 @@ type InFile  = {
   wasCompressedForFree?: boolean;
   wasEnhanced?: boolean;
   outputLongSide?: number;
+  outputWidth?: number;
+  outputHeight?: number;
 };
 
 import UploadArea from "./UploadArea";
@@ -49,6 +51,7 @@ import {
   pickEsrganScaleForTarget,
   toEnhanceLongSide,
   compressDataUrlForApi,
+  computeUpscaledDimensions,
 } from '@/lib/image/enhance';
 import { trackAnalyticsEvent } from '@/lib/analytics/events';
 
@@ -413,8 +416,14 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
             });
             const img = new Image();
             img.onload = () => {
-              const longSide = Math.max(img.naturalWidth, img.naturalHeight);
-              setInputs(prev => prev.map(i => i.id === id ? { ...i, outputLongSide: longSide } : i));
+              const w = img.naturalWidth;
+              const h = img.naturalHeight;
+              setInputs(prev => prev.map(i => i.id === id ? {
+                ...i,
+                outputLongSide: Math.max(w, h),
+                outputWidth: w,
+                outputHeight: h,
+              } : i));
             };
             img.src = newOutputUrl;
           } else if (newOutputUrl !== undefined) {
@@ -2198,11 +2207,22 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                                 )}
                                 {enhancingFileId !== input.id && (
                                   <>
+                                    {input.outputWidth && input.outputHeight && (
+                                      <p className="text-xs text-gray-500">現在のサイズ: {input.outputWidth}×{input.outputHeight}px</p>
+                                    )}
                                     <div className="inline-flex rounded-lg border border-purple-200 overflow-hidden">
                                       {(['1k', '2k', '4k'] as EnhanceTarget[]).map((target) => {
                                         const targetPx = toEnhanceLongSide(target);
                                         const alreadyLargeEnough = (input.outputLongSide ?? 0) >= targetPx;
                                         const isSelected = pendingEnhance?.fileId === input.id && pendingEnhance.target === target;
+                                        const afterDims = (input.outputWidth && input.outputHeight)
+                                          ? computeUpscaledDimensions(input.outputWidth, input.outputHeight, target)
+                                          : null;
+                                        const titleText = alreadyLargeEnough
+                                          ? `既に${target.toUpperCase()}以上のサイズです`
+                                          : afterDims
+                                            ? `${afterDims.width}×${afterDims.height}px にアップスケール`
+                                            : `${target.toUpperCase()}にアップスケール`;
                                         return (
                                           <button
                                             key={target}
@@ -2215,7 +2235,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                                               }
                                             }}
                                             disabled={batchEnhanceState.inProgress || alreadyLargeEnough}
-                                            title={alreadyLargeEnough ? `既に${target.toUpperCase()}以上のサイズです` : `${target.toUpperCase()}にアップスケール`}
+                                            title={titleText}
                                             className={`px-3 py-2 text-sm font-medium border-r last:border-r-0 border-purple-200 transition-colors ${
                                               isSelected
                                                 ? 'bg-purple-600 text-white'
@@ -2230,28 +2250,39 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                                         );
                                       })}
                                     </div>
-                                    {pendingEnhance?.fileId === input.id && (
-                                      <div className="flex items-center gap-2">
-                                        <button
-                                          type="button"
-                                          onClick={() => {
-                                            const t = pendingEnhance.target;
-                                            setPendingEnhance(null);
-                                            void handleEnhanceForFile(input, t);
-                                          }}
-                                          className="inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700"
-                                        >
-                                          {pendingEnhance.target.toUpperCase()}にアップスケール実行
-                                        </button>
-                                        <button
-                                          type="button"
-                                          onClick={() => setPendingEnhance(null)}
-                                          className="text-xs text-gray-500 hover:text-gray-700"
-                                        >
-                                          キャンセル
-                                        </button>
-                                      </div>
-                                    )}
+                                    {pendingEnhance?.fileId === input.id && (() => {
+                                      const cur = { w: input.outputWidth ?? 0, h: input.outputHeight ?? 0 };
+                                      const after = computeUpscaledDimensions(cur.w, cur.h, pendingEnhance.target);
+                                      return (
+                                        <div className="flex flex-col gap-1.5">
+                                          <p className="text-xs text-gray-600">
+                                            <span className="font-medium">{cur.w}×{cur.h}</span>
+                                            <span className="mx-1.5 text-purple-400">→</span>
+                                            <span className="font-bold text-purple-700">{after.width}×{after.height}</span>
+                                          </p>
+                                          <div className="flex items-center gap-2">
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                const t = pendingEnhance.target;
+                                                setPendingEnhance(null);
+                                                void handleEnhanceForFile(input, t);
+                                              }}
+                                              className="inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700"
+                                            >
+                                              {pendingEnhance.target.toUpperCase()}にアップスケール実行
+                                            </button>
+                                            <button
+                                              type="button"
+                                              onClick={() => setPendingEnhance(null)}
+                                              className="text-xs text-gray-500 hover:text-gray-700"
+                                            >
+                                              キャンセル
+                                            </button>
+                                          </div>
+                                        </div>
+                                      );
+                                    })()}
                                   </>
                                 )}
                               </>
@@ -2426,25 +2457,30 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                 </div>
                 {pendingBatchTarget && (() => {
                   const targetPx = toEnhanceLongSide(pendingBatchTarget);
-                  const eligibleCount = inputs.filter(
+                  const eligible = inputs.filter(
                     i => i.status === 'completed' && (i.highQualityOutputUrl || i.outputUrl) && (i.outputLongSide ?? 0) < targetPx
-                  ).length;
+                  );
                   return (
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => { void handleBatchEnhance(pendingBatchTarget); }}
-                        className="inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700"
-                      >
-                        {eligibleCount}枚を{pendingBatchTarget.toUpperCase()}にアップスケール実行
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setPendingBatchTarget(null)}
-                        className="text-xs text-gray-500 hover:text-gray-700"
-                      >
-                        キャンセル
-                      </button>
+                    <div className="flex flex-col gap-2">
+                      <p className="text-xs text-gray-500">
+                        {eligible.length}枚が対象（長辺 {targetPx}px へ拡大）
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => { void handleBatchEnhance(pendingBatchTarget); }}
+                          className="inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700"
+                        >
+                          {eligible.length}枚を{pendingBatchTarget.toUpperCase()}にアップスケール実行
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPendingBatchTarget(null)}
+                          className="text-xs text-gray-500 hover:text-gray-700"
+                        >
+                          キャンセル
+                        </button>
+                      </div>
                     </div>
                   );
                 })()}
