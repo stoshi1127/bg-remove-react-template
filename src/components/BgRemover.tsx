@@ -117,7 +117,6 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
   const [selectedProcessingMode, setSelectedProcessingMode] = useState<ProcessingMode>(() =>
     isPro ? 'pro_high_precision' : 'standard'
   );
-  const [enhanceTarget, setEnhanceTarget] = useState<EnhanceTarget>('2k');
   const [enhancingFileId, setEnhancingFileId] = useState<string | null>(null);
   const [batchEnhanceState, setBatchEnhanceState] = useState<{
     inProgress: boolean;
@@ -1603,7 +1602,6 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
       return;
     }
 
-    setEnhanceTarget(target);
     setEnhancingFileId(input.id);
     setMsg(null);
 
@@ -1648,7 +1646,6 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
     }
 
     setPendingBatchTarget(null);
-    setEnhanceTarget(target);
     setBatchEnhanceState({
       inProgress: true,
       target,
