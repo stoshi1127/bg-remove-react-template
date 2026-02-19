@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
   try {
     const standardModelVersion = '851-labs/background-remover:a029dff38972b5fda4ec5d75d7d1cd25aeff621d2cf4946a41055d7db66b80bc';
     const proHighPrecisionModelVersion =
-      process.env.REPLICATE_REMOVE_BG_2_VERSION || 'fottoai/remove-bg-2';
+      process.env.REPLICATE_REMOVE_BG_2_VERSION || 'fottoai/remove-bg-2:d748bcc6882e5567ffe1468356323e6345736494dd9b827ff2871a68fca79be5';
     const contentType = req.headers.get('content-type') ?? '';
     let imageInput: string | null = null;
     let requestedProcessingMode: ProcessingMode = 'standard';
