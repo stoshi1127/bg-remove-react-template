@@ -78,3 +78,21 @@ export function pickEsrganScaleForTarget(currentLongSide: number, targetLongSide
   const ratio = targetLongSide / currentLongSide;
   return ratio > 2.6 ? 4 : 2;
 }
+
+/**
+ * Re-renders through canvas as lossy WebP to stay under Vercel's 4.5 MB
+ * request body limit. Falls back to JPEG if WebP is unsupported.
+ */
+export async function compressDataUrlForApi(dataUrl: string): Promise<string> {
+  const image = await loadImage(dataUrl);
+  const canvas = document.createElement('canvas');
+  canvas.width = image.naturalWidth;
+  canvas.height = image.naturalHeight;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('画像処理の準備に失敗しました。');
+  ctx.drawImage(image, 0, 0);
+
+  const webp = canvas.toDataURL('image/webp', 0.85);
+  if (webp.startsWith('data:image/webp')) return webp;
+  return canvas.toDataURL('image/jpeg', 0.9);
+}

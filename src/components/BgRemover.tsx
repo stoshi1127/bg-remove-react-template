@@ -48,6 +48,7 @@ import {
   resizeDataUrlLongSide,
   pickEsrganScaleForTarget,
   toEnhanceLongSide,
+  compressDataUrlForApi,
 } from '@/lib/image/enhance';
 import { trackAnalyticsEvent } from '@/lib/analytics/events';
 
@@ -574,6 +575,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
     const targetLongSide = toEnhanceLongSide(target);
     const normalized = await normalizeDataUrlLongSide(sourceDataUrl, 1440);
     const scale = pickEsrganScaleForTarget(normalized.longSide, targetLongSide);
+    const compressedDataUrl = await compressDataUrlForApi(normalized.dataUrl);
 
     trackAnalyticsEvent('enhance_started', { target, targetLongSide, scale });
     const startedAt = Date.now();
@@ -582,7 +584,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        imageDataUrl: normalized.dataUrl,
+        imageDataUrl: compressedDataUrl,
         scale,
       }),
     });
