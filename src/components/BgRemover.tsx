@@ -36,6 +36,7 @@ type InFile  = {
   lastProcessingMode?: ProcessingMode;
   wasCompressedForFree?: boolean;
   wasEnhanced?: boolean;
+  outputLongSide?: number;
 };
 
 import UploadArea from "./UploadArea";
@@ -129,6 +130,8 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
     completed: 0,
     total: 0,
   });
+  const [pendingEnhance, setPendingEnhance] = useState<{ fileId: string; target: EnhanceTarget } | null>(null);
+  const [pendingBatchTarget, setPendingBatchTarget] = useState<EnhanceTarget | null>(null);
   const proOfferImpressionTrackedRef = useRef(false);
   
   // 並行処理制限の設定（ユーザーには見せず、完全自動）
@@ -401,17 +404,19 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
           }
           
           if (newOutputUrl && newOutputUrl !== input.outputUrl) {
-            // 新しい outputUrl が設定される場合、古いものがあれば解放候補（ただし現状はcleanupObjectUrlsで一括）
-            // もし input.outputUrl が objectUrlsRef にあれば削除する処理も検討可能
-            registerObjectUrl(newOutputUrl); // 新しいURLを登録
+            registerObjectUrl(newOutputUrl);
             updates.outputUrl = newOutputUrl;
-            // ここでバウンディングボックス計算をトリガー
             calculateBoundingBox(newOutputUrl).then(bbox => {
                 setInputs(prev => prev.map(i => i.id === id ? { ...i, boundingBox: bbox } : i));
             }).catch(err => {
                 console.error("Bounding box calculation failed:", err);
-                // エラーハンドリング：必要に応じてエラーメッセージを表示するなど
             });
+            const img = new Image();
+            img.onload = () => {
+              const longSide = Math.max(img.naturalWidth, img.naturalHeight);
+              setInputs(prev => prev.map(i => i.id === id ? { ...i, outputLongSide: longSide } : i));
+            };
+            img.src = newOutputUrl;
           } else if (newOutputUrl !== undefined) {
             updates.outputUrl = newOutputUrl;
           }
@@ -1631,14 +1636,18 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
       return;
     }
 
+    const targetPx = toEnhanceLongSide(target);
     const completedFiles = inputs.filter(
-      (input) => input.status === 'completed' && (input.highQualityOutputUrl || input.outputUrl)
+      (input) => input.status === 'completed'
+        && (input.highQualityOutputUrl || input.outputUrl)
+        && (input.outputLongSide ?? 0) < targetPx
     );
     if (completedFiles.length === 0) {
-      setMsg('アップスケールできる画像がまだありません。');
+      setMsg('対象サイズ未満の画像がありません。すべて既にそのサイズ以上です。');
       return;
     }
 
+    setPendingBatchTarget(null);
     setEnhanceTarget(target);
     setBatchEnhanceState({
       inProgress: true,
@@ -2115,37 +2124,59 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                     <div className="mt-3 pt-2 border-t border-gray-100">
                       {input.outputUrl && input.status === 'completed' && (
                         <div className={`mb-3 rounded-xl border p-3 ${
-                          isPro ? 'border-purple-200 bg-purple-50' : 'border-blue-200 bg-blue-50'
+                          isPro ? 'border-purple-200 bg-purple-50' : 'border-indigo-300 bg-gradient-to-br from-blue-50 to-indigo-50'
                         }`}>
-                          <p className="text-sm font-semibold text-gray-900">
-                            {isPro
-                              ? (input.lastProcessingMode === 'pro_high_precision' ? 'アップスケール' : 'Pro機能')
-                              : 'Proプランでできること'}
-                          </p>
                           {!isPro && (
-                            <ul className="mt-2 space-y-1 text-xs text-gray-700 list-disc list-inside">
-                              <li>高精度モデルでフチまできれいに切り抜き</li>
-                              <li>最大4Kまでアップスケール（高解像度化）</li>
-                              <li>元の画質のまま処理（圧縮なし）</li>
-                            </ul>
-                          )}
-                          {isPro && (
-                            <p className="text-xs text-gray-600 mt-1">
-                              {input.lastProcessingMode === 'pro_high_precision'
-                                ? '必要なサイズを選んでアップスケールできます。'
-                                : '高精度で再処理したあと、必要なサイズへアップスケールできます。'}
-                            </p>
-                          )}
-                          <div className="mt-3 flex flex-wrap gap-2">
-                            {!isPro && (
+                            <>
+                              <p className="text-sm font-bold text-indigo-800">
+                                Proならもっときれいに仕上がります
+                              </p>
+                              <div className="mt-2 space-y-2">
+                                <div className="flex items-start gap-2">
+                                  <span className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold">1</span>
+                                  <div>
+                                    <p className="text-xs font-semibold text-gray-900">高精度透過</p>
+                                    <p className="text-xs text-gray-600">髪の毛やフチまできれいに切り抜き</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-start gap-2">
+                                  <span className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold">2</span>
+                                  <div>
+                                    <p className="text-xs font-semibold text-gray-900">アップスケール</p>
+                                    <p className="text-xs text-gray-600">最大4K（3840px）まで拡大・高解像度化</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-start gap-2">
+                                  <span className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold">3</span>
+                                  <div>
+                                    <p className="text-xs font-semibold text-gray-900">元画質を維持</p>
+                                    <p className="text-xs text-gray-600">写真を圧縮せずそのまま処理</p>
+                                  </div>
+                                </div>
+                              </div>
                               <button
                                 type="button"
                                 onClick={() => goToProPurchase('result_remake')}
-                                className="inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                                className="mt-3 w-full inline-flex items-center justify-center px-4 py-2.5 rounded-lg text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-sm"
                               >
                                 Proにアップグレード
                               </button>
-                            )}
+                            </>
+                          )}
+                          {isPro && (
+                            <>
+                              <p className="text-sm font-semibold text-gray-900">
+                                {input.lastProcessingMode === 'pro_high_precision' ? 'アップスケール' : 'Pro機能'}
+                              </p>
+                              <p className="text-xs text-gray-600 mt-1">
+                                {input.lastProcessingMode === 'pro_high_precision'
+                                  ? '画像を拡大して高解像度にできます。サイズを選んでから実行してください。'
+                                  : '高精度で再処理したあと、アップスケールもできます。'}
+                              </p>
+                            </>
+                          )}
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            
                             {isPro && (
                               <>
                                 {input.lastProcessingMode !== 'pro_high_precision' && (
@@ -2158,21 +2189,70 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                                     {enhancingFileId === input.id ? '再処理中…' : '高精度で再処理'}
                                   </button>
                                 )}
-                                <div className="inline-flex rounded-lg border border-purple-200 overflow-hidden">
-                                  {(['1k', '2k', '4k'] as EnhanceTarget[]).map((target) => (
-                                    <button
-                                      key={target}
-                                      type="button"
-                                      onClick={() => { void handleEnhanceForFile(input, target); }}
-                                      disabled={batchEnhanceState.inProgress || enhancingFileId === input.id}
-                                      className={`px-3 py-2 text-sm font-medium border-r last:border-r-0 border-purple-200 ${
-                                        enhanceTarget === target ? 'bg-purple-600 text-white' : 'bg-white text-purple-700 hover:bg-purple-100'
-                                      } disabled:opacity-60`}
-                                    >
-                                      {target === '1k' ? '1K' : target === '2k' ? '2K' : '4K'}
-                                    </button>
-                                  ))}
-                                </div>
+                                {enhancingFileId === input.id && pendingEnhance?.fileId !== input.id && (
+                                  <div className="flex items-center gap-2 w-full">
+                                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-purple-600 border-t-transparent" />
+                                    <span className="text-xs text-purple-700 font-medium">アップスケール処理中…</span>
+                                  </div>
+                                )}
+                                {enhancingFileId !== input.id && (
+                                  <>
+                                    <div className="inline-flex rounded-lg border border-purple-200 overflow-hidden">
+                                      {(['1k', '2k', '4k'] as EnhanceTarget[]).map((target) => {
+                                        const targetPx = toEnhanceLongSide(target);
+                                        const alreadyLargeEnough = (input.outputLongSide ?? 0) >= targetPx;
+                                        const isSelected = pendingEnhance?.fileId === input.id && pendingEnhance.target === target;
+                                        return (
+                                          <button
+                                            key={target}
+                                            type="button"
+                                            onClick={() => {
+                                              if (isSelected) {
+                                                setPendingEnhance(null);
+                                              } else {
+                                                setPendingEnhance({ fileId: input.id, target });
+                                              }
+                                            }}
+                                            disabled={batchEnhanceState.inProgress || alreadyLargeEnough}
+                                            title={alreadyLargeEnough ? `既に${target.toUpperCase()}以上のサイズです` : `${target.toUpperCase()}にアップスケール`}
+                                            className={`px-3 py-2 text-sm font-medium border-r last:border-r-0 border-purple-200 transition-colors ${
+                                              isSelected
+                                                ? 'bg-purple-600 text-white'
+                                                : alreadyLargeEnough
+                                                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                                  : 'bg-white text-purple-700 hover:bg-purple-100'
+                                            } disabled:opacity-60`}
+                                          >
+                                            {target === '1k' ? '1K' : target === '2k' ? '2K' : '4K'}
+                                            {alreadyLargeEnough && ' ✓'}
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                    {pendingEnhance?.fileId === input.id && (
+                                      <div className="flex items-center gap-2">
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            const t = pendingEnhance.target;
+                                            setPendingEnhance(null);
+                                            void handleEnhanceForFile(input, t);
+                                          }}
+                                          className="inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700"
+                                        >
+                                          {pendingEnhance.target.toUpperCase()}にアップスケール実行
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => setPendingEnhance(null)}
+                                          className="text-xs text-gray-500 hover:text-gray-700"
+                                        >
+                                          キャンセル
+                                        </button>
+                                      </div>
+                                    )}
+                                  </>
+                                )}
                               </>
                             )}
                           </div>
@@ -2314,21 +2394,60 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
         
         {inputs.filter(input => input.status === 'completed').length > 1 && (
           <>
-            {isPro && (
-              <div className="inline-flex rounded-lg border border-purple-200 overflow-hidden">
-                {(['1k', '2k', '4k'] as EnhanceTarget[]).map((target) => (
-                  <button
-                    key={`batch-${target}`}
-                    type="button"
-                    onClick={() => { void handleBatchEnhance(target); }}
-                    disabled={busy || batchEnhanceState.inProgress}
-                    className={`px-3 py-2 text-sm font-semibold border-r last:border-r-0 border-purple-200 ${
-                      enhanceTarget === target ? 'bg-purple-600 text-white' : 'bg-white text-purple-700 hover:bg-purple-50'
-                    } disabled:opacity-60`}
-                  >
-                    全部{target === '1k' ? '1K' : target === '2k' ? '2K' : '4K'}
-                  </button>
-                ))}
+            {isPro && !batchEnhanceState.inProgress && (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs text-gray-600 font-medium">一括アップスケール:</span>
+                <div className="inline-flex rounded-lg border border-purple-200 overflow-hidden">
+                  {(['1k', '2k', '4k'] as EnhanceTarget[]).map((target) => {
+                    const targetPx = toEnhanceLongSide(target);
+                    const eligibleCount = inputs.filter(
+                      i => i.status === 'completed' && (i.highQualityOutputUrl || i.outputUrl) && (i.outputLongSide ?? 0) < targetPx
+                    ).length;
+                    const isSelected = pendingBatchTarget === target;
+                    return (
+                      <button
+                        key={`batch-${target}`}
+                        type="button"
+                        onClick={() => setPendingBatchTarget(isSelected ? null : target)}
+                        disabled={busy || eligibleCount === 0}
+                        title={eligibleCount === 0 ? `全画像が既に${target.toUpperCase()}以上です` : `${eligibleCount}枚を${target.toUpperCase()}にアップスケール`}
+                        className={`px-3 py-2 text-sm font-semibold border-r last:border-r-0 border-purple-200 transition-colors ${
+                          isSelected
+                            ? 'bg-purple-600 text-white'
+                            : eligibleCount === 0
+                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                              : 'bg-white text-purple-700 hover:bg-purple-50'
+                        } disabled:opacity-60`}
+                      >
+                        {target === '1k' ? '1K' : target === '2k' ? '2K' : '4K'}
+                      </button>
+                    );
+                  })}
+                </div>
+                {pendingBatchTarget && (() => {
+                  const targetPx = toEnhanceLongSide(pendingBatchTarget);
+                  const eligibleCount = inputs.filter(
+                    i => i.status === 'completed' && (i.highQualityOutputUrl || i.outputUrl) && (i.outputLongSide ?? 0) < targetPx
+                  ).length;
+                  return (
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => { void handleBatchEnhance(pendingBatchTarget); }}
+                        className="inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700"
+                      >
+                        {eligibleCount}枚を{pendingBatchTarget.toUpperCase()}にアップスケール実行
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPendingBatchTarget(null)}
+                        className="text-xs text-gray-500 hover:text-gray-700"
+                      >
+                        キャンセル
+                      </button>
+                    </div>
+                  );
+                })()}
               </div>
             )}
             <PrimaryButton onClick={handleDownloadAll} disabled={busy || batchEnhanceState.inProgress} variant="secondary">
