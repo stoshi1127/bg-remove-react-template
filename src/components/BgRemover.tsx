@@ -111,7 +111,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
   const [inputs,  setInputs]  = useState<InFile[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [customColor, setCustomColor] = useState<string>('#FFFFFF');
-  const [selectedRatio, setSelectedRatio] = useState<string>('1:1');
+  const [selectedRatio, setSelectedRatio] = useState<string>('fit-subject');
   
   const [busy,    setBusy]    = useState(false);
   const [msg,     setMsg]     = useState<string | null>(null);
@@ -136,6 +136,9 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
   const [pendingEnhance, setPendingEnhance] = useState<{ fileId: string; target: EnhanceTarget } | null>(null);
   const [pendingBatchTarget, setPendingBatchTarget] = useState<EnhanceTarget | null>(null);
   const proOfferImpressionTrackedRef = useRef(false);
+  const sectionSizeRef = useRef<HTMLDivElement>(null);
+  const sectionBgRef = useRef<HTMLDivElement>(null);
+  const sectionFilesRef = useRef<HTMLDivElement>(null);
   
   // 並行処理制限の設定（ユーザーには見せず、完全自動）
   const [maxConcurrentProcesses, setMaxConcurrentProcesses] = useState<number>(5); // デフォルト5並行
@@ -574,6 +577,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
     }
     setSelectedProcessingMode(nextMode);
     trackAnalyticsEvent('processing_mode_selected', { mode: nextMode, isPro });
+    setTimeout(() => sectionSizeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
   }, [goToProPurchase, isPro]);
 
   const createStandardOutputFromDataUrl = useCallback(async (dataUrl: string) => {
@@ -1828,7 +1832,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
 
       {/* 処理モード選択 */}
       <div className="space-y-2">
-        <h3 className="text-sm font-semibold text-gray-800">仕上がりモード</h3>
+        <h3 className="text-base font-semibold text-gray-800">仕上がりモード</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <button
             type="button"
@@ -1880,15 +1884,18 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
 
       {/* アスペクト比選択エリア */}
       {inputs.length > 0 && (
-        <div className="space-y-3 pt-4">
-          <h3 className="text-lg font-semibold text-gray-800">仕上がりのサイズ:</h3>
+        <div ref={sectionSizeRef} className="space-y-3 pt-4">
+          <h3 className="text-base font-semibold text-gray-800">仕上がりのサイズ</h3>
           <div className="flex flex-wrap gap-3">
             {aspectRatios.map(ratio => (
               <RatioButton
                 key={ratio.key}
                 label={ratio.label}
                 isActive={selectedRatio === ratio.key}
-                onClick={() => setSelectedRatio(ratio.key)}
+                onClick={() => {
+                  setSelectedRatio(ratio.key);
+                  setTimeout(() => sectionBgRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+                }}
               />
             ))}
           </div>
@@ -1897,12 +1904,15 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
 
       {/* 背景テンプレート選択エリア */}
       {inputs.length > 0 && (
-        <div className="space-y-3 pt-4">
-          <h3 className="text-lg font-semibold text-gray-800">背景をカスタマイズ (オプション):</h3>
+        <div ref={sectionBgRef} className="space-y-3 pt-4">
+          <h3 className="text-base font-semibold text-gray-800">背景をカスタマイズ（オプション）</h3>
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
             {/* 「背景なし」オプション */}
             <div
-              onClick={() => setSelectedTemplate(null)}
+              onClick={() => {
+                setSelectedTemplate(null);
+                setTimeout(() => sectionFilesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+              }}
               className={`cursor-pointer rounded-lg border-2 ${!selectedTemplate ? 'border-blue-500 ring-2 ring-blue-300' : 'border-gray-200 hover:border-blue-400'} overflow-hidden relative aspect-square flex items-center justify-center bg-gray-100 transition-all`}
             >
               <div className="absolute inset-0" style={{backgroundImage: 'linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)', backgroundSize: '20px 20px', backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px' }}></div>
@@ -1910,7 +1920,10 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
             </div>
             {/* カラーピッカー */}
             <div
-              onClick={() => setSelectedTemplate(customColor)}
+              onClick={() => {
+                setSelectedTemplate(customColor);
+                setTimeout(() => sectionFilesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+              }}
               className={`cursor-pointer rounded-lg border-2 ${selectedTemplate === customColor ? 'border-blue-500 ring-2 ring-blue-300' : 'border-gray-200 hover:border-blue-400'} overflow-hidden relative aspect-square flex items-center justify-center transition-all`}
               style={{ backgroundColor: customColor }}
             >
@@ -1920,6 +1933,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                 onChange={(e) => {
                   setCustomColor(e.target.value);
                   setSelectedTemplate(e.target.value);
+                  setTimeout(() => sectionFilesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
                 }}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                 id="color-picker"
@@ -1933,7 +1947,10 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
             {templates.map((template) => (
               <div
                 key={template.src}
-                onClick={() => setSelectedTemplate(template.src)}
+                onClick={() => {
+                  setSelectedTemplate(template.src);
+                  setTimeout(() => sectionFilesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+                }}
                 className={`cursor-pointer rounded-lg border-2 ${selectedTemplate === template.src ? 'border-blue-500 ring-2 ring-blue-300' : 'border-transparent hover:border-blue-400'} overflow-hidden relative aspect-square transition-all`}
               >
                 {template.src.startsWith('#') ? (
@@ -1950,48 +1967,10 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
       
       {/* 選択されたファイルリスト */}
       {inputs.length > 0 && (
-        <div className="space-y-4 pt-6">
-          <h3 className="text-base font-semibold text-gray-700 tracking-tight">選択されたファイル</h3>
+        <div ref={sectionFilesRef} className="space-y-4 pt-6">
+          <h3 className="text-base font-semibold text-gray-800">選択されたファイル</h3>
 
-          {!isPro && hasCompletedResults && (
-            <div className="rounded-xl border border-indigo-300 bg-gradient-to-br from-blue-50 to-indigo-50 p-4">
-              <p className="text-sm font-bold text-indigo-800">
-                Proならもっときれいに仕上がります
-              </p>
-              <div className="mt-2 space-y-2">
-                <div className="flex items-start gap-2">
-                  <span className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold">1</span>
-                  <div>
-                    <p className="text-xs font-semibold text-gray-900">高精度透過</p>
-                    <p className="text-xs text-gray-600">髪の毛やフチまできれいに切り抜き</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold">2</span>
-                  <div>
-                    <p className="text-xs font-semibold text-gray-900">アップスケール</p>
-                    <p className="text-xs text-gray-600">最大4K（3840px）まで拡大・高解像度化</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold">3</span>
-                  <div>
-                    <p className="text-xs font-semibold text-gray-900">元画質を維持</p>
-                    <p className="text-xs text-gray-600">写真を圧縮せずそのまま処理</p>
-                  </div>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => goToProPurchase('result_upsell_top')}
-                className="mt-3 w-full inline-flex items-center justify-center px-4 py-2.5 rounded-lg text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-sm"
-              >
-                Proにアップグレード
-              </button>
-            </div>
-          )}
-
-          <ul className="border border-gray-200 rounded-xl divide-y divide-gray-100 shadow-sm bg-white overflow-hidden">
+          <ul className="flex flex-col gap-4 list-none p-0 m-0">
             {inputs.map(input => {
               const processingTime = input.startTime && input.endTime 
                 ? ((input.endTime - input.startTime) / 1000).toFixed(1) 
@@ -2003,10 +1982,10 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
               const showComparison = input.status === 'completed' && input.outputUrl && input.previewUrl;
               
               return (
-                <li key={input.id} className={`p-4 sm:p-5 transition-all duration-300 ease-in-out relative rounded-xl ${
-                  input.status === 'completed' ? 'bg-emerald-50/60 border-l-4 border-emerald-500' :
-                  input.status === 'error' ? 'bg-red-50/80 border-l-4 border-red-400' :
-                  input.status === 'processing' || input.status === 'uploading' ? 'bg-sky-50/80 border-l-4 border-sky-400' :
+                <li key={input.id} className={`p-4 sm:p-5 transition-all duration-300 ease-in-out relative rounded-xl border border-gray-200 shadow-sm ${
+                  input.status === 'completed' ? 'bg-emerald-50/60 border-l-4 border-l-emerald-500' :
+                  input.status === 'error' ? 'bg-red-50/80 border-l-4 border-l-red-400' :
+                  input.status === 'processing' || input.status === 'uploading' ? 'bg-sky-50/80 border-l-4 border-l-sky-400' :
                   'bg-white'
                 }`}>
 
@@ -2343,7 +2322,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                               download={`processed_${input.name.replace(/\.[^.]+$/, ".png")}`}
                               className="flex-1 sm:flex-none"
                             >
-                              <PrimaryButton variant="outline" size="sm" className="w-full sm:w-auto">
+                              <PrimaryButton variant="primary" size="sm" className="w-full sm:w-auto">
                                 保存
                               </PrimaryButton>
                             </a>
@@ -2354,8 +2333,8 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                               download={`processed_hq_${input.name.replace(/\.[^.]+$/, ".png")}`}
                               className="flex-1 sm:flex-none"
                             >
-                              <PrimaryButton size="sm" className="w-full sm:w-auto">
-                                保存
+                              <PrimaryButton variant="primary" size="sm" className="w-full sm:w-auto">
+                                {input.wasEnhanced ? 'アップスケールを保存' : '保存'}
                               </PrimaryButton>
                             </a>
                           )}
@@ -2375,7 +2354,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                               rel="noopener noreferrer" // セキュリティのために追加
                               className="flex-1 sm:flex-none"
                             >
-                              <PrimaryButton size="sm" className="w-full sm:w-auto">
+                              <PrimaryButton variant="outline" size="sm" className="w-full sm:w-auto bg-white text-gray-800 hover:bg-gray-100 border-gray-300">
                                 イージートリミングで編集
                               </PrimaryButton>
                             </Link>
@@ -2415,34 +2394,10 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
             {busy ? (
               <span className="flex items-center">
                 <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-white border-opacity-60 mr-2"></div>
-                {`処理中... (${processedCount}/${inputs.filter(i => i.status === 'ready' || i.status === 'uploading' || i.status === 'processing' || i.status === 'completed' || i.status === 'error').length}枚完了, ${progress}%)`}
+                処理中...
               </span>
             ) : `選択した画像（${inputs.filter(i => i.status === 'ready').length}枚）の背景を透過する`}
           </PrimaryButton>
-        )}
-        
-        {/* 処理中キャンセルボタン */}
-        {busy && (
-          <div className="flex items-center gap-3">
-            <PrimaryButton
-              onClick={handleCancel}
-              variant="secondary"
-              className="bg-red-500 hover:bg-red-600 text-white border-red-500"
-            >
-              <span className="flex items-center">
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-                処理をキャンセル
-              </span>
-            </PrimaryButton>
-            <div className="text-sm text-gray-600">
-              <span className="flex items-center">
-                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-blue-500 border-opacity-60 mr-2"></div>
-                {`処理中... (${processedCount}/${inputs.filter(i => i.status === 'ready' || i.status === 'uploading' || i.status === 'processing' || i.status === 'completed' || i.status === 'error').length}枚完了, ${progress}%)`}
-              </span>
-            </div>
-          </div>
         )}
         
         {/* エラーファイル一括再処理ボタン */}
@@ -2470,6 +2425,43 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
         
         {inputs.filter(input => input.status === 'completed').length > 1 && (
           <>
+            {!isPro && hasCompletedResults && (
+              <div className="rounded-xl border border-indigo-300 bg-gradient-to-br from-blue-50 to-indigo-50 p-4 text-left">
+                <p className="text-sm font-bold text-indigo-800">
+                  Proならもっときれいに仕上がります
+                </p>
+                <div className="mt-2 space-y-2">
+                  <div className="flex items-start gap-2">
+                    <span className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold">1</span>
+                    <div>
+                      <p className="text-xs font-semibold text-gray-900">高精度透過</p>
+                      <p className="text-xs text-gray-600">髪の毛やフチまできれいに切り抜き</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold">2</span>
+                    <div>
+                      <p className="text-xs font-semibold text-gray-900">アップスケール</p>
+                      <p className="text-xs text-gray-600">最大4K（3840px）まで拡大・高解像度化</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold">3</span>
+                    <div>
+                      <p className="text-xs font-semibold text-gray-900">元画質を維持</p>
+                      <p className="text-xs text-gray-600">写真を圧縮せずそのまま処理</p>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => goToProPurchase('result_upsell_top')}
+                  className="mt-3 w-full inline-flex items-center justify-center px-5 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-colors shadow-sm"
+                >
+                  Proを購入する
+                </button>
+              </div>
+            )}
             {isPro && !batchEnhanceState.inProgress && (
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-xs text-gray-600 font-medium">一括アップスケール:</span>
@@ -2531,7 +2523,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                 })()}
               </div>
             )}
-            <PrimaryButton onClick={handleDownloadAll} disabled={busy || batchEnhanceState.inProgress} variant="secondary">
+            <PrimaryButton onClick={handleDownloadAll} disabled={busy || batchEnhanceState.inProgress} variant="primary">
               すべてダウンロード (.zip)
             </PrimaryButton>
           </>
@@ -2575,24 +2567,44 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
         </div>
       )}
 
-      {/* シンプルな進捗表示（複数ファイル時のみ） */}
-      {busy && inputs.length > 1 && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="text-sm font-medium text-blue-800">
-              {inputs.filter(i => i.status === 'completed').length}/{inputs.length} 完了
+      {/* 処理中モーダル */}
+      {busy && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4" role="dialog" aria-modal="true" aria-labelledby="processing-modal-title">
+          <div
+            className="absolute inset-0 bg-black/40"
+            aria-hidden="true"
+          />
+          <div className="relative w-full max-w-sm bg-white rounded-2xl shadow-xl border border-gray-200 p-6">
+            <h2 id="processing-modal-title" className="text-lg font-bold text-gray-900 mb-4">
+              処理中
+            </h2>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-800">
+                  {processedCount}/{inputs.filter(i => i.status === 'ready' || i.status === 'uploading' || i.status === 'processing' || i.status === 'completed' || i.status === 'error').length}枚完了
+                </p>
+                <p className="text-xs text-gray-600">{progress}%</p>
+              </div>
             </div>
-            <div className="text-xs text-blue-600">
-              高速処理中...
+            <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
+              <div
+                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${progress}%` }}
+              />
             </div>
-          </div>
-          
-          {/* シンプルな進捗バー */}
-          <div className="w-full bg-blue-200 rounded-full h-2">
-            <div 
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${progress}%` }}
-            ></div>
+            <PrimaryButton
+              onClick={handleCancel}
+              variant="secondary"
+              className="w-full bg-red-500 hover:bg-red-600 text-white border-red-500"
+            >
+              <span className="flex items-center justify-center">
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                処理をキャンセル
+              </span>
+            </PrimaryButton>
           </div>
         </div>
       )}
