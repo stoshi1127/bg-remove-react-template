@@ -139,7 +139,9 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
   const sectionSizeRef = useRef<HTMLDivElement>(null);
   const sectionBgRef = useRef<HTMLDivElement>(null);
   const sectionFilesRef = useRef<HTMLDivElement>(null);
-  
+  const ctaRef = useRef<HTMLDivElement>(null);
+  const [isCtaVisible, setIsCtaVisible] = useState<boolean>(true);
+
   // 並行処理制限の設定（ユーザーには見せず、完全自動）
   const [maxConcurrentProcesses, setMaxConcurrentProcesses] = useState<number>(5); // デフォルト5並行
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -216,6 +218,17 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
       // ignore sessionStorage errors
     }
   }, [selectedProcessingMode]);
+
+  // 元のCTAがビューポート内にあるか監視（スティッキーCTAの表示切り替え用）
+  useEffect(() => {
+    if (!ctaRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsCtaVisible(entry.isIntersecting),
+      { threshold: 0.1 }
+    );
+    observer.observe(ctaRef.current);
+    return () => observer.disconnect();
+  }, []);
 
   // ログ記録関数（デバッグモード時のみ動作）
   const addLog = useCallback((log: {
@@ -2402,7 +2415,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
       )}
 
       {/* 背景除去・一括ダウンロードボタン */}
-      <div className="flex flex-wrap items-center justify-center gap-4">
+      <div ref={ctaRef} className="flex flex-wrap items-center justify-center gap-4">
         {inputs.length > 0 && inputs.some(i => i.status === 'ready' || i.status === 'error') && !busy && (
           <PrimaryButton
             onClick={() => {
@@ -2560,13 +2573,13 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                 .map(t => `${enhancedByTarget[t]}枚を${t.toUpperCase()}`);
               const upscaleSummary = parts.length > 0 ? parts.join('、') + 'にアップスケール済み' : null;
               return (
-                <div className="flex flex-col items-center gap-1">
+                <div className="flex w-full flex-col items-center gap-1">
                   {upscaleSummary && (
                     <p className="text-sm text-gray-600">
                       {upscaleSummary}
                     </p>
                   )}
-                  <PrimaryButton onClick={handleDownloadAll} disabled={busy || batchEnhanceState.inProgress} variant="primary">
+                  <PrimaryButton onClick={handleDownloadAll} disabled={busy || batchEnhanceState.inProgress} variant="primary" className="w-full">
                     すべてダウンロード (.zip)
                   </PrimaryButton>
                 </div>
@@ -2706,6 +2719,20 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
 
       {/* 全体メッセージ */}
       {msg && <p className={`text-sm p-3.5 rounded-md shadow ${inputs.some(i => i.status === 'error') && (msg.includes("エラー") || msg.includes("失敗")) ? 'text-red-800 bg-red-100 border border-red-300' : 'text-gray-800 bg-gray-100 border border-gray-300'}`}>{msg}</p>}
+
+      {/* スティッキーCTA（元のCTAが画面外のときのみ表示） */}
+      {!isCtaVisible && inputs.length > 0 && inputs.some(i => i.status === 'ready') && !busy && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-md border-t border-gray-200 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] px-4 py-3 pb-[env(safe-area-inset-bottom)]">
+          <div className="max-w-3xl mx-auto">
+            <PrimaryButton
+              onClick={() => void handleRemove()}
+              disabled={inputs.filter(i => i.status === 'ready').length === 0}
+            >
+              選択した画像（{inputs.filter(i => i.status === 'ready').length}枚）の背景を透過する
+            </PrimaryButton>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
