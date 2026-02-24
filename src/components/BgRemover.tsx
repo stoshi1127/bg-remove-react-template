@@ -2721,15 +2721,49 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
       {msg && <p className={`text-sm p-3.5 rounded-md shadow ${inputs.some(i => i.status === 'error') && (msg.includes("エラー") || msg.includes("失敗")) ? 'text-red-800 bg-red-100 border border-red-300' : 'text-gray-800 bg-gray-100 border border-gray-300'}`}>{msg}</p>}
 
       {/* スティッキーCTA（元のCTAが画面外のときのみ表示） */}
-      {!isCtaVisible && inputs.length > 0 && inputs.some(i => i.status === 'ready') && !busy && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 backdrop-blur-md border-t border-gray-200 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] px-4 py-3">
-          <div className="max-w-3xl mx-auto">
-            <PrimaryButton
-              onClick={() => void handleRemove()}
-              disabled={inputs.filter(i => i.status === 'ready').length === 0}
-            >
-              選択した画像（{inputs.filter(i => i.status === 'ready').length}枚）の背景を透過する
-            </PrimaryButton>
+      {!isCtaVisible && inputs.length > 0 && !busy && (
+        inputs.some(i => i.status === 'ready') || inputs.filter(i => i.status === 'completed').length > 1
+      ) && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-md border-t border-gray-200 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          <div className="max-w-3xl mx-auto space-y-2">
+            {inputs.some(i => i.status === 'ready') && (
+              <>
+                <div className="flex flex-wrap items-center justify-center gap-1.5">
+                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium ${
+                    selectedProcessingMode === 'pro_high_precision'
+                      ? 'bg-purple-50 border border-purple-200 text-purple-700'
+                      : 'bg-gray-50 border border-gray-200 text-gray-600'
+                  }`}>
+                    {selectedProcessingMode === 'standard' ? '標準' : '高精度'}
+                  </span>
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-gray-50 border border-gray-200 text-gray-600">
+                    {{ '1:1': '1:1', '16:9': '16:9', '4:3': '4:3', 'original': '元画像', 'fit-subject': 'フィット' }[selectedRatio] ?? selectedRatio}
+                  </span>
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-gray-50 border border-gray-200 text-gray-600">
+                    背景:{selectedTemplate ? (templates.find(t => t.src === selectedTemplate)?.name ?? 'カスタム色') : '透過'}
+                  </span>
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 border border-blue-200 text-blue-700">
+                    {inputs.filter(i => i.status === 'ready').length}枚
+                  </span>
+                </div>
+                <PrimaryButton
+                  onClick={() => void handleRemove()}
+                  disabled={inputs.filter(i => i.status === 'ready').length === 0}
+                >
+                  選択した画像（{inputs.filter(i => i.status === 'ready').length}枚）の背景を透過する
+                </PrimaryButton>
+              </>
+            )}
+            {!inputs.some(i => i.status === 'ready') && inputs.filter(i => i.status === 'completed').length > 1 && (
+              <>
+                <p className="text-center text-[11px] font-medium text-emerald-700">
+                  {inputs.filter(i => i.status === 'completed').length}枚の処理が完了
+                </p>
+                <PrimaryButton onClick={handleDownloadAll} disabled={batchEnhanceState.inProgress} variant="primary" className="w-full">
+                  すべてダウンロード (.zip)
+                </PrimaryButton>
+              </>
+            )}
           </div>
         </div>
       )}
