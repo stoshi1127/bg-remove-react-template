@@ -136,6 +136,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
   const [pendingEnhance, setPendingEnhance] = useState<{ fileId: string; target: EnhanceTarget } | null>(null);
   const [pendingBatchTarget, setPendingBatchTarget] = useState<EnhanceTarget | null>(null);
   const proOfferImpressionTrackedRef = useRef(false);
+  const sectionModeRef = useRef<HTMLDivElement>(null);
   const sectionSizeRef = useRef<HTMLDivElement>(null);
   const sectionBgRef = useRef<HTMLDivElement>(null);
   const sectionFilesRef = useRef<HTMLDivElement>(null);
@@ -1863,7 +1864,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
       />
 
       {/* 処理モード選択 */}
-      <div className="space-y-2">
+      <div ref={sectionModeRef} className="space-y-2">
         <h3 className="text-base font-semibold text-gray-800">仕上がりモード</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <button
@@ -2729,22 +2730,38 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
             {inputs.some(i => i.status === 'ready') && (
               <>
                 <div className="flex flex-wrap items-center justify-center gap-1.5">
-                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium ${
-                    selectedProcessingMode === 'pro_high_precision'
-                      ? 'bg-purple-50 border border-purple-200 text-purple-700'
-                      : 'bg-gray-50 border border-gray-200 text-gray-600'
-                  }`}>
-                    {selectedProcessingMode === 'standard' ? '標準' : '高精度'}
-                  </span>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-gray-50 border border-gray-200 text-gray-600">
-                    {{ '1:1': '1:1', '16:9': '16:9', '4:3': '4:3', 'original': '元画像', 'fit-subject': 'フィット' }[selectedRatio] ?? selectedRatio}
-                  </span>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-gray-50 border border-gray-200 text-gray-600">
-                    背景:{selectedTemplate ? (templates.find(t => t.src === selectedTemplate)?.name ?? 'カスタム色') : '透過'}
-                  </span>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 border border-blue-200 text-blue-700">
-                    {inputs.filter(i => i.status === 'ready').length}枚
-                  </span>
+                  <button
+                    type="button"
+                    onClick={() => sectionModeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium cursor-pointer hover:opacity-80 transition-opacity ${
+                      selectedProcessingMode === 'pro_high_precision'
+                        ? 'bg-purple-50 border border-purple-200 text-purple-700'
+                        : 'bg-gray-50 border border-gray-200 text-gray-600'
+                    }`}
+                  >
+                    仕上：{selectedProcessingMode === 'standard' ? '標準' : '高精度'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => sectionSizeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                    className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-gray-50 border border-gray-200 text-gray-600 cursor-pointer hover:opacity-80 transition-opacity"
+                  >
+                    サイズ：{{ '1:1': '1:1', '16:9': '16:9', '4:3': '4:3', 'original': '元画像', 'fit-subject': 'フィット' }[selectedRatio] ?? selectedRatio}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => sectionBgRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                    className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-gray-50 border border-gray-200 text-gray-600 cursor-pointer hover:opacity-80 transition-opacity"
+                  >
+                    背景：{selectedTemplate ? (templates.find(t => t.src === selectedTemplate)?.name ?? 'カスタム色') : '透過'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => sectionFilesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                    className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 border border-blue-200 text-blue-700 cursor-pointer hover:opacity-80 transition-opacity"
+                  >
+                    {inputs.filter(i => i.status === 'ready').length}/{Math.min(inputs.length, 30)}枚
+                  </button>
                 </div>
                 <PrimaryButton
                   onClick={() => void handleRemove()}
