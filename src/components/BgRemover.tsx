@@ -1524,6 +1524,9 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
     } finally {
       setBusy(false);
       
+      // 透過完了後に選択されたファイルへスクロール
+      setTimeout(() => scrollToSectionWithHeaderOffset(sectionFilesRef.current), 200);
+      
       // 少し待ってから状態を確認（React の状態更新が完了するまで）
       setTimeout(() => {
         setInputs(currentInputs => {
