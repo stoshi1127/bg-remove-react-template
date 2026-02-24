@@ -64,15 +64,15 @@ export default function GuestProPurchase() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center px-5 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-colors shadow-sm"
+        className="inline-flex items-center px-5 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 transition-colors shadow-sm"
       >
         Proを購入する
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+        <div className="fixed inset-0 z-[120] flex items-center justify-center px-4">
           <div
-            className="absolute inset-0 bg-black/40"
+            className="fixed inset-0 bg-black/40"
             onClick={() => !loading && setOpen(false)}
             aria-hidden="true"
           />
@@ -117,7 +117,7 @@ export default function GuestProPurchase() {
                 type="button"
                 onClick={submit}
                 disabled={loading}
-                className="w-full inline-flex items-center justify-center px-5 py-3 rounded-xl font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-60"
+                className="w-full inline-flex items-center justify-center px-5 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 transition-colors disabled:opacity-60"
               >
                 {loading ? '準備中…' : '購入手続きへ進む'}
               </button>

@@ -2852,7 +2852,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                 )}
                 {!isPro && (
                   <div className="rounded-lg border border-amber-200 bg-amber-50/70 p-2.5">
-                    <p className="text-[11px] text-amber-700 mb-2">Proなら一括アップスケール（1K/2K/4K）が使えます</p>
+                    <p className="text-[11px] text-amber-700 mb-2">Proならアップスケール、高精度モードが使えます</p>
                     <button
                       type="button"
                       onClick={() => goToProPurchase('sticky_download_upsell')}

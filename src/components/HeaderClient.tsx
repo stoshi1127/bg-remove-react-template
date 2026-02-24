@@ -20,7 +20,7 @@ export default function HeaderClient({ isLoggedIn, isPro = false }: HeaderClient
   const ProLink = (
     <Link
       href="/?buyPro=1#pro"
-      className="px-4 py-2 rounded-lg text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 font-semibold transition-colors duration-200 shadow-sm"
+      className="px-4 py-2 rounded-lg text-white bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 font-semibold transition-colors duration-200 shadow-sm"
     >
       Proを購入
     </Link>
@@ -28,7 +28,7 @@ export default function HeaderClient({ isLoggedIn, isPro = false }: HeaderClient
 
   const ProBadge = (
     <span
-      className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 shadow-sm"
+      className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold text-white bg-gradient-to-r from-amber-500 to-yellow-500 shadow-sm"
       aria-label="Pro会員"
       title="Pro会員"
     >
@@ -165,7 +165,7 @@ export default function HeaderClient({ isLoggedIn, isPro = false }: HeaderClient
               <>
                 <Link
                   href="/?buyPro=1#pro"
-                  className="block px-4 py-2 rounded-lg font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600"
+                  className="block px-4 py-2 rounded-lg font-semibold text-white bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600"
                   onClick={closeMenu}
                 >
                   Proを購入
