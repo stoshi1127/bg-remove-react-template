@@ -2722,7 +2722,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
 
       {/* スティッキーCTA（元のCTAが画面外のときのみ表示） */}
       {!isCtaVisible && inputs.length > 0 && inputs.some(i => i.status === 'ready') && !busy && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-md border-t border-gray-200 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] px-4 py-3 pb-[env(safe-area-inset-bottom)]">
+        <div className="fixed bottom-0 left-0 right-0 z-40 backdrop-blur-md border-t border-gray-200 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] px-4 py-3">
           <div className="max-w-3xl mx-auto">
             <PrimaryButton
               onClick={() => void handleRemove()}
