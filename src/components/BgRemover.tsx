@@ -1406,7 +1406,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
           }
         }
         
-        // ログ記録：エラー
+        // ログ記録：エラー（キャンセル時は ready に戻すため別扱い）
         addLog({
           id: input.id,
           fileName: input.name,
@@ -1415,10 +1415,14 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
           duration: Date.now() - startTime
         });
         
-        updateInputStatus(input.id, "error", errorMessage);
-        setMsg(prevMsg => prevMsg ? `${prevMsg}\n${input.name}: ${errorMessage}` : `${input.name}: ${errorMessage}`);
+        if (errorMessage === "処理がキャンセルされました") {
+          updateInputStatus(input.id, "ready", undefined);
+        } else {
+          updateInputStatus(input.id, "error", errorMessage);
+          setMsg(prevMsg => prevMsg ? `${prevMsg}\n${input.name}: ${errorMessage}` : `${input.name}: ${errorMessage}`);
+        }
         
-        // エラーでも進捗を更新
+        // エラーでも進捗を更新（キャンセル時もカウントは進める）
         setProcessedCount(prev => {
           const newCount = prev + 1;
           const newProgress = Math.round((newCount / filesToProcess.length) * 100);
@@ -2530,29 +2534,6 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
         )}
       </div>
 
-      {batchEnhanceState.inProgress && (
-        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-medium text-purple-900">
-              一括アップスケール中（{batchEnhanceState.completed}/{batchEnhanceState.total}）
-            </p>
-            <p className="text-xs text-purple-700">
-              {batchEnhanceState.target ? batchEnhanceState.target.toUpperCase() : ''}
-            </p>
-          </div>
-          <div className="w-full bg-purple-100 rounded-full h-2">
-            <div
-              className="bg-purple-600 h-2 rounded-full transition-all duration-300"
-              style={{
-                width: `${batchEnhanceState.total > 0
-                  ? Math.round((batchEnhanceState.completed / batchEnhanceState.total) * 100)
-                  : 0}%`
-              }}
-            />
-          </div>
-        </div>
-      )}
-
       {shouldShowResultAd && adPlacement === 'after_cta' && (
         <div className="border-t border-gray-100 pt-4">
           <AdSlot
@@ -2567,44 +2548,102 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
         </div>
       )}
 
-      {/* 処理中モーダル */}
-      {busy && (
+      {/* 処理中・アップスケール中モーダル */}
+      {(busy || enhancingFileId || batchEnhanceState.inProgress) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4" role="dialog" aria-modal="true" aria-labelledby="processing-modal-title">
           <div
             className="absolute inset-0 bg-black/40"
             aria-hidden="true"
           />
           <div className="relative w-full max-w-sm bg-white rounded-2xl shadow-xl border border-gray-200 p-6">
-            <h2 id="processing-modal-title" className="text-lg font-bold text-gray-900 mb-4">
-              処理中
-            </h2>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-800">
-                  {processedCount}/{inputs.filter(i => i.status === 'ready' || i.status === 'uploading' || i.status === 'processing' || i.status === 'completed' || i.status === 'error').length}枚完了
-                </p>
-                <p className="text-xs text-gray-600">{progress}%</p>
-              </div>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
-              <div
-                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-            <PrimaryButton
-              onClick={handleCancel}
-              variant="secondary"
-              className="w-full bg-red-500 hover:bg-red-600 text-white border-red-500"
-            >
-              <span className="flex items-center justify-center">
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-                処理をキャンセル
-              </span>
-            </PrimaryButton>
+            {busy ? (
+              <>
+                <h2 id="processing-modal-title" className="text-lg font-bold text-gray-900 mb-4">
+                  処理中
+                </h2>
+                {(() => {
+                  const uploadingCount = inputs.filter(i => i.status === 'uploading').length;
+                  const processingCount = inputs.filter(i => i.status === 'processing').length;
+                  return (uploadingCount > 0 || processingCount > 0) ? (
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 mb-3 text-sm text-gray-700">
+                      {uploadingCount > 0 && <span>アップロード中: {uploadingCount}枚</span>}
+                      {processingCount > 0 && <span>AI背景除去中: {processingCount}枚</span>}
+                    </div>
+                  ) : null;
+                })()}
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-800">
+                      {processedCount}/{inputs.filter(i => i.status === 'ready' || i.status === 'uploading' || i.status === 'processing' || i.status === 'completed' || i.status === 'error').length}枚完了
+                    </p>
+                    <p className="text-xs text-gray-600">{progress}%</p>
+                  </div>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
+                  <div
+                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+                <PrimaryButton
+                  onClick={handleCancel}
+                  variant="secondary"
+                  className="w-full bg-red-500 hover:bg-red-600 text-white border-red-500"
+                >
+                  <span className="flex items-center justify-center">
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    処理をキャンセル
+                  </span>
+                </PrimaryButton>
+              </>
+            ) : batchEnhanceState.inProgress ? (
+              <>
+                <h2 id="processing-modal-title" className="text-lg font-bold text-gray-900 mb-4">
+                  一括アップスケール中
+                </h2>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-500 border-t-transparent flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-800">
+                      {batchEnhanceState.completed}/{batchEnhanceState.total}枚完了
+                    </p>
+                    <p className="text-xs text-purple-600">
+                      {batchEnhanceState.target ? batchEnhanceState.target.toUpperCase() : ''}
+                    </p>
+                  </div>
+                </div>
+                <div className="w-full bg-purple-100 rounded-full h-2 mb-6">
+                  <div
+                    className="bg-purple-600 h-2 rounded-full transition-all duration-300"
+                    style={{
+                      width: `${batchEnhanceState.total > 0
+                        ? Math.round((batchEnhanceState.completed / batchEnhanceState.total) * 100)
+                        : 0}%`
+                    }}
+                  />
+                </div>
+              </>
+            ) : enhancingFileId ? (
+              (() => {
+                const enhancingInput = inputs.find(i => i.id === enhancingFileId);
+                return (
+                  <>
+                    <h2 id="processing-modal-title" className="text-lg font-bold text-gray-900 mb-4">
+                      アップスケール中
+                    </h2>
+                    <div className="flex items-center gap-3">
+                      <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-500 border-t-transparent flex-shrink-0" />
+                      <p className="text-sm font-medium text-gray-800 truncate">
+                        {enhancingInput ? enhancingInput.name : '処理中...'}
+                      </p>
+                    </div>
+                  </>
+                );
+              })()
+            ) : null}
           </div>
         </div>
       )}
