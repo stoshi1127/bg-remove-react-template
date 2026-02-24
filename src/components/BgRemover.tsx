@@ -1891,17 +1891,17 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
             onClick={() => handleSelectProcessingMode('pro_high_precision')}
             className={`rounded-xl border px-4 py-3 text-left transition-colors relative ${
               selectedProcessingMode === 'pro_high_precision'
-                ? 'border-purple-500 bg-purple-50'
-                : 'border-gray-200 hover:border-purple-300'
+                ? 'border-amber-500 bg-amber-50'
+                : 'border-gray-200 hover:border-amber-400'
             } ${!isPro ? 'opacity-80' : ''}`}
           >
-            <span className="absolute top-2 right-2 inline-flex items-center rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-semibold text-purple-700">
+            <span className="absolute top-2 right-2 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
               Pro
             </span>
             <p className="font-semibold text-gray-900">高精度（Pro）</p>
             <p className="text-xs text-gray-600 mt-1">人物のフチまでていねいに仕上げる</p>
             {!isPro && (
-              <p className="text-[11px] text-purple-700 mt-2">Proで選べます</p>
+              <p className="text-[11px] text-amber-700 mt-2">Proで選べます</p>
             )}
           </button>
         </div>
@@ -2742,7 +2742,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                     onClick={() => scrollToSectionWithHeaderOffset(sectionModeRef.current)}
                     className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium cursor-pointer hover:opacity-80 transition-opacity ${
                       selectedProcessingMode === 'pro_high_precision'
-                        ? 'bg-purple-50 border border-purple-200 text-purple-700'
+                        ? 'bg-amber-50 border border-amber-200 text-amber-700'
                         : 'bg-gray-50 border border-gray-200 text-gray-600'
                     }`}
                   >
