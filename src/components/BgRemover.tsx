@@ -172,6 +172,13 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
   const adCtaLabel = process.env.NEXT_PUBLIC_AD_RESULT_CTA_LABEL || '詳細を見る';
   const hasCompletedResults = inputs.some(input => input.status === 'completed');
   const shouldShowResultAd = adsEnabled && !isPro && hasCompletedResults;
+  const HEADER_OFFSET_PX = 88;
+
+  const scrollToSectionWithHeaderOffset = useCallback((target: HTMLDivElement | null) => {
+    if (!target) return;
+    const y = target.getBoundingClientRect().top + window.scrollY - HEADER_OFFSET_PX;
+    window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+  }, []);
 
   useEffect(() => {
     if (isPro) return;
@@ -593,8 +600,8 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
     }
     setSelectedProcessingMode(nextMode);
     trackAnalyticsEvent('processing_mode_selected', { mode: nextMode, isPro });
-    setTimeout(() => sectionSizeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
-  }, [goToProPurchase, isPro]);
+    setTimeout(() => scrollToSectionWithHeaderOffset(sectionSizeRef.current), 100);
+  }, [goToProPurchase, isPro, scrollToSectionWithHeaderOffset]);
 
   const createStandardOutputFromDataUrl = useCallback(async (dataUrl: string) => {
     return resizeDataUrlLongSide(dataUrl, 1600);
@@ -1927,7 +1934,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                 isActive={selectedRatio === ratio.key}
                 onClick={() => {
                   setSelectedRatio(ratio.key);
-                  setTimeout(() => sectionBgRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+                  setTimeout(() => scrollToSectionWithHeaderOffset(sectionBgRef.current), 100);
                 }}
               />
             ))}
@@ -1944,7 +1951,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
             <div
               onClick={() => {
                 setSelectedTemplate(null);
-                setTimeout(() => sectionFilesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+                setTimeout(() => scrollToSectionWithHeaderOffset(sectionFilesRef.current), 100);
               }}
               className={`cursor-pointer rounded-lg border-2 ${!selectedTemplate ? 'border-blue-500 ring-2 ring-blue-300' : 'border-gray-200 hover:border-blue-400'} overflow-hidden relative aspect-square flex items-center justify-center bg-gray-100 transition-all`}
             >
@@ -1955,7 +1962,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
             <div
               onClick={() => {
                 setSelectedTemplate(customColor);
-                setTimeout(() => sectionFilesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+                setTimeout(() => scrollToSectionWithHeaderOffset(sectionFilesRef.current), 100);
               }}
               className={`cursor-pointer rounded-lg border-2 ${selectedTemplate === customColor ? 'border-blue-500 ring-2 ring-blue-300' : 'border-gray-200 hover:border-blue-400'} overflow-hidden relative aspect-square flex items-center justify-center transition-all`}
               style={{ backgroundColor: customColor }}
@@ -1966,7 +1973,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                 onChange={(e) => {
                   setCustomColor(e.target.value);
                   setSelectedTemplate(e.target.value);
-                  setTimeout(() => sectionFilesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+                  setTimeout(() => scrollToSectionWithHeaderOffset(sectionFilesRef.current), 100);
                 }}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                 id="color-picker"
@@ -1982,7 +1989,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                 key={template.src}
                 onClick={() => {
                   setSelectedTemplate(template.src);
-                  setTimeout(() => sectionFilesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+                  setTimeout(() => scrollToSectionWithHeaderOffset(sectionFilesRef.current), 100);
                 }}
                 className={`cursor-pointer rounded-lg border-2 ${selectedTemplate === template.src ? 'border-blue-500 ring-2 ring-blue-300' : 'border-transparent hover:border-blue-400'} overflow-hidden relative aspect-square transition-all`}
               >
@@ -2606,9 +2613,9 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
 
       {/* 処理中・アップスケール中モーダル */}
       {(busy || enhancingFileId || batchEnhanceState.inProgress) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4" role="dialog" aria-modal="true" aria-labelledby="processing-modal-title">
+        <div className="fixed inset-0 z-[120] flex items-center justify-center px-4" role="dialog" aria-modal="true" aria-labelledby="processing-modal-title">
           <div
-            className="absolute inset-0 bg-black/40"
+            className="fixed inset-0 bg-black/40"
             aria-hidden="true"
           />
           <div className="relative w-full max-w-sm bg-white rounded-2xl shadow-xl border border-gray-200 p-6">
@@ -2732,7 +2739,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                 <div className="flex flex-wrap items-center justify-center gap-1.5">
                   <button
                     type="button"
-                    onClick={() => sectionModeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                    onClick={() => scrollToSectionWithHeaderOffset(sectionModeRef.current)}
                     className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium cursor-pointer hover:opacity-80 transition-opacity ${
                       selectedProcessingMode === 'pro_high_precision'
                         ? 'bg-purple-50 border border-purple-200 text-purple-700'
@@ -2743,24 +2750,24 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                   </button>
                   <button
                     type="button"
-                    onClick={() => sectionSizeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                    onClick={() => scrollToSectionWithHeaderOffset(sectionSizeRef.current)}
                     className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-gray-50 border border-gray-200 text-gray-600 cursor-pointer hover:opacity-80 transition-opacity"
                   >
                     サイズ：{{ '1:1': '1:1', '16:9': '16:9', '4:3': '4:3', 'original': '元画像', 'fit-subject': 'フィット' }[selectedRatio] ?? selectedRatio}
                   </button>
                   <button
                     type="button"
-                    onClick={() => sectionBgRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                    onClick={() => scrollToSectionWithHeaderOffset(sectionBgRef.current)}
                     className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-gray-50 border border-gray-200 text-gray-600 cursor-pointer hover:opacity-80 transition-opacity"
                   >
                     背景：{selectedTemplate ? (templates.find(t => t.src === selectedTemplate)?.name ?? 'カスタム色') : '透過'}
                   </button>
                   <button
                     type="button"
-                    onClick={() => sectionFilesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                    onClick={() => scrollToSectionWithHeaderOffset(sectionFilesRef.current)}
                     className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 border border-blue-200 text-blue-700 cursor-pointer hover:opacity-80 transition-opacity"
                   >
-                    {inputs.filter(i => i.status === 'ready').length}/{Math.min(inputs.length, 30)}枚
+                    {inputs.filter(i => i.status === 'ready').length}/30枚
                   </button>
                 </div>
                 <PrimaryButton
@@ -2773,9 +2780,29 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
             )}
             {!inputs.some(i => i.status === 'ready') && inputs.filter(i => i.status === 'completed').length > 1 && (
               <>
-                <p className="text-center text-[11px] font-medium text-emerald-700">
-                  {inputs.filter(i => i.status === 'completed').length}枚の処理が完了
-                </p>
+                {(() => {
+                  const enhancedByTarget = inputs
+                    .filter(i => i.status === 'completed' && i.wasEnhanced && (i.outputLongSide ?? 0) >= 1024)
+                    .reduce<Record<EnhanceTarget, number>>(
+                      (acc, i) => {
+                        const long = i.outputLongSide ?? 0;
+                        if (long >= toEnhanceLongSide('4k')) acc['4k'] = (acc['4k'] ?? 0) + 1;
+                        else if (long >= toEnhanceLongSide('2k')) acc['2k'] = (acc['2k'] ?? 0) + 1;
+                        else if (long >= toEnhanceLongSide('1k')) acc['1k'] = (acc['1k'] ?? 0) + 1;
+                        return acc;
+                      },
+                      { '1k': 0, '2k': 0, '4k': 0 }
+                    );
+                  const parts = (['4k', '2k', '1k'] as const)
+                    .filter(t => enhancedByTarget[t] > 0)
+                    .map(t => `${enhancedByTarget[t]}枚を${t.toUpperCase()}`);
+                  const upscaleSummary = parts.length > 0 ? parts.join('、') + 'にアップスケール済み' : null;
+                  return upscaleSummary ? (
+                    <p className="text-center text-[11px] font-medium text-gray-600">
+                      {upscaleSummary}
+                    </p>
+                  ) : null;
+                })()}
                 <PrimaryButton onClick={handleDownloadAll} disabled={batchEnhanceState.inProgress} variant="primary" className="w-full">
                   すべてダウンロード (.zip)
                 </PrimaryButton>
