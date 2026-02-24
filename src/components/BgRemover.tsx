@@ -2542,9 +2542,36 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                 })()}
               </div>
             )}
-            <PrimaryButton onClick={handleDownloadAll} disabled={busy || batchEnhanceState.inProgress} variant="primary">
-              すべてダウンロード (.zip)
-            </PrimaryButton>
+            {(() => {
+              const enhancedByTarget = inputs
+                .filter(i => i.status === 'completed' && i.wasEnhanced && (i.outputLongSide ?? 0) >= 1024)
+                .reduce<Record<EnhanceTarget, number>>(
+                  (acc, i) => {
+                    const long = i.outputLongSide ?? 0;
+                    if (long >= toEnhanceLongSide('4k')) acc['4k'] = (acc['4k'] ?? 0) + 1;
+                    else if (long >= toEnhanceLongSide('2k')) acc['2k'] = (acc['2k'] ?? 0) + 1;
+                    else if (long >= toEnhanceLongSide('1k')) acc['1k'] = (acc['1k'] ?? 0) + 1;
+                    return acc;
+                  },
+                  { '1k': 0, '2k': 0, '4k': 0 }
+                );
+              const parts = (['4k', '2k', '1k'] as const)
+                .filter(t => enhancedByTarget[t] > 0)
+                .map(t => `${enhancedByTarget[t]}枚を${t.toUpperCase()}`);
+              const upscaleSummary = parts.length > 0 ? parts.join('、') + 'にアップスケール済み' : null;
+              return (
+                <div className="flex flex-col items-center gap-1">
+                  {upscaleSummary && (
+                    <p className="text-sm text-gray-600">
+                      {upscaleSummary}
+                    </p>
+                  )}
+                  <PrimaryButton onClick={handleDownloadAll} disabled={busy || batchEnhanceState.inProgress} variant="primary">
+                    すべてダウンロード (.zip)
+                  </PrimaryButton>
+                </div>
+              );
+            })()}
           </>
         )}
       </div>
