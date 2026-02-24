@@ -253,6 +253,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
 
   // AbortController for canceling requests
   const abortControllerRef = useRef<AbortController | null>(null);
+  const cancelRequestedRef = useRef(false);
 
   // 並行数を動的に調整する関数
   const adjustConcurrency = useCallback((responseTime: number, success: boolean) => {
@@ -308,6 +309,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
 
   // キャンセル機能
   const handleCancel = useCallback(() => {
+    cancelRequestedRef.current = true;
     if (abortControllerRef.current) {
       abortControllerRef.current.abort('User cancelled');
     }
@@ -1004,6 +1006,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
     }
 
     setOversizedPromptItems([]);
+    cancelRequestedRef.current = false;
     const filesToProcess = candidates;
 
     // 大量ファイル処理時の自動調整
@@ -1394,12 +1397,20 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
 
       } catch (error: unknown) {
         console.error("ファイル処理エラー:", error, input.name);
-        
+        const isCancelled =
+          cancelRequestedRef.current ||
+          (abortControllerRef.current?.signal.aborted ?? false) ||
+          (error instanceof Error && (
+            error.name === 'AbortError' ||
+            /cancel|aborted|abort|中断/i.test(error.message)
+          )) ||
+          (typeof error === 'string' && /cancel|aborted|abort|中断/i.test(error));
+
         let errorMessage = "不明なエラー";
-        if (error instanceof Error) {
-          if (error.name === 'AbortError') {
-            errorMessage = "処理がキャンセルされました";
-          } else if (error.message.includes('timeout') || error.message.includes('タイムアウト')) {
+        if (isCancelled) {
+          errorMessage = "処理がキャンセルされました";
+        } else if (error instanceof Error) {
+          if (error.message.includes('timeout') || error.message.includes('タイムアウト')) {
             errorMessage = "処理タイムアウト";
           } else {
             errorMessage = error.message;
@@ -1415,14 +1426,15 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
           duration: Date.now() - startTime
         });
         
-        if (errorMessage === "処理がキャンセルされました") {
+        if (isCancelled) {
           updateInputStatus(input.id, "ready", undefined);
+          return;
         } else {
           updateInputStatus(input.id, "error", errorMessage);
           setMsg(prevMsg => prevMsg ? `${prevMsg}\n${input.name}: ${errorMessage}` : `${input.name}: ${errorMessage}`);
         }
         
-        // エラーでも進捗を更新（キャンセル時もカウントは進める）
+        // エラー時は進捗を更新
         setProcessedCount(prev => {
           const newCount = prev + 1;
           const newProgress = Math.round((newCount / filesToProcess.length) * 100);
@@ -1494,6 +1506,9 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
       // 少し待ってから状態を確認（React の状態更新が完了するまで）
       setTimeout(() => {
         setInputs(currentInputs => {
+          if (cancelRequestedRef.current) {
+            return currentInputs;
+          }
           const totalProcessed = filesToProcess.length;
           const actualCompletedCount = currentInputs.filter(input => input.status === "completed").length;
           const actualErrorCount = currentInputs.filter(input => input.status === "error").length;
