@@ -1950,8 +1950,8 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
       
       {/* 選択されたファイルリスト */}
       {inputs.length > 0 && (
-        <div className="space-y-3 pt-4">
-          <h3 className="text-lg font-semibold text-gray-800">選択されたファイル:</h3>
+        <div className="space-y-4 pt-6">
+          <h3 className="text-base font-semibold text-gray-700 tracking-tight">選択されたファイル</h3>
 
           {!isPro && hasCompletedResults && (
             <div className="rounded-xl border border-indigo-300 bg-gradient-to-br from-blue-50 to-indigo-50 p-4">
@@ -1991,7 +1991,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
             </div>
           )}
 
-          <ul className="border border-gray-200 rounded-md divide-y divide-gray-200 shadow-sm bg-white">
+          <ul className="border border-gray-200 rounded-xl divide-y divide-gray-100 shadow-sm bg-white overflow-hidden">
             {inputs.map(input => {
               const processingTime = input.startTime && input.endTime 
                 ? ((input.endTime - input.startTime) / 1000).toFixed(1) 
@@ -2000,18 +2000,27 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
           const currentTime = input.startTime && !input.endTime 
                 ? ((Date.now() - input.startTime) / 1000).toFixed(1) 
                 : null;
+              const showComparison = input.status === 'completed' && input.outputUrl && input.previewUrl;
               
               return (
-                <li key={input.id} className={`p-3 transition-all duration-300 ease-in-out relative ${
-                  input.status === 'completed' ? 'bg-green-50 border-l-4 border-green-400' :
-                  input.status === 'error' ? 'bg-red-50 border-l-4 border-red-400' :
-                  input.status === 'processing' || input.status === 'uploading' ? 'bg-blue-50 border-l-4 border-blue-400' :
+                <li key={input.id} className={`p-4 sm:p-5 transition-all duration-300 ease-in-out relative rounded-xl ${
+                  input.status === 'completed' ? 'bg-emerald-50/60 border-l-4 border-emerald-500' :
+                  input.status === 'error' ? 'bg-red-50/80 border-l-4 border-red-400' :
+                  input.status === 'processing' || input.status === 'uploading' ? 'bg-sky-50/80 border-l-4 border-sky-400' :
                   'bg-white'
                 }`}>
 
                   
                   <div className="flex items-start space-x-3">
-                    <div className="flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 bg-gray-100 rounded overflow-hidden flex items-center justify-center relative">
+                    <div
+                      className="flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden flex items-center justify-center relative bg-gray-100"
+                      style={input.outputUrl && input.status === 'completed' ? {
+                        backgroundImage: 'linear-gradient(45deg, #d1d5db 25%, transparent 25%), linear-gradient(-45deg, #d1d5db 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #d1d5db 75%), linear-gradient(-45deg, transparent 75%, #d1d5db 75%)',
+                        backgroundSize: '10px 10px',
+                        backgroundPosition: '0 0, 0 5px, 5px -5px, -5px 0px',
+                        backgroundColor: '#f3f4f6',
+                      } : undefined}
+                    >
                       {/* 処理中のパルスアニメーション */}
                       {(input.status === 'uploading' || input.status === 'processing') && (
                         <div className="absolute inset-0 bg-blue-400 opacity-20 animate-pulse rounded"></div>
@@ -2088,7 +2097,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                         <p className="text-sm font-medium text-gray-900 truncate">{input.name}</p>
                         {/* 処理時間表示 */}
                         {processingTime && (
-                          <span className="text-xs text-green-600 font-medium bg-green-100 px-2 py-1 rounded">
+                          <span className="text-xs text-emerald-700 font-medium bg-emerald-100 px-2 py-1 rounded-full">
                             {processingTime}秒
                           </span>
                         )}
@@ -2098,8 +2107,8 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                       <div className="flex items-center space-x-2">
                         <p className={`text-xs font-medium ${
                           input.status === 'error' ? 'text-red-700' :
-                          input.status === 'completed' ? 'text-green-700' :
-                          input.status === 'processing' || input.status === 'uploading' ? 'text-blue-600' :
+                          input.status === 'completed' ? 'text-emerald-700' :
+                          input.status === 'processing' || input.status === 'uploading' ? 'text-sky-600' :
                           'text-gray-500'
                         }`}>
                           {input.status === 'pending' && (
@@ -2141,11 +2150,11 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                             </span>
                           )}
                           {input.status === 'completed' && (
-                            <span className="flex items-center">
-                              <svg className="w-3 h-3 mr-1 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                            <span className="flex items-center text-emerald-700">
+                              <svg className="w-3 h-3 mr-1 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                               </svg>
-                              完了 🎉
+                              完了
                             </span>
                           )}
                           {input.status === 'error' && (
@@ -2165,10 +2174,46 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                       )}
                     </div>
                   </div>
+
+                  {/* 完了時: 元の画像 vs 透過後の比較表示 */}
+                  {showComparison && (
+                    <div className="mt-4 rounded-xl border border-emerald-200/80 bg-white/80 overflow-hidden shadow-inner">
+                      <div className="grid grid-cols-2 gap-0">
+                        <div className="flex flex-col p-2 sm:p-3 border-r border-gray-200">
+                          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">元の画像</span>
+                          <div className="aspect-square max-h-32 sm:max-h-40 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
+                            <img
+                              src={input.previewUrl}
+                              alt={`元画像 ${input.name}`}
+                              className="object-contain w-full h-full"
+                            />
+                          </div>
+                        </div>
+                        <div className="flex flex-col p-2 sm:p-3">
+                          <span className="text-xs font-semibold text-emerald-600 uppercase tracking-wider mb-2">透過後</span>
+                          <div
+                            className="aspect-square max-h-32 sm:max-h-40 rounded-lg overflow-hidden flex items-center justify-center flex-1 min-h-0"
+                            style={{
+                              backgroundImage: 'linear-gradient(45deg, #e5e7eb 25%, transparent 25%), linear-gradient(-45deg, #e5e7eb 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #e5e7eb 75%), linear-gradient(-45deg, transparent 75%, #e5e7eb 75%)',
+                              backgroundSize: '14px 14px',
+                              backgroundPosition: '0 0, 0 7px, 7px -7px, -7px 0px',
+                              backgroundColor: '#f9fafb',
+                            }}
+                          >
+                            <img
+                              src={input.outputUrl}
+                              alt={`透過後 ${input.name}`}
+                              className="object-contain w-full h-full relative z-10"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   
                   {/* ボタンエリア - スマホでは下に配置 */}
                   {(input.outputUrl && input.status === 'completed') || input.status === 'error' ? (
-                    <div className="mt-3 pt-2 border-t border-gray-100">
+                    <div className={`mt-4 pt-3 border-t ${input.status === 'completed' ? 'border-emerald-200/60' : 'border-red-200/60'}`}>
                       {input.outputUrl && input.status === 'completed' && isPro && (
                         <div className="mb-3 rounded-xl border p-3 border-purple-200 bg-purple-50">
                           <p className="text-sm font-semibold text-gray-900">
