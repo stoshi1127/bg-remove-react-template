@@ -22,6 +22,7 @@ export default function BillingButtons({ isPro }: { isPro: boolean }) {
   };
 
   const goCheckout = async () => {
+    trackAnalyticsEvent('pro_purchase_click', { source: 'account_page' });
     setLoading('checkout');
     setError(null);
     try {

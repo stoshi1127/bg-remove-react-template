@@ -9,13 +9,26 @@ type GuestCheckoutResponse =
   | { ok: true; kind: 'already_pro' }
   | { ok: false; error: string };
 
-export default function GuestProPurchase() {
-  const [open, setOpen] = useState(false);
+type GuestProPurchaseProps = {
+  /** 外部から開閉を制御する場合 */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+};
+
+export default function GuestProPurchase({ open: controlledOpen, onOpenChange }: GuestProPurchaseProps = {}) {
+  const [internalOpen, setInternalOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const searchParams = useSearchParams();
   const autoOpenedRef = useRef(false);
+
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+  const setOpen = (v: boolean) => {
+    if (!isControlled) setInternalOpen(v);
+    onOpenChange?.(v);
+  };
 
   useEffect(() => {
     if (autoOpenedRef.current) return;
@@ -24,7 +37,7 @@ export default function GuestProPurchase() {
       autoOpenedRef.current = true;
       setOpen(true);
     }
-  }, [searchParams]);
+  }, [searchParams, setOpen]);
 
   const extractError = (v: unknown): string | null => {
     if (!v || typeof v !== 'object') return null;
@@ -59,11 +72,16 @@ export default function GuestProPurchase() {
     }
   };
 
+  const handleOpenClick = () => {
+    trackAnalyticsEvent('pro_purchase_click', { source: 'guest_cta' });
+    setOpen(true);
+  };
+
   return (
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={handleOpenClick}
         className="inline-flex items-center px-5 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 transition-colors shadow-sm"
       >
         Proを購入する
@@ -80,8 +98,9 @@ export default function GuestProPurchase() {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-lg font-bold text-gray-900">Proを購入する</h2>
+                <p className="text-sm font-semibold text-amber-700 mt-1">月額780円</p>
                 <p className="text-sm text-gray-600 mt-1">
-                  メールアドレスを入力して購入に進みます。購入後は自動でログインします。
+                  広告なし・高精度・大きな画像・プレミアムAIが使えます。メールアドレスを入力して購入に進みます。購入後は自動でログインします。
                 </p>
               </div>
               <button

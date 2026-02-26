@@ -589,6 +589,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
   }, [changeExtension, getImageDimensions]);
 
   const goToProPurchase = useCallback((reason: string) => {
+    trackAnalyticsEvent('pro_purchase_click', { source: reason });
     trackAnalyticsEvent('pro_high_precision_click', { reason, isPro });
     window.location.href = '/?buyPro=1#pro';
   }, [isPro]);
@@ -2473,6 +2474,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                 <p className="text-sm font-bold text-indigo-800">
                   Proならもっときれいに仕上がります
                 </p>
+                <p className="text-xs text-indigo-600 mt-1">月額780円で高精度＋プレミアムAIが使えます</p>
                 <div className="mt-2 space-y-2">
                   <div className="flex items-start gap-2">
                     <span className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold">1</span>

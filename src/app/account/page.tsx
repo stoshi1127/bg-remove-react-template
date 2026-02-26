@@ -8,6 +8,8 @@ import { isBillingEnabled } from '@/lib/billing/config';
 import LogoutButton from './ui/LogoutButton';
 import BillingButtons from './ui/BillingButtons';
 import BillingTracking from './ui/BillingTracking';
+import AccountPricingSection from './ui/AccountPricingSection';
+import AccountPremiumUsage from './ui/AccountPremiumUsage';
 
 export const metadata: Metadata = {
   title: 'アカウント | QuickTools',
@@ -48,6 +50,9 @@ export default async function AccountPage() {
               <div className="text-sm text-gray-500">プラン</div>
               <div className="text-lg font-semibold text-gray-900">
                 {user.isPro ? 'Pro' : 'Free'}
+                {user.isPro && (
+                  <span className="ml-2 text-sm font-normal text-gray-600">（月額780円）</span>
+                )}
               </div>
               {user.proValidUntil && (
                 <div className="text-xs text-gray-500 mt-1">
@@ -66,6 +71,16 @@ export default async function AccountPage() {
               current period end まではProを維持しますが、早めに「Proを管理する」からお支払い方法をご確認ください。
             </div>
           )}
+
+          {user.isPro && (
+            <div className="mt-4">
+              <AccountPremiumUsage isPro={user.isPro} />
+            </div>
+          )}
+
+          <div className="mt-4">
+            <AccountPricingSection isPro={user.isPro} />
+          </div>
 
           {billingEnabled ? (
             <BillingButtons isPro={user.isPro} />

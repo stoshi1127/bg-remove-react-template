@@ -119,6 +119,9 @@ export default function RootLayout({
               <div>
                 <h3 className="text-lg font-semibold mb-4 text-white">その他</h3>
                 <div className="space-y-2">
+                  <Link href="/#pro" className="block text-gray-300 hover:text-white transition-colors duration-200">
+                    料金・プラン
+                  </Link>
                   <Link href="/blog" className="block text-gray-300 hover:text-white transition-colors duration-200">
                     ブログ
                   </Link>

@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { trackAnalyticsEvent } from '@/lib/analytics/events';
+import PremiumUsageBadge from './PremiumUsageBadge';
 
 type HeaderClientProps = {
   isLoggedIn: boolean;
@@ -20,6 +22,7 @@ export default function HeaderClient({ isLoggedIn, isPro = false }: HeaderClient
   const ProLink = (
     <Link
       href="/?buyPro=1#pro"
+      onClick={() => trackAnalyticsEvent('pro_purchase_click', { source: 'header' })}
       className="px-4 py-2 rounded-lg text-white bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 font-semibold transition-colors duration-200 shadow-sm"
     >
       Proを購入
@@ -85,7 +88,12 @@ export default function HeaderClient({ isLoggedIn, isPro = false }: HeaderClient
               </>
             ) : (
               <div className="flex items-center gap-2">
-                {isPro ? ProBadge : null}
+                {isPro ? (
+                  <>
+                    <PremiumUsageBadge isPro={isPro} />
+                    {ProBadge}
+                  </>
+                ) : null}
                 <Link
                   href="/account"
                   className="px-4 py-2 rounded-lg text-gray-700 hover:text-blue-600 hover:bg-gray-50 font-medium transition-colors duration-200"
@@ -166,7 +174,10 @@ export default function HeaderClient({ isLoggedIn, isPro = false }: HeaderClient
                 <Link
                   href="/?buyPro=1#pro"
                   className="block px-4 py-2 rounded-lg font-semibold text-white bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600"
-                  onClick={closeMenu}
+                  onClick={() => {
+                    trackAnalyticsEvent('pro_purchase_click', { source: 'header_mobile' });
+                    closeMenu();
+                  }}
                 >
                   Proを購入
                 </Link>
@@ -179,7 +190,7 @@ export default function HeaderClient({ isLoggedIn, isPro = false }: HeaderClient
                 </Link>
               </>
             ) : (
-              <div className="px-4 py-2" onClick={closeMenu}>
+              <div className="px-4 py-2 space-y-2" onClick={closeMenu}>
                 <div className="flex items-center justify-between">
                   <Link
                     href="/account"
@@ -189,6 +200,9 @@ export default function HeaderClient({ isLoggedIn, isPro = false }: HeaderClient
                   </Link>
                   {isPro ? ProBadge : null}
                 </div>
+                {isPro ? (
+                  <PremiumUsageBadge isPro={isPro} className="block w-fit" />
+                ) : null}
               </div>
             )}
 
