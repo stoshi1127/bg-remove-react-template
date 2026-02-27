@@ -79,7 +79,7 @@ export default async function AccountPage() {
           )}
 
           <div className="mt-4">
-            <AccountPricingSection isPro={user.isPro} />
+            <AccountPricingSection />
           </div>
 
           {billingEnabled ? (
