@@ -37,7 +37,7 @@ export default function PricingModal({
 
   return (
     <div
-      className="fixed inset-0 z-[130] flex items-center justify-center px-4"
+      className="fixed inset-0 z-[130] flex items-center justify-center px-4 text-center"
       role="dialog"
       aria-modal="true"
       aria-labelledby="pricing-modal-title"
@@ -47,13 +47,13 @@ export default function PricingModal({
         onClick={onClose}
         aria-hidden="true"
       />
-      <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-xl border border-gray-200 p-6 max-h-[90vh] overflow-y-auto">
+      <div className="relative w-full max-w-3xl bg-white rounded-2xl shadow-xl border border-gray-200 p-6 max-h-[90vh] overflow-y-auto">
         <div className="flex items-start justify-between gap-4 mb-4">
           <div>
             <h2 id="pricing-modal-title" className="text-lg font-bold text-gray-900">
               FreeとProの違い
             </h2>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-sm text-gray-600 mt-1 text-center">
               月額780円で、もっと自由に使えます。
             </p>
           </div>

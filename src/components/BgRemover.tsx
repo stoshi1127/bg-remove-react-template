@@ -8,7 +8,7 @@ import { saveAs } from 'file-saver';
 import { upload as uploadToBlob } from '@vercel/blob/client';
 
 // ファイルステータスの型定義
-type FileStatus = 
+type FileStatus =
   | "pending"        // 待機中（HEIC変換前または処理待ち）
   | "converting"     // HEIC変換中
   | "ready"          // 処理準備完了（HEIC変換後または元々JPEG/PNG）
@@ -17,7 +17,7 @@ type FileStatus =
   | "completed"      // 完了
   | "error";         // エラー発生
 
-type InFile  = { 
+type InFile = {
   id: string;          // ユニークID
   originalFile: File;  // 元のファイルオブジェクト
   blob: File | Blob;   // 処理用Blob (HEIC変換後は変換後のBlob)
@@ -106,15 +106,15 @@ type BgRemoverMultiProps = {
 };
 
 export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: BgRemoverMultiProps) {
-  
+
   /* ------------ state --------------- */
-  const [inputs,  setInputs]  = useState<InFile[]>([]);
+  const [inputs, setInputs] = useState<InFile[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [customColor, setCustomColor] = useState<string>('#FFFFFF');
   const [selectedRatio, setSelectedRatio] = useState<string>('fit-subject');
-  
-  const [busy,    setBusy]    = useState(false);
-  const [msg,     setMsg]     = useState<string | null>(null);
+
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
   const [progress, setProgress] = useState<number>(0);
   const [processedCount, setProcessedCount] = useState<number>(0);
   const [oversizedPromptItems, setOversizedPromptItems] = useState<OversizedPromptItem[]>([]);
@@ -196,7 +196,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
         console.log('Debug mode:', !debugMode);
       }
     };
-    
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [debugMode]);
@@ -249,7 +249,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
   }) => {
     // デバッグモードでない場合は何もしない
     if (!debugMode) return;
-    
+
     setProcessingLogs(prev => [...prev, {
       ...log,
       timestamp: Date.now()
@@ -282,7 +282,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
 
     setAvgResponseTime(prev => {
       const newAvg = prev === 0 ? responseTime : (prev * 0.7 + responseTime * 0.3);
-      
+
       // レスポンス時間とエラー状況に基づいて並行数を調整
       setMaxConcurrentProcesses(current => {
         if (!success) {
@@ -297,7 +297,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
         }
         return current;
       });
-      
+
       return newAvg;
     });
   }, [adaptiveConcurrency]);
@@ -334,7 +334,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
     if (abortControllerRef.current) {
       abortControllerRef.current.abort('User cancelled');
     }
-    
+
     // 処理中のファイルを ready 状態に戻す
     setInputs(prev => prev.map(input => {
       if (input.status === 'uploading' || input.status === 'processing') {
@@ -342,15 +342,15 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
       }
       return input;
     }));
-    
+
     setBusy(false);
     setCurrentlyProcessing(0);
     setMsg('処理がキャンセルされました。');
-    
+
     // 並行処理関連の状態をリセット
     processingSlots.current = 0;
     processingQueue.current = [];
-    
+
     // キャンセル記録（デバッグモード時のみ）
     addLog({
       id: 'system',
@@ -405,7 +405,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
           }
         });
       }
-      
+
       // ログの自動削除（100件を超える場合）
       if (processingLogs.length > 100) {
         setProcessingLogs(prev => prev.slice(-50));
@@ -419,26 +419,26 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
 
   // 特定の入力ファイルのステータスを更新するヘルパー関数
   const updateInputStatus = useCallback((id: string, newStatus: FileStatus, newMessage?: string, newOutputUrl?: string) => {
-    setInputs(prevInputs => 
+    setInputs(prevInputs =>
       prevInputs.map(input => {
         if (input.id === id) {
           const updates: Partial<InFile> = {
             status: newStatus,
             errorMessage: newMessage,
           };
-          
+
           // 完了時に終了時刻を記録
           if (newStatus === 'completed') {
             updates.endTime = Date.now();
           }
-          
+
           if (newOutputUrl && newOutputUrl !== input.outputUrl) {
             registerObjectUrl(newOutputUrl);
             updates.outputUrl = newOutputUrl;
             calculateBoundingBox(newOutputUrl).then(bbox => {
-                setInputs(prev => prev.map(i => i.id === id ? { ...i, boundingBox: bbox } : i));
+              setInputs(prev => prev.map(i => i.id === id ? { ...i, boundingBox: bbox } : i));
             }).catch(err => {
-                console.error("Bounding box calculation failed:", err);
+              console.error("Bounding box calculation failed:", err);
             });
             const img = new Image();
             img.onload = () => {
@@ -455,9 +455,9 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
           } else if (newOutputUrl !== undefined) {
             updates.outputUrl = newOutputUrl;
           }
-          
+
           return { ...input, ...updates };
-        } 
+        }
         return input;
       })
     );
@@ -656,124 +656,124 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
 
   // 画像合成関数
   const applyTemplate = async (
-    originalImageUrl: string, 
-    templateUrl: string, 
-    ratio: string, 
+    originalImageUrl: string,
+    templateUrl: string,
+    ratio: string,
     bbox: { x: number, y: number, width: number, height: number } | undefined
   ): Promise<string> => {
     return new Promise((resolve, reject) => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-            return reject(new Error('Could not get canvas context'));
-        }
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        return reject(new Error('Could not get canvas context'));
+      }
 
-        const originalImg = new Image();
-        originalImg.crossOrigin = "anonymous";
-        originalImg.onload = () => {
-          const baseWidth = 1200;
-          let targetWidth = baseWidth;
-          let targetHeight = baseWidth;
+      const originalImg = new Image();
+      originalImg.crossOrigin = "anonymous";
+      originalImg.onload = () => {
+        const baseWidth = 1200;
+        let targetWidth = baseWidth;
+        let targetHeight = baseWidth;
 
-          if (ratio === 'fit-subject') {
-            if (bbox && bbox.width > 0 && bbox.height > 0) {
-              targetWidth = bbox.width;
-              targetHeight = bbox.height;
-            } else {
-              // フォールバック
-              targetWidth = originalImg.naturalWidth;
-              targetHeight = originalImg.naturalHeight;
-            }
-          } else if (ratio === 'original') {
+        if (ratio === 'fit-subject') {
+          if (bbox && bbox.width > 0 && bbox.height > 0) {
+            targetWidth = bbox.width;
+            targetHeight = bbox.height;
+          } else {
+            // フォールバック
             targetWidth = originalImg.naturalWidth;
             targetHeight = originalImg.naturalHeight;
-          } else if (ratio === '16:9') {
-            targetWidth = baseWidth; // 幅は固定
-            targetHeight = Math.round(baseWidth * 9 / 16);
-          } else if (ratio === '4:3') {
-            targetWidth = baseWidth; // 幅は固定
-            targetHeight = Math.round(baseWidth * 3 / 4);
           }
-          // '1:1' はデフォルトの baseWidth x baseWidth
-
-          // 最終出力の長辺をプラン別でクランプ（巨大PNG化と端末負荷を抑える）
-          const outputMaxSide = isPro ? PRO_OUTPUT_MAX_SIDE : FREE_OUTPUT_MAX_SIDE;
-          const longestSide = Math.max(targetWidth, targetHeight);
-          if (longestSide > outputMaxSide) {
-            const scale = outputMaxSide / longestSide;
-            targetWidth = Math.max(1, Math.round(targetWidth * scale));
-            targetHeight = Math.max(1, Math.round(targetHeight * scale));
-          }
-
-          canvas.width = targetWidth;
-          canvas.height = targetHeight;
-
-          const drawFinalImage = () => {
-            if (ratio === 'fit-subject' && bbox && bbox.width > 0) {
-              // 被写体のバウンディングボックスを使って元画像から切り出して描画
-              ctx.drawImage(
-                originalImg,
-                bbox.x,
-                bbox.y,
-                bbox.width,
-                bbox.height,
-                0,
-                0,
-                targetWidth,
-                targetHeight
-              );
-            } else {
-              // それ以外の比率では、中央に余白をもって描画
-              // 「元画像に合わせる」場合はパディングなし
-              const padding = ratio === 'original' ? 0 : 100;
-              const maxW = targetWidth - padding;
-              const maxH = targetHeight - padding;
-              const scale = Math.min(maxW / originalImg.width, maxH / originalImg.height);
-              const w = originalImg.width * scale;
-              const h = originalImg.height * scale;
-              const x = (targetWidth - w) / 2;
-              const y = (targetHeight - h) / 2;
-              ctx.drawImage(originalImg, x, y, w, h);
-            }
-            resolve(canvas.toDataURL('image/png'));
-          };
-
-          // テンプレートが透明か、色か、画像かで処理を分岐
-          if (templateUrl === 'transparent') {
-            drawFinalImage();
-          } else if (templateUrl.startsWith('#')) {
-              ctx.fillStyle = templateUrl;
-              ctx.fillRect(0, 0, targetWidth, targetHeight);
-              drawFinalImage();
-          } else { 
-              const templateImg = new Image();
-              templateImg.crossOrigin = "anonymous";
-              templateImg.onload = () => {
-                  // テンプレート画像を中央に描画（アスペクト比を維持して全体をカバー）
-                  const templateAspectRatio = templateImg.width / templateImg.height;
-                  const canvasAspectRatio = targetWidth / targetHeight;
-                  let sx, sy, sWidth, sHeight;
-
-                  if (templateAspectRatio > canvasAspectRatio) {
-                      sHeight = templateImg.height;
-                      sWidth = sHeight * canvasAspectRatio;
-                      sx = (templateImg.width - sWidth) / 2;
-                      sy = 0;
-                  } else {
-                      sWidth = templateImg.width;
-                      sHeight = sWidth / canvasAspectRatio;
-                      sx = 0;
-                      sy = (templateImg.height - sHeight) / 2;
-                  }
-                  ctx.drawImage(templateImg, sx, sy, sWidth, sHeight, 0, 0, targetWidth, targetHeight);
-                  drawFinalImage();
-              };
-              templateImg.onerror = () => reject(new Error("Template image loading failed"));
-              templateImg.src = templateUrl;
-          }
+        } else if (ratio === 'original') {
+          targetWidth = originalImg.naturalWidth;
+          targetHeight = originalImg.naturalHeight;
+        } else if (ratio === '16:9') {
+          targetWidth = baseWidth; // 幅は固定
+          targetHeight = Math.round(baseWidth * 9 / 16);
+        } else if (ratio === '4:3') {
+          targetWidth = baseWidth; // 幅は固定
+          targetHeight = Math.round(baseWidth * 3 / 4);
         }
-        originalImg.onerror = () => reject(new Error("Original image loading failed"));
-        originalImg.src = originalImageUrl;
+        // '1:1' はデフォルトの baseWidth x baseWidth
+
+        // 最終出力の長辺をプラン別でクランプ（巨大PNG化と端末負荷を抑える）
+        const outputMaxSide = isPro ? PRO_OUTPUT_MAX_SIDE : FREE_OUTPUT_MAX_SIDE;
+        const longestSide = Math.max(targetWidth, targetHeight);
+        if (longestSide > outputMaxSide) {
+          const scale = outputMaxSide / longestSide;
+          targetWidth = Math.max(1, Math.round(targetWidth * scale));
+          targetHeight = Math.max(1, Math.round(targetHeight * scale));
+        }
+
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+
+        const drawFinalImage = () => {
+          if (ratio === 'fit-subject' && bbox && bbox.width > 0) {
+            // 被写体のバウンディングボックスを使って元画像から切り出して描画
+            ctx.drawImage(
+              originalImg,
+              bbox.x,
+              bbox.y,
+              bbox.width,
+              bbox.height,
+              0,
+              0,
+              targetWidth,
+              targetHeight
+            );
+          } else {
+            // それ以外の比率では、中央に余白をもって描画
+            // 「元画像に合わせる」場合はパディングなし
+            const padding = ratio === 'original' ? 0 : 100;
+            const maxW = targetWidth - padding;
+            const maxH = targetHeight - padding;
+            const scale = Math.min(maxW / originalImg.width, maxH / originalImg.height);
+            const w = originalImg.width * scale;
+            const h = originalImg.height * scale;
+            const x = (targetWidth - w) / 2;
+            const y = (targetHeight - h) / 2;
+            ctx.drawImage(originalImg, x, y, w, h);
+          }
+          resolve(canvas.toDataURL('image/png'));
+        };
+
+        // テンプレートが透明か、色か、画像かで処理を分岐
+        if (templateUrl === 'transparent') {
+          drawFinalImage();
+        } else if (templateUrl.startsWith('#')) {
+          ctx.fillStyle = templateUrl;
+          ctx.fillRect(0, 0, targetWidth, targetHeight);
+          drawFinalImage();
+        } else {
+          const templateImg = new Image();
+          templateImg.crossOrigin = "anonymous";
+          templateImg.onload = () => {
+            // テンプレート画像を中央に描画（アスペクト比を維持して全体をカバー）
+            const templateAspectRatio = templateImg.width / templateImg.height;
+            const canvasAspectRatio = targetWidth / targetHeight;
+            let sx, sy, sWidth, sHeight;
+
+            if (templateAspectRatio > canvasAspectRatio) {
+              sHeight = templateImg.height;
+              sWidth = sHeight * canvasAspectRatio;
+              sx = (templateImg.width - sWidth) / 2;
+              sy = 0;
+            } else {
+              sWidth = templateImg.width;
+              sHeight = sWidth / canvasAspectRatio;
+              sx = 0;
+              sy = (templateImg.height - sHeight) / 2;
+            }
+            ctx.drawImage(templateImg, sx, sy, sWidth, sHeight, 0, 0, targetWidth, targetHeight);
+            drawFinalImage();
+          };
+          templateImg.onerror = () => reject(new Error("Template image loading failed"));
+          templateImg.src = templateUrl;
+        }
+      }
+      originalImg.onerror = () => reject(new Error("Original image loading failed"));
+      originalImg.src = originalImageUrl;
     });
   };
 
@@ -898,20 +898,20 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
     // 30枚制限チェック
     const MAX_FILES = 30;
     let filesToProcess = Array.from(files);
-    
+
     if (filesToProcess.length > MAX_FILES) {
       setMsg(`一度に処理できるのは${MAX_FILES}枚までです。最初の${MAX_FILES}枚だけを処理します。`);
       filesToProcess = filesToProcess.slice(0, MAX_FILES);
     }
 
     // 既存のオブジェクトURLをクリーンアップ
-    cleanupObjectUrls(); 
+    cleanupObjectUrls();
     // inputs をクリアする前に、各 input の previewUrl と outputUrl も revoke することが望ましいが、
     // cleanupObjectUrls ですべてクリアしているので、ここでは setInputs のみ。
 
     setInputs([]);
     setMsg(null); setProgress(0); setProcessedCount(0);
-    
+
     const newInputs: InFile[] = [];
     for (let i = 0; i < filesToProcess.length; i++) {
       const file = filesToProcess[i];
@@ -926,11 +926,11 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
         registerObjectUrl(previewUrl);
       }
 
-      newInputs.push({ 
-        id, 
-        originalFile: file, 
-        blob: file, 
-        name: file.name, 
+      newInputs.push({
+        id,
+        originalFile: file,
+        blob: file,
+        name: file.name,
         status: isHeic ? "pending" : "ready",
         previewUrl, // 追加
         sourceQualityMode: selectedProcessingMode,
@@ -942,18 +942,18 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
     setInputs(newInputs);
 
     for (const input of newInputs) {
-      if (input.status === "pending") { 
+      if (input.status === "pending") {
         updateInputStatus(input.id, "converting");
         try {
           const { default: heic2any } = await import("heic2any");
           const convertedBlob = await heic2any({ blob: input.originalFile, toType: "image/jpeg" });
           const finalBlob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
           const newName = input.originalFile.name.replace(/\.[^.]+$/, ".jpg");
-          
+
           // HEIC変換後の新しいプレビューURLを生成
           const newPreviewUrl = URL.createObjectURL(finalBlob);
           registerObjectUrl(newPreviewUrl);
-          
+
           setInputs(prev => prev.map(i => i.id === input.id ? {
             ...i,
             blob: finalBlob,
@@ -964,8 +964,8 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
         } catch (err: unknown) {
           console.error("HEIC 変換エラー:", err, input.name);
           let errMsg = "HEIC 変換エラー";
-          if (typeof err === 'object' && err !== null && 'code' in err && err.code === 1) { 
-             errMsg = "HEIC形式ではないか、サポートされていない形式です。";
+          if (typeof err === 'object' && err !== null && 'code' in err && err.code === 1) {
+            errMsg = "HEIC形式ではないか、サポートされていない形式です。";
           }
           const detailMsg = typeof err === 'object' && err !== null && 'message' in err && typeof err.message === 'string' ? `: ${err.message}` : '';
           updateInputStatus(input.id, "error", `${input.name}: ${errMsg}${detailMsg}`);
@@ -986,12 +986,12 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
   const handleFilesSelect = async (files: FileList) => {
     await processFiles(files);
   };
-  
+
   /* ------------ ② 背景除去：API経由で並行実行 --------------- */
   const handleRemove = async (forceFreeCompress = false) => {
     const candidates = inputs.filter(input => input.status === "ready" || input.status === "error");
     if (busy || candidates.length === 0) {
-      if(candidates.length === 0 && inputs.length > 0) {
+      if (candidates.length === 0 && inputs.length > 0) {
         setMsg("処理できるファイルがありません。写真の準備が終わっているかご確認ください。");
       }
       return;
@@ -1056,16 +1056,16 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
     const processSingleFile = async (input: InFile, index: number): Promise<void> => {
       // 並行スロットを取得（キューで待機）
       await acquireSlot();
-      
+
       // 処理開始時刻と順序を記録
       const startTime = Date.now();
       const requestStartTime = Date.now(); // API レスポンス時間測定用
-      setInputs(prev => prev.map(i => 
-        i.id === input.id 
+      setInputs(prev => prev.map(i =>
+        i.id === input.id
           ? { ...i, startTime, processingOrder: index }
           : i
       ));
-      
+
       // ログ記録：処理開始
       addLog({
         id: input.id,
@@ -1073,7 +1073,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
         event: 'start',
         details: `ファイルサイズ: ${(input.blob.size / 1024).toFixed(1)}KB`
       });
-      
+
       // 処理中カウントを増加
       setCurrentlyProcessing(prev => {
         const newCount = prev + 1;
@@ -1084,7 +1084,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
         }));
         return newCount;
       });
-      
+
       // タイムアウト設定（5分）
       const timeoutMs = 5 * 60 * 1000;
       const timeoutController = new AbortController();
@@ -1097,7 +1097,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
         if (input.status === 'error') {
           updateInputStatus(input.id, 'ready', undefined);
         }
-        
+
         updateInputStatus(input.id, "uploading");
         let blobForRequest: Blob = input.blob;
         let nameForRequest = input.name;
@@ -1141,7 +1141,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
           // 複数のAbortSignalを手動で組み合わせる
           const combinedController = new AbortController();
           combinedSignal = combinedController.signal;
-          
+
           // 既存のAbortControllerがabortされた場合
           if (abortControllerRef.current.signal.aborted) {
             combinedController.abort(abortControllerRef.current.signal.reason);
@@ -1150,7 +1150,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
               combinedController.abort(abortControllerRef.current?.signal.reason);
             }, { once: true });
           }
-          
+
           // タイムアウトコントローラーがabortされた場合
           if (timeoutController.signal.aborted) {
             combinedController.abort(timeoutController.signal.reason);
@@ -1204,7 +1204,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
         // レスポンス時間を測定
         const responseTime = Date.now() - requestStartTime;
         const success = response.ok;
-        
+
         // ログ記録：API レスポンス
         addLog({
           id: input.id,
@@ -1213,7 +1213,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
           responseTime,
           details: success ? `成功 (${response.status})` : `エラー (${response.status})`
         });
-        
+
         // 動的並行数調整
         adjustConcurrency(responseTime, success);
 
@@ -1221,7 +1221,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({ error: "不明なサーバーエラー" }));
           const errorMessage = `背景除去エラー: ${errorData.error || response.statusText}`;
-          
+
           // ログ記録：エラー
           addLog({
             id: input.id,
@@ -1230,23 +1230,23 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
             details: errorMessage,
             responseTime
           });
-          
+
           updateInputStatus(input.id, "error", errorMessage);
           setMsg(prevMsg => prevMsg ? `${prevMsg}\n${input.name}: ${errorMessage}` : `${input.name}: ${errorMessage}`);
-          
+
           // エラー統計更新
           setPerformanceStats(stats => ({
             ...stats,
             totalErrors: stats.totalErrors + 1
           }));
-          
+
           return;
         }
 
         updateInputStatus(input.id, "processing");
         const imageBlob = await response.blob();
         const appliedProcessingMode = (response.headers.get('x-processing-mode') as ProcessingMode | null) ?? requestedProcessingMode;
-        
+
         // ログ記録：後処理開始
         addLog({
           id: input.id,
@@ -1254,16 +1254,16 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
           event: 'processing',
           details: `処理後サイズ: ${(imageBlob.size / 1024).toFixed(1)}KB`
         });
-        
+
         // メモリ効率のためのサイズチェック
         if (imageBlob.size > 50 * 1024 * 1024) { // 50MB制限
           throw new Error(`仕上がりのデータが大きすぎるため保存できませんでした（${Math.round(imageBlob.size / 1024 / 1024)}MB）`);
         }
-        
+
         // BlobをData URLに変換し、必要であればテンプレートを適用
         return new Promise<void>((resolve, reject) => {
           const reader = new FileReader();
-          
+
           // FileReader のタイムアウト設定
           const readerTimeoutId = setTimeout(() => {
             reader.abort();
@@ -1274,24 +1274,24 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
             clearTimeout(readerTimeoutId);
             try {
               const removedBgUrl = reader.result as string;
-              
+
               // 背景除去後の画像から、まず被写体のバウンディングボックスを計算する
               const subjectBbox = await Promise.race([
                 calculateBoundingBox(removedBgUrl),
-                new Promise<undefined>((_, reject) => 
+                new Promise<undefined>((_, reject) =>
                   setTimeout(() => reject(new Error('バウンディングボックス計算タイムアウト')), 15000)
                 )
               ]);
 
               let finalUrl = removedBgUrl;
-              
+
               // アスペクト比がデフォルトでない場合、またはテンプレートが選択されている場合は常に画像処理を行う
               if (selectedRatio !== '1:1' || selectedTemplate) {
                 const templateUrl = selectedTemplate ?? 'transparent';
                 // 計算したバウンディングボックスをテンプレート適用関数に渡す
                 finalUrl = await Promise.race([
                   applyTemplate(removedBgUrl, templateUrl, selectedRatio, subjectBbox),
-                  new Promise<string>((_, reject) => 
+                  new Promise<string>((_, reject) =>
                     setTimeout(() => reject(new Error('テンプレート適用タイムアウト')), 30000)
                   )
                 ]);
@@ -1325,10 +1325,10 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                 }
                 return next;
               }));
-              
+
               // 処理時間を計算
               const totalDuration = Date.now() - startTime;
-              
+
               // ログ記録：完了
               addLog({
                 id: input.id,
@@ -1337,7 +1337,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                 duration: totalDuration,
                 responseTime
               });
-              
+
               // パフォーマンス統計更新
               setPerformanceStats(stats => ({
                 ...stats,
@@ -1345,7 +1345,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                 totalTime: stats.totalTime + totalDuration,
                 avgFileSize: (stats.avgFileSize * stats.totalProcessed + blobForRequest.size) / (stats.totalProcessed + 1)
               }));
-              
+
               // 完了カウントと進捗を更新
               setProcessedCount(prev => {
                 const newCount = prev + 1;
@@ -1353,13 +1353,13 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                 setProgress(newProgress);
                 return newCount;
               });
-              
+
               resolve();
             } catch (e) {
               clearTimeout(readerTimeoutId);
               console.error("Template application failed", e);
               const errorMessage = e instanceof Error ? e.message : "不明なエラー";
-              
+
               // ログ記録：エラー
               addLog({
                 id: input.id,
@@ -1368,26 +1368,26 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                 details: `処理エラー: ${errorMessage}`,
                 duration: Date.now() - startTime
               });
-              
+
               updateInputStatus(input.id, "error", `処理エラー: ${errorMessage}`);
               setMsg(prev => prev ? `${prev}\n${input.name}: ${errorMessage}` : `${input.name}: ${errorMessage}`);
-              
+
               // エラー統計更新
               setPerformanceStats(stats => ({
                 ...stats,
                 totalErrors: stats.totalErrors + 1
               }));
-              
+
               // エラーでも並行数調整を行う
               adjustConcurrency(responseTime, false);
               reject(e);
             }
           };
-          
+
           reader.onerror = (e) => {
             clearTimeout(readerTimeoutId);
             console.error("Blob to Data URL conversion failed", e);
-            
+
             // ログ記録：エラー
             addLog({
               id: input.id,
@@ -1396,24 +1396,24 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
               details: 'Blob読み込みエラー',
               duration: Date.now() - startTime
             });
-            
+
             updateInputStatus(input.id, "error", `処理済み画像の読み込みエラー: ${input.name}`);
             setMsg(prevMsg => prevMsg ? `${prevMsg}\n${input.name}: 処理済み画像の読み込みに失敗しました。` : `${input.name}: 処理済み画像の読み込みに失敗しました。`);
-            
+
             setPerformanceStats(stats => ({
               ...stats,
               totalErrors: stats.totalErrors + 1
             }));
-            
+
             adjustConcurrency(responseTime, false);
             reject(e);
           };
-          
+
           reader.onabort = () => {
             clearTimeout(readerTimeoutId);
             reject(new Error('読み込み中断'));
           };
-          
+
           reader.readAsDataURL(imageBlob);
         });
 
@@ -1438,7 +1438,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
             errorMessage = error.message;
           }
         }
-        
+
         // ログ記録：エラー（キャンセル時は ready に戻すため別扱い）
         addLog({
           id: input.id,
@@ -1447,7 +1447,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
           details: errorMessage,
           duration: Date.now() - startTime
         });
-        
+
         if (isCancelled) {
           updateInputStatus(input.id, "ready", undefined);
           return;
@@ -1455,7 +1455,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
           updateInputStatus(input.id, "error", errorMessage);
           setMsg(prevMsg => prevMsg ? `${prevMsg}\n${input.name}: ${errorMessage}` : `${input.name}: ${errorMessage}`);
         }
-        
+
         // エラー時は進捗を更新
         setProcessedCount(prev => {
           const newCount = prev + 1;
@@ -1463,13 +1463,13 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
           setProgress(newProgress);
           return newCount;
         });
-        
+
         // エラー統計更新
         setPerformanceStats(stats => ({
           ...stats,
           totalErrors: stats.totalErrors + 1
         }));
-        
+
         // エラー時の並行数調整
         const responseTime = Date.now() - requestStartTime;
         adjustConcurrency(responseTime, false);
@@ -1485,19 +1485,19 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
     try {
       // AbortControllerを初期化
       abortControllerRef.current = new AbortController();
-      
+
       // 全てのファイルを並行処理で開始
       const processPromises = filesToProcess.map((input, index) => processSingleFile(input, index));
-      
+
       // 全ての処理の完了を待機（エラーがあっても他の処理は続行）
       const results = await Promise.allSettled(processPromises);
-      
+
       // 結果の集計
       const fulfilled = results.filter(result => result.status === 'fulfilled').length;
       const rejected = results.filter(result => result.status === 'rejected').length;
-      
+
       console.log(`並行処理完了: 成功=${fulfilled}件, エラー=${rejected}件`);
-      
+
       // バッチ処理完了ログ
       if (debugMode) {
         addLog({
@@ -1507,13 +1507,13 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
           details: `バッチ処理完了: 成功=${fulfilled}件, エラー=${rejected}件`
         });
       }
-      
+
     } catch (err: unknown) {
       console.error("全体的な処理エラー:", err);
       const generalErrorMessage = typeof err === 'object' && err !== null && 'message' in err && typeof err.message === 'string'
         ? err.message : "背景除去中に予期せぬエラーが発生しました。詳細不明。";
       setMsg(generalErrorMessage);
-      
+
       if (debugMode) {
         addLog({
           id: 'batch',
@@ -1524,10 +1524,10 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
       }
     } finally {
       setBusy(false);
-      
+
       // 透過完了後に選択されたファイルへスクロール
       setTimeout(() => scrollToSectionWithHeaderOffset(sectionFilesRef.current), 200);
-      
+
       // 少し待ってから状態を確認（React の状態更新が完了するまで）
       setTimeout(() => {
         setInputs(currentInputs => {
@@ -1541,29 +1541,29 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
 
           if (totalProcessed > 0) {
             if (anyErrors && actualCompletedCount > 0) {
-                // 一部成功、一部エラー
-                setMsg(`処理が終わりました：${actualCompletedCount}枚 成功、${actualErrorCount}枚 失敗。各ファイルの状態をご確認ください。`);
+              // 一部成功、一部エラー
+              setMsg(`処理が終わりました：${actualCompletedCount}枚 成功、${actualErrorCount}枚 失敗。各ファイルの状態をご確認ください。`);
             } else if (anyErrors && actualCompletedCount === 0) {
-                // 全てエラー
-                setMsg("すべてのファイルで問題が発生しました。各ファイルの状態をご確認ください。");
+              // 全てエラー
+              setMsg("すべてのファイルで問題が発生しました。各ファイルの状態をご確認ください。");
             } else if (actualCompletedCount === totalProcessed) {
-                // 全て成功
-                setMsg(`すべてのファイル（${actualCompletedCount}枚）の処理が完了しました！`);
+              // 全て成功
+              setMsg(`すべてのファイル（${actualCompletedCount}枚）の処理が完了しました！`);
             } else {
-                // 処理中や準備完了状態のファイルがある場合
-                const processingCount = currentInputs.filter(input => 
-                  input.status === "processing" || input.status === "uploading"
-                ).length;
-                if (processingCount > 0) {
-                  setMsg(`${actualCompletedCount}枚 完了、あと${processingCount}枚 処理中です。`);
-                } else {
-                  setMsg(`${actualCompletedCount}枚の処理が完了しました。残りの状態をご確認ください。`);
-                }
+              // 処理中や準備完了状態のファイルがある場合
+              const processingCount = currentInputs.filter(input =>
+                input.status === "processing" || input.status === "uploading"
+              ).length;
+              if (processingCount > 0) {
+                setMsg(`${actualCompletedCount}枚 完了、あと${processingCount}枚 処理中です。`);
+              } else {
+                setMsg(`${actualCompletedCount}枚の処理が完了しました。残りの状態をご確認ください。`);
+              }
             }
           } else if (currentInputs.length > 0 && totalProcessed === 0) {
             setMsg("処理できるファイルがありません。");
           }
-          
+
           return currentInputs; // 状態は変更せず、メッセージのみ更新
         });
       }, 100);
@@ -1711,7 +1711,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
       completed: 0,
       total: completedFiles.length,
     });
-    setMsg(`${completedFiles.length}枚を${target.toUpperCase()}へアップスケールしています...`);
+    setMsg(`${completedFiles.length}枚を${target.toUpperCase()}へ高画質化しています...`);
 
     let successCount = 0;
     let failureCount = 0;
@@ -1734,7 +1734,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
         successCount += 1;
       } catch (error) {
         failureCount += 1;
-        console.error('一括アップスケール失敗:', input.name, error);
+        console.error('一括高画質化失敗:', input.name, error);
       } finally {
         setBatchEnhanceState(prev => ({
           ...prev,
@@ -1752,7 +1752,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
     });
     setMsg(
       failureCount === 0
-        ? `${successCount}枚のアップスケールが完了しました。`
+        ? `${successCount}枚の高画質化が完了しました。`
         : `${successCount}枚完了、${failureCount}枚失敗しました。`
     );
   };
@@ -1842,7 +1842,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                   onClick={() => {
                     console.info('[free_compress_chosen]', { count: oversizedPromptItems.length });
                     setOversizedPromptItems([]);
-                  void handleRemove(true);
+                    void handleRemove(true);
                   }}
                 >
                   自動で軽くして無料で処理する
@@ -1881,11 +1881,10 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
           <button
             type="button"
             onClick={() => handleSelectProcessingMode('standard')}
-            className={`rounded-xl border px-4 py-3 text-left transition-colors ${
-              selectedProcessingMode === 'standard'
-                ? 'border-blue-500 bg-blue-50'
-                : 'border-gray-200 hover:border-blue-300'
-            }`}
+            className={`rounded-xl border px-4 py-3 text-left transition-colors ${selectedProcessingMode === 'standard'
+              ? 'border-blue-500 bg-blue-50'
+              : 'border-gray-200 hover:border-blue-300'
+              }`}
           >
             <p className="font-semibold text-gray-900">標準（速い）</p>
             <p className="text-xs text-gray-600 mt-1">はやく仕上げたいときにおすすめ</p>
@@ -1893,11 +1892,10 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
           <button
             type="button"
             onClick={() => handleSelectProcessingMode('pro_high_precision')}
-            className={`rounded-xl border px-4 py-3 text-left transition-colors relative ${
-              selectedProcessingMode === 'pro_high_precision'
-                ? 'border-amber-500 bg-amber-50'
-                : 'border-gray-200 hover:border-amber-400'
-            } ${!isPro ? 'opacity-80' : ''}`}
+            className={`rounded-xl border px-4 py-3 text-left transition-colors relative ${selectedProcessingMode === 'pro_high_precision'
+              ? 'border-amber-500 bg-amber-50'
+              : 'border-gray-200 hover:border-amber-400'
+              } ${!isPro ? 'opacity-80' : ''}`}
           >
             <span className="absolute top-2 right-2 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
               Pro
@@ -1910,17 +1908,16 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
           </button>
         </div>
       </div>
-      
+
       {/* ファイル数制限の案内 */}
       <div className="flex items-center justify-center">
-        <div className={`text-sm px-4 py-2 rounded-lg border ${
-          inputs.length >= 30 ? 'text-red-600 bg-red-50 border-red-200' :
+        <div className={`text-sm px-4 py-2 rounded-lg border ${inputs.length >= 30 ? 'text-red-600 bg-red-50 border-red-200' :
           inputs.length >= 25 ? 'text-yellow-600 bg-yellow-50 border-yellow-200' :
-          inputs.length > 0 ? 'text-blue-600 bg-blue-50 border-blue-200' :
-          'text-gray-500 bg-gray-50 border-gray-200'
-        }`}>
-          📋 {inputs.length > 0 ? 
-            `${inputs.length}/30枚選択中` : 
+            inputs.length > 0 ? 'text-blue-600 bg-blue-50 border-blue-200' :
+              'text-gray-500 bg-gray-50 border-gray-200'
+          }`}>
+          {inputs.length > 0 ?
+            `${inputs.length}/30枚選択中` :
             '最大30枚まで同時処理可能です'
           }
         </div>
@@ -1959,7 +1956,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
               }}
               className={`cursor-pointer rounded-lg border-2 ${!selectedTemplate ? 'border-blue-500 ring-2 ring-blue-300' : 'border-gray-200 hover:border-blue-400'} overflow-hidden relative aspect-square flex items-center justify-center bg-gray-100 transition-all`}
             >
-              <div className="absolute inset-0" style={{backgroundImage: 'linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)', backgroundSize: '20px 20px', backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px' }}></div>
+              <div className="absolute inset-0" style={{ backgroundImage: 'linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)', backgroundSize: '20px 20px', backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px' }}></div>
               <span className="relative z-10 text-sm font-medium text-gray-600 bg-white bg-opacity-75 px-2 py-1 rounded">なし</span>
             </div>
             {/* カラーピッカー */}
@@ -2008,7 +2005,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
           </div>
         </div>
       )}
-      
+
       {/* 選択されたファイルリスト */}
       {inputs.length > 0 && (
         <div ref={sectionFilesRef} className="space-y-4 pt-6">
@@ -2016,24 +2013,23 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
 
           <ul className="flex flex-col gap-4 list-none p-0 m-0">
             {inputs.map(input => {
-              const processingTime = input.startTime && input.endTime 
-                ? ((input.endTime - input.startTime) / 1000).toFixed(1) 
+              const processingTime = input.startTime && input.endTime
+                ? ((input.endTime - input.startTime) / 1000).toFixed(1)
                 : null;
               // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const currentTime = input.startTime && !input.endTime 
-                ? ((Date.now() - input.startTime) / 1000).toFixed(1) 
+              const currentTime = input.startTime && !input.endTime
+                ? ((Date.now() - input.startTime) / 1000).toFixed(1)
                 : null;
               const showComparison = input.status === 'completed' && input.outputUrl && input.previewUrl;
-              
-              return (
-                <li key={input.id} className={`p-4 sm:p-5 transition-all duration-300 ease-in-out relative rounded-xl border border-gray-200 shadow-sm ${
-                  input.status === 'completed' ? 'bg-emerald-50/60 border-l-4 border-l-emerald-500' :
-                  input.status === 'error' ? 'bg-red-50/80 border-l-4 border-l-red-400' :
-                  input.status === 'processing' || input.status === 'uploading' ? 'bg-sky-50/80 border-l-4 border-l-sky-400' :
-                  'bg-white'
-                }`}>
 
-                  
+              return (
+                <li key={input.id} className={`p-4 sm:p-5 transition-all duration-300 ease-in-out relative rounded-xl border border-gray-200 shadow-sm ${input.status === 'completed' ? 'bg-emerald-50/60 border-l-4 border-l-emerald-500' :
+                  input.status === 'error' ? 'bg-red-50/80 border-l-4 border-l-red-400' :
+                    input.status === 'processing' || input.status === 'uploading' ? 'bg-sky-50/80 border-l-4 border-l-sky-400' :
+                      'bg-white'
+                  }`}>
+
+
                   <div className="flex items-start space-x-3">
                     <div
                       className="flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden flex items-center justify-center relative bg-gray-100"
@@ -2048,16 +2044,16 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                       {(input.status === 'uploading' || input.status === 'processing') && (
                         <div className="absolute inset-0 bg-blue-400 opacity-20 animate-pulse rounded"></div>
                       )}
-                      
+
                       {input.outputUrl ? (
-                        <img 
-                          src={input.outputUrl} 
+                        <img
+                          src={input.outputUrl}
                           alt={`処理済み ${input.name}`}
                           className="object-contain w-full h-full relative z-10"
                         />
                       ) : input.previewUrl && (input.status === 'ready' || input.status === 'uploading' || input.status === 'processing' || input.status === 'completed') ? (
-                        <img 
-                          src={input.previewUrl} 
+                        <img
+                          src={input.previewUrl}
                           alt={`プレビュー ${input.name}`}
                           className="object-contain w-full h-full relative z-10"
                           onError={(e) => {
@@ -2092,9 +2088,9 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                         <div className="flex flex-col items-center justify-center text-blue-600 relative z-10">
                           <div className="animate-pulse">
                             <div className="flex space-x-1">
-                              <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
-                              <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
-                              <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
+                              <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                              <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                              <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
                             </div>
                           </div>
                           <span className="text-xs font-medium mt-1">処理中</span>
@@ -2126,14 +2122,13 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                         )}
 
                       </div>
-                      
+
                       <div className="flex items-center space-x-2">
-                        <p className={`text-xs font-medium ${
-                          input.status === 'error' ? 'text-red-700' :
+                        <p className={`text-xs font-medium ${input.status === 'error' ? 'text-red-700' :
                           input.status === 'completed' ? 'text-emerald-700' :
-                          input.status === 'processing' || input.status === 'uploading' ? 'text-sky-600' :
-                          'text-gray-500'
-                        }`}>
+                            input.status === 'processing' || input.status === 'uploading' ? 'text-sky-600' :
+                              'text-gray-500'
+                          }`}>
                           {input.status === 'pending' && (
                             <span className="flex items-center">
                               <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2165,9 +2160,9 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                           {input.status === 'processing' && (
                             <span className="flex items-center">
                               <div className="flex space-x-1 mr-2">
-                                <div className="w-1 h-1 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
-                                <div className="w-1 h-1 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '100ms'}}></div>
-                                <div className="w-1 h-1 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '200ms'}}></div>
+                                <div className="w-1 h-1 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                                <div className="w-1 h-1 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '100ms' }}></div>
+                                <div className="w-1 h-1 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '200ms' }}></div>
                               </div>
                               AI背景除去中...
                             </span>
@@ -2233,127 +2228,126 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                       </div>
                     </div>
                   )}
-                  
+
                   {/* ボタンエリア - スマホでは下に配置 */}
                   {(input.outputUrl && input.status === 'completed') || input.status === 'error' ? (
                     <div className={`mt-4 pt-3 border-t ${input.status === 'completed' ? 'border-emerald-200/60' : 'border-red-200/60'}`}>
                       {input.outputUrl && input.status === 'completed' && isPro && (
                         <div className="mb-3 rounded-xl border p-3 border-purple-200 bg-purple-50">
                           <p className="text-sm font-semibold text-gray-900">
-                            {input.lastProcessingMode === 'pro_high_precision' ? 'アップスケール' : 'Pro機能'}
+                            {input.lastProcessingMode === 'pro_high_precision' ? '高画質化（拡大）' : 'Pro機能'}
                           </p>
                           <p className="text-xs text-gray-600 mt-1">
                             {input.lastProcessingMode === 'pro_high_precision'
                               ? '画像を拡大して高解像度にできます。サイズを選んでから実行してください。'
-                              : '高精度で再処理したあと、アップスケールもできます。'}
+                              : '高精度で再処理したあと、高画質化（拡大）もできます。'}
                           </p>
                           <div className="mt-3 flex flex-wrap gap-2">
-                              <>
-                                {input.lastProcessingMode !== 'pro_high_precision' && (
-                                  <button
-                                    type="button"
-                                    onClick={() => { void handleRemakeWithOriginal(input, 'edge_cleanup'); }}
-                                    disabled={batchEnhanceState.inProgress || enhancingFileId === input.id}
-                                    className="inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-60"
-                                  >
-                                    {enhancingFileId === input.id ? '再処理中…' : '高精度で再処理'}
-                                  </button>
-                                )}
-                                {enhancingFileId === input.id && pendingEnhance?.fileId !== input.id && (
-                                  <div className="flex items-center gap-2 w-full py-1">
-                                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-purple-600 border-t-transparent" />
-                                    <span className="text-xs text-purple-700 font-medium">アップスケール処理中…</span>
+                            <>
+                              {input.lastProcessingMode !== 'pro_high_precision' && (
+                                <button
+                                  type="button"
+                                  onClick={() => { void handleRemakeWithOriginal(input, 'edge_cleanup'); }}
+                                  disabled={batchEnhanceState.inProgress || enhancingFileId === input.id}
+                                  className="inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-60"
+                                >
+                                  {enhancingFileId === input.id ? '再処理中…' : '高精度で再処理'}
+                                </button>
+                              )}
+                              {enhancingFileId === input.id && pendingEnhance?.fileId !== input.id && (
+                                <div className="flex items-center gap-2 w-full py-1">
+                                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-purple-600 border-t-transparent" />
+                                  <span className="text-xs text-purple-700 font-medium">高画質化処理中…</span>
+                                </div>
+                              )}
+                              {input.wasEnhanced && enhancingFileId !== input.id && (
+                                <div className="flex items-center gap-1.5 w-full py-1 px-2 rounded-md bg-green-50 border border-green-200">
+                                  <svg className="w-4 h-4 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                  </svg>
+                                  <span className="text-xs text-green-700 font-medium">高画質化完了</span>
+                                </div>
+                              )}
+                              {enhancingFileId !== input.id && (
+                                <>
+                                  {input.outputWidth && input.outputHeight && (
+                                    <p className="text-xs text-gray-500">現在のサイズ: {input.outputWidth}×{input.outputHeight}px</p>
+                                  )}
+                                  <div className="inline-flex rounded-lg border border-purple-200 overflow-hidden">
+                                    {(['1k', '2k', '4k'] as EnhanceTarget[]).map((target) => {
+                                      const targetPx = toEnhanceLongSide(target);
+                                      const alreadyLargeEnough = (input.outputLongSide ?? 0) >= targetPx;
+                                      const isSelected = pendingEnhance?.fileId === input.id && pendingEnhance.target === target;
+                                      const afterDims = (input.outputWidth && input.outputHeight)
+                                        ? computeUpscaledDimensions(input.outputWidth, input.outputHeight, target)
+                                        : null;
+                                      const titleText = alreadyLargeEnough
+                                        ? `既に${target.toUpperCase()}以上のサイズです`
+                                        : afterDims
+                                          ? `${afterDims.width}×${afterDims.height}px に高画質化（拡大）`
+                                          : `${target.toUpperCase()}に高画質化（拡大）`;
+                                      return (
+                                        <button
+                                          key={target}
+                                          type="button"
+                                          onClick={() => {
+                                            if (isSelected) {
+                                              setPendingEnhance(null);
+                                            } else {
+                                              setPendingEnhance({ fileId: input.id, target });
+                                            }
+                                          }}
+                                          disabled={batchEnhanceState.inProgress || alreadyLargeEnough}
+                                          title={titleText}
+                                          className={`px-3 py-2 text-sm font-medium border-r last:border-r-0 border-purple-200 transition-colors ${isSelected
+                                            ? 'bg-purple-600 text-white'
+                                            : alreadyLargeEnough
+                                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                              : 'bg-white text-purple-700 hover:bg-purple-100'
+                                            } disabled:opacity-60`}
+                                        >
+                                          {target === '1k' ? '1K' : target === '2k' ? '2K' : '4K'}
+                                          {alreadyLargeEnough && ' ✓'}
+                                        </button>
+                                      );
+                                    })}
                                   </div>
-                                )}
-                                {input.wasEnhanced && enhancingFileId !== input.id && (
-                                  <div className="flex items-center gap-1.5 w-full py-1 px-2 rounded-md bg-green-50 border border-green-200">
-                                    <svg className="w-4 h-4 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                    </svg>
-                                    <span className="text-xs text-green-700 font-medium">アップスケール完了</span>
-                                  </div>
-                                )}
-                                {enhancingFileId !== input.id && (
-                                  <>
-                                    {input.outputWidth && input.outputHeight && (
-                                      <p className="text-xs text-gray-500">現在のサイズ: {input.outputWidth}×{input.outputHeight}px</p>
-                                    )}
-                                    <div className="inline-flex rounded-lg border border-purple-200 overflow-hidden">
-                                      {(['1k', '2k', '4k'] as EnhanceTarget[]).map((target) => {
-                                        const targetPx = toEnhanceLongSide(target);
-                                        const alreadyLargeEnough = (input.outputLongSide ?? 0) >= targetPx;
-                                        const isSelected = pendingEnhance?.fileId === input.id && pendingEnhance.target === target;
-                                        const afterDims = (input.outputWidth && input.outputHeight)
-                                          ? computeUpscaledDimensions(input.outputWidth, input.outputHeight, target)
-                                          : null;
-                                        const titleText = alreadyLargeEnough
-                                          ? `既に${target.toUpperCase()}以上のサイズです`
-                                          : afterDims
-                                            ? `${afterDims.width}×${afterDims.height}px にアップスケール`
-                                            : `${target.toUpperCase()}にアップスケール`;
-                                        return (
+                                  {pendingEnhance?.fileId === input.id && (() => {
+                                    const cur = { w: input.outputWidth ?? 0, h: input.outputHeight ?? 0 };
+                                    const after = computeUpscaledDimensions(cur.w, cur.h, pendingEnhance.target);
+                                    return (
+                                      <div className="flex flex-col gap-1.5">
+                                        <p className="text-xs text-gray-600">
+                                          <span className="font-medium">{cur.w}×{cur.h}</span>
+                                          <span className="mx-1.5 text-purple-400">→</span>
+                                          <span className="font-bold text-purple-700">{after.width}×{after.height}</span>
+                                        </p>
+                                        <div className="flex items-center gap-2">
                                           <button
-                                            key={target}
                                             type="button"
                                             onClick={() => {
-                                              if (isSelected) {
-                                                setPendingEnhance(null);
-                                              } else {
-                                                setPendingEnhance({ fileId: input.id, target });
-                                              }
+                                              const t = pendingEnhance.target;
+                                              setPendingEnhance(null);
+                                              void handleEnhanceForFile(input, t);
                                             }}
-                                            disabled={batchEnhanceState.inProgress || alreadyLargeEnough}
-                                            title={titleText}
-                                            className={`px-3 py-2 text-sm font-medium border-r last:border-r-0 border-purple-200 transition-colors ${
-                                              isSelected
-                                                ? 'bg-purple-600 text-white'
-                                                : alreadyLargeEnough
-                                                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                                  : 'bg-white text-purple-700 hover:bg-purple-100'
-                                            } disabled:opacity-60`}
+                                            className="inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700"
                                           >
-                                            {target === '1k' ? '1K' : target === '2k' ? '2K' : '4K'}
-                                            {alreadyLargeEnough && ' ✓'}
+                                            {pendingEnhance.target.toUpperCase()}に高画質化を実行
                                           </button>
-                                        );
-                                      })}
-                                    </div>
-                                    {pendingEnhance?.fileId === input.id && (() => {
-                                      const cur = { w: input.outputWidth ?? 0, h: input.outputHeight ?? 0 };
-                                      const after = computeUpscaledDimensions(cur.w, cur.h, pendingEnhance.target);
-                                      return (
-                                        <div className="flex flex-col gap-1.5">
-                                          <p className="text-xs text-gray-600">
-                                            <span className="font-medium">{cur.w}×{cur.h}</span>
-                                            <span className="mx-1.5 text-purple-400">→</span>
-                                            <span className="font-bold text-purple-700">{after.width}×{after.height}</span>
-                                          </p>
-                                          <div className="flex items-center gap-2">
-                                            <button
-                                              type="button"
-                                              onClick={() => {
-                                                const t = pendingEnhance.target;
-                                                setPendingEnhance(null);
-                                                void handleEnhanceForFile(input, t);
-                                              }}
-                                              className="inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700"
-                                            >
-                                              {pendingEnhance.target.toUpperCase()}にアップスケール実行
-                                            </button>
-                                            <button
-                                              type="button"
-                                              onClick={() => setPendingEnhance(null)}
-                                              className="text-xs text-gray-500 hover:text-gray-700"
-                                            >
-                                              キャンセル
-                                            </button>
-                                          </div>
+                                          <button
+                                            type="button"
+                                            onClick={() => setPendingEnhance(null)}
+                                            className="text-xs text-gray-500 hover:text-gray-700"
+                                          >
+                                            キャンセル
+                                          </button>
                                         </div>
-                                      );
-                                    })()}
-                                  </>
-                                )}
-                              </>
+                                      </div>
+                                    );
+                                  })()}
+                                </>
+                              )}
+                            </>
                           </div>
                         </div>
                       )}
@@ -2378,13 +2372,13 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                               className="flex-1 sm:flex-none"
                             >
                               <PrimaryButton variant="primary" size="sm" className="w-full sm:w-auto">
-                                {input.wasEnhanced ? 'アップスケールを保存' : '保存'}
+                                {input.wasEnhanced ? '高画質化して保存' : '保存'}
                               </PrimaryButton>
                             </a>
                           )}
                           {/* イージートリミングで編集ボタン - Linkを使用 */}
                           {input.boundingBox && input.outputUrl && (
-                            <Link 
+                            <Link
                               href="/trim"
                               onClick={() => {
                                 // localStorageに画像URLとバウンディングボックスを保存
@@ -2406,10 +2400,10 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                         </div>
                       )}
                       {input.status === 'error' && (
-                        <button 
+                        <button
                           onClick={() => {
                             updateInputStatus(input.id, 'ready', undefined);
-                            setMsg(null); 
+                            setMsg(null);
                           }}
                           className="w-full sm:w-auto px-3 py-1.5 rounded-md text-sm font-medium text-white bg-yellow-500 hover:bg-yellow-600 transition-colors"
                           title="このファイルで再試行（エラークリア）"
@@ -2443,7 +2437,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
             ) : `選択した画像（${inputs.filter(i => i.status === 'ready').length}枚）の背景を透過する`}
           </PrimaryButton>
         )}
-        
+
         {/* エラーファイル一括再処理ボタン */}
         {inputs.filter(i => i.status === 'error').length > 0 && !busy && (
           <PrimaryButton
@@ -2466,35 +2460,35 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
             </span>
           </PrimaryButton>
         )}
-        
+
         {inputs.filter(input => input.status === 'completed').length > 1 && (
           <>
             {!isPro && hasCompletedResults && (
-              <div className="rounded-xl border border-indigo-300 bg-gradient-to-br from-blue-50 to-indigo-50 p-4 text-left">
-                <p className="text-sm font-bold text-indigo-800">
+              <div className="rounded-xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50/80 p-4 text-left shadow-sm">
+                <p className="text-sm font-bold text-amber-900">
                   Proならもっときれいに仕上がります
                 </p>
-                <p className="text-xs text-indigo-600 mt-1">月額780円で高精度＋プレミアムAIが使えます</p>
-                <div className="mt-2 space-y-2">
-                  <div className="flex items-start gap-2">
-                    <span className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold">1</span>
+                <p className="text-xs text-amber-700 mt-1 font-medium">月額780円で高精度＋プレミアムAIが使えます</p>
+                <div className="mt-3 space-y-2.5">
+                  <div className="flex items-start gap-2.5">
+                    <span className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-bold">1</span>
                     <div>
                       <p className="text-xs font-semibold text-gray-900">高精度透過</p>
-                      <p className="text-xs text-gray-600">髪の毛やフチまできれいに切り抜き</p>
+                      <p className="text-[11px] text-gray-600 mt-0.5">髪の毛やフチまできれいに切り抜き</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-2">
-                    <span className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold">2</span>
+                  <div className="flex items-start gap-2.5">
+                    <span className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-bold">2</span>
                     <div>
-                      <p className="text-xs font-semibold text-gray-900">アップスケール</p>
-                      <p className="text-xs text-gray-600">最大4K（3840px）まで拡大・高解像度化</p>
+                      <p className="text-xs font-semibold text-gray-900">高画質化（拡大）</p>
+                      <p className="text-[11px] text-gray-600 mt-0.5">最大4K（3840px）まで拡大してさらに綺麗に</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-2">
-                    <span className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold">3</span>
+                  <div className="flex items-start gap-2.5">
+                    <span className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-bold">3</span>
                     <div>
                       <p className="text-xs font-semibold text-gray-900">元画質を維持</p>
-                      <p className="text-xs text-gray-600">写真を圧縮せずそのまま処理</p>
+                      <p className="text-[11px] text-gray-600 mt-0.5">写真を圧縮せずそのまま処理</p>
                     </div>
                   </div>
                 </div>
@@ -2509,7 +2503,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
             )}
             {isPro && !batchEnhanceState.inProgress && (
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs text-gray-600 font-medium">一括アップスケール:</span>
+                <span className="text-xs text-gray-600 font-medium">一括高画質化（拡大）:</span>
                 <div className="inline-flex rounded-lg border border-purple-200 overflow-hidden">
                   {(['1k', '2k', '4k'] as EnhanceTarget[]).map((target) => {
                     const targetPx = toEnhanceLongSide(target);
@@ -2523,14 +2517,13 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                         type="button"
                         onClick={() => setPendingBatchTarget(isSelected ? null : target)}
                         disabled={busy || eligibleCount === 0}
-                        title={eligibleCount === 0 ? `全画像が既に${target.toUpperCase()}以上です` : `${eligibleCount}枚を${target.toUpperCase()}にアップスケール`}
-                        className={`px-3 py-2 text-sm font-semibold border-r last:border-r-0 border-purple-200 transition-colors ${
-                          isSelected
-                            ? 'bg-purple-600 text-white'
-                            : eligibleCount === 0
-                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                              : 'bg-white text-purple-700 hover:bg-purple-50'
-                        } disabled:opacity-60`}
+                        title={eligibleCount === 0 ? `全画像が既に${target.toUpperCase()}以上です` : `${eligibleCount}枚を${target.toUpperCase()}に高画質化（拡大）`}
+                        className={`px-3 py-2 text-sm font-semibold border-r last:border-r-0 border-purple-200 transition-colors ${isSelected
+                          ? 'bg-purple-600 text-white'
+                          : eligibleCount === 0
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-white text-purple-700 hover:bg-purple-50'
+                          } disabled:opacity-60`}
                       >
                         {target === '1k' ? '1K' : target === '2k' ? '2K' : '4K'}
                       </button>
@@ -2553,7 +2546,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                           onClick={() => { void handleBatchEnhance(pendingBatchTarget); }}
                           className="inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700"
                         >
-                          {eligible.length}枚を{pendingBatchTarget.toUpperCase()}にアップスケール実行
+                          {eligible.length}枚を{pendingBatchTarget.toUpperCase()}に高画質化を実行
                         </button>
                         <button
                           type="button"
@@ -2584,7 +2577,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
               const parts = (['4k', '2k', '1k'] as const)
                 .filter(t => enhancedByTarget[t] > 0)
                 .map(t => `${enhancedByTarget[t]}枚を${t.toUpperCase()}`);
-              const upscaleSummary = parts.length > 0 ? parts.join('、') + 'にアップスケール済み' : null;
+              const upscaleSummary = parts.length > 0 ? parts.join('、') + 'に高画質化済み' : null;
               return (
                 <div className="flex w-full flex-col items-center gap-1">
                   {upscaleSummary && (
@@ -2616,7 +2609,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
         </div>
       )}
 
-      {/* 処理中・アップスケール中モーダル */}
+      {/* 処理中・高画質化中モーダル */}
       {(busy || enhancingFileId || batchEnhanceState.inProgress) && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center px-4" role="dialog" aria-modal="true" aria-labelledby="processing-modal-title">
           <div
@@ -2670,7 +2663,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
             ) : batchEnhanceState.inProgress ? (
               <>
                 <h2 id="processing-modal-title" className="text-lg font-bold text-gray-900 mb-4">
-                  一括アップスケール中
+                  一括高画質化（拡大）中
                 </h2>
                 <div className="flex items-center gap-3 mb-4">
                   <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-500 border-t-transparent flex-shrink-0" />
@@ -2700,7 +2693,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                 return (
                   <>
                     <h2 id="processing-modal-title" className="text-lg font-bold text-gray-900 mb-4">
-                      アップスケール中
+                      高画質化（拡大）中
                     </h2>
                     <div className="flex items-center gap-3">
                       <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-500 border-t-transparent flex-shrink-0" />
@@ -2737,144 +2730,142 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
       {!isCtaVisible && inputs.length > 0 && !busy && (
         inputs.some(i => i.status === 'ready') || inputs.filter(i => i.status === 'completed').length > 1
       ) && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-md border-t border-gray-200 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-          <div className="max-w-3xl mx-auto space-y-2">
-            {inputs.some(i => i.status === 'ready') && (
-              <>
-                <div className="flex flex-wrap items-center justify-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => scrollToSectionWithHeaderOffset(sectionModeRef.current)}
-                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium cursor-pointer hover:opacity-80 transition-opacity ${
-                      selectedProcessingMode === 'pro_high_precision'
+          <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-md border-t border-gray-200 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+            <div className="max-w-3xl mx-auto space-y-2">
+              {inputs.some(i => i.status === 'ready') && (
+                <>
+                  <div className="flex flex-wrap items-center justify-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => scrollToSectionWithHeaderOffset(sectionModeRef.current)}
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium cursor-pointer hover:opacity-80 transition-opacity ${selectedProcessingMode === 'pro_high_precision'
                         ? 'bg-amber-50 border border-amber-200 text-amber-700'
                         : 'bg-gray-50 border border-gray-200 text-gray-600'
-                    }`}
+                        }`}
+                    >
+                      仕上：{selectedProcessingMode === 'standard' ? '標準' : '高精度'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => scrollToSectionWithHeaderOffset(sectionSizeRef.current)}
+                      className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-gray-50 border border-gray-200 text-gray-600 cursor-pointer hover:opacity-80 transition-opacity"
+                    >
+                      サイズ：{{ '1:1': '1:1', '16:9': '16:9', '4:3': '4:3', 'original': '元画像', 'fit-subject': 'フィット' }[selectedRatio] ?? selectedRatio}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => scrollToSectionWithHeaderOffset(sectionBgRef.current)}
+                      className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-gray-50 border border-gray-200 text-gray-600 cursor-pointer hover:opacity-80 transition-opacity"
+                    >
+                      背景：{selectedTemplate ? (templates.find(t => t.src === selectedTemplate)?.name ?? 'カスタム色') : '透過'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => scrollToSectionWithHeaderOffset(sectionFilesRef.current)}
+                      className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 border border-blue-200 text-blue-700 cursor-pointer hover:opacity-80 transition-opacity"
+                    >
+                      {inputs.filter(i => i.status === 'ready').length}/30枚
+                    </button>
+                  </div>
+                  <PrimaryButton
+                    onClick={() => void handleRemove()}
+                    disabled={inputs.filter(i => i.status === 'ready').length === 0}
                   >
-                    仕上：{selectedProcessingMode === 'standard' ? '標準' : '高精度'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => scrollToSectionWithHeaderOffset(sectionSizeRef.current)}
-                    className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-gray-50 border border-gray-200 text-gray-600 cursor-pointer hover:opacity-80 transition-opacity"
-                  >
-                    サイズ：{{ '1:1': '1:1', '16:9': '16:9', '4:3': '4:3', 'original': '元画像', 'fit-subject': 'フィット' }[selectedRatio] ?? selectedRatio}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => scrollToSectionWithHeaderOffset(sectionBgRef.current)}
-                    className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-gray-50 border border-gray-200 text-gray-600 cursor-pointer hover:opacity-80 transition-opacity"
-                  >
-                    背景：{selectedTemplate ? (templates.find(t => t.src === selectedTemplate)?.name ?? 'カスタム色') : '透過'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => scrollToSectionWithHeaderOffset(sectionFilesRef.current)}
-                    className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 border border-blue-200 text-blue-700 cursor-pointer hover:opacity-80 transition-opacity"
-                  >
-                    {inputs.filter(i => i.status === 'ready').length}/30枚
-                  </button>
-                </div>
-                <PrimaryButton
-                  onClick={() => void handleRemove()}
-                  disabled={inputs.filter(i => i.status === 'ready').length === 0}
-                >
-                  選択した画像（{inputs.filter(i => i.status === 'ready').length}枚）の背景を透過する
-                </PrimaryButton>
-              </>
-            )}
-            {!inputs.some(i => i.status === 'ready') && inputs.filter(i => i.status === 'completed').length > 1 && (
-              <>
-                {(() => {
-                  const enhancedByTarget = inputs
-                    .filter(i => i.status === 'completed' && i.wasEnhanced && (i.outputLongSide ?? 0) >= 1024)
-                    .reduce<Record<EnhanceTarget, number>>(
-                      (acc, i) => {
-                        const long = i.outputLongSide ?? 0;
-                        if (long >= toEnhanceLongSide('4k')) acc['4k'] = (acc['4k'] ?? 0) + 1;
-                        else if (long >= toEnhanceLongSide('2k')) acc['2k'] = (acc['2k'] ?? 0) + 1;
-                        else if (long >= toEnhanceLongSide('1k')) acc['1k'] = (acc['1k'] ?? 0) + 1;
-                        return acc;
-                      },
-                      { '1k': 0, '2k': 0, '4k': 0 }
-                    );
-                  const parts = (['4k', '2k', '1k'] as const)
-                    .filter(t => enhancedByTarget[t] > 0)
-                    .map(t => `${enhancedByTarget[t]}枚を${t.toUpperCase()}`);
-                  const upscaleSummary = parts.length > 0 ? parts.join('、') + 'にアップスケール済み' : null;
-                  return upscaleSummary ? (
-                    <p className="text-center text-[11px] font-medium text-gray-600">
-                      {upscaleSummary}
-                    </p>
-                  ) : null;
-                })()}
-                {isPro && !batchEnhanceState.inProgress && (
-                  <div className="rounded-lg border border-purple-200 bg-purple-50/70 p-2.5 space-y-2">
-                    <p className="text-[11px] font-semibold text-purple-700">一括アップスケール（Pro）</p>
-                    <div className="inline-flex w-full rounded-lg border border-purple-200 overflow-hidden">
-                      {(['1k', '2k', '4k'] as EnhanceTarget[]).map((target) => {
-                        const targetPx = toEnhanceLongSide(target);
-                        const eligibleCount = inputs.filter(
-                          i => i.status === 'completed' && (i.highQualityOutputUrl || i.outputUrl) && (i.outputLongSide ?? 0) < targetPx
-                        ).length;
-                        const isSelected = pendingBatchTarget === target;
-                        return (
-                          <button
-                            key={`sticky-batch-${target}`}
-                            type="button"
-                            onClick={() => setPendingBatchTarget(isSelected ? null : target)}
-                            disabled={busy || eligibleCount === 0}
-                            className={`flex-1 px-2 py-1.5 text-xs font-semibold border-r last:border-r-0 border-purple-200 transition-colors ${
-                              isSelected
+                    選択した画像（{inputs.filter(i => i.status === 'ready').length}枚）の背景を透過する
+                  </PrimaryButton>
+                </>
+              )}
+              {!inputs.some(i => i.status === 'ready') && inputs.filter(i => i.status === 'completed').length > 1 && (
+                <>
+                  {(() => {
+                    const enhancedByTarget = inputs
+                      .filter(i => i.status === 'completed' && i.wasEnhanced && (i.outputLongSide ?? 0) >= 1024)
+                      .reduce<Record<EnhanceTarget, number>>(
+                        (acc, i) => {
+                          const long = i.outputLongSide ?? 0;
+                          if (long >= toEnhanceLongSide('4k')) acc['4k'] = (acc['4k'] ?? 0) + 1;
+                          else if (long >= toEnhanceLongSide('2k')) acc['2k'] = (acc['2k'] ?? 0) + 1;
+                          else if (long >= toEnhanceLongSide('1k')) acc['1k'] = (acc['1k'] ?? 0) + 1;
+                          return acc;
+                        },
+                        { '1k': 0, '2k': 0, '4k': 0 }
+                      );
+                    const parts = (['4k', '2k', '1k'] as const)
+                      .filter(t => enhancedByTarget[t] > 0)
+                      .map(t => `${enhancedByTarget[t]}枚を${t.toUpperCase()}`);
+                    const upscaleSummary = parts.length > 0 ? parts.join('、') + 'に高画質化済み' : null;
+                    return upscaleSummary ? (
+                      <p className="text-center text-[11px] font-medium text-gray-600">
+                        {upscaleSummary}
+                      </p>
+                    ) : null;
+                  })()}
+                  {isPro && !batchEnhanceState.inProgress && (
+                    <div className="rounded-lg border border-purple-200 bg-purple-50/70 p-2.5 space-y-2">
+                      <p className="text-[11px] font-semibold text-purple-700">一括高画質化（Pro）</p>
+                      <div className="inline-flex w-full rounded-lg border border-purple-200 overflow-hidden">
+                        {(['1k', '2k', '4k'] as EnhanceTarget[]).map((target) => {
+                          const targetPx = toEnhanceLongSide(target);
+                          const eligibleCount = inputs.filter(
+                            i => i.status === 'completed' && (i.highQualityOutputUrl || i.outputUrl) && (i.outputLongSide ?? 0) < targetPx
+                          ).length;
+                          const isSelected = pendingBatchTarget === target;
+                          return (
+                            <button
+                              key={`sticky-batch-${target}`}
+                              type="button"
+                              onClick={() => setPendingBatchTarget(isSelected ? null : target)}
+                              disabled={busy || eligibleCount === 0}
+                              className={`flex-1 px-2 py-1.5 text-xs font-semibold border-r last:border-r-0 border-purple-200 transition-colors ${isSelected
                                 ? 'bg-purple-600 text-white'
                                 : eligibleCount === 0
                                   ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                   : 'bg-white text-purple-700 hover:bg-purple-100'
-                            }`}
+                                }`}
+                            >
+                              {target === '1k' ? '1K' : target === '2k' ? '2K' : '4K'}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {pendingBatchTarget && (() => {
+                        const targetPx = toEnhanceLongSide(pendingBatchTarget);
+                        const eligible = inputs.filter(
+                          i => i.status === 'completed' && (i.highQualityOutputUrl || i.outputUrl) && (i.outputLongSide ?? 0) < targetPx
+                        );
+                        if (eligible.length === 0) return null;
+                        return (
+                          <button
+                            type="button"
+                            onClick={() => { void handleBatchEnhance(pendingBatchTarget); }}
+                            className="w-full inline-flex items-center justify-center px-3 py-2 rounded-lg text-xs font-semibold text-white bg-purple-600 hover:bg-purple-700"
                           >
-                            {target === '1k' ? '1K' : target === '2k' ? '2K' : '4K'}
+                            {eligible.length}枚を{pendingBatchTarget.toUpperCase()}に高画質化
                           </button>
                         );
-                      })}
+                      })()}
                     </div>
-                    {pendingBatchTarget && (() => {
-                      const targetPx = toEnhanceLongSide(pendingBatchTarget);
-                      const eligible = inputs.filter(
-                        i => i.status === 'completed' && (i.highQualityOutputUrl || i.outputUrl) && (i.outputLongSide ?? 0) < targetPx
-                      );
-                      if (eligible.length === 0) return null;
-                      return (
-                        <button
-                          type="button"
-                          onClick={() => { void handleBatchEnhance(pendingBatchTarget); }}
-                          className="w-full inline-flex items-center justify-center px-3 py-2 rounded-lg text-xs font-semibold text-white bg-purple-600 hover:bg-purple-700"
-                        >
-                          {eligible.length}枚を{pendingBatchTarget.toUpperCase()}にアップスケール
-                        </button>
-                      );
-                    })()}
-                  </div>
-                )}
-                {!isPro && (
-                  <div className="rounded-lg border border-amber-200 bg-amber-50/70 p-2.5">
-                    <p className="text-[11px] text-amber-700 mb-2">Proならアップスケール、高精度モードが使えます</p>
-                    <button
-                      type="button"
-                      onClick={() => goToProPurchase('sticky_download_upsell')}
-                      className="w-full inline-flex items-center justify-center px-3 py-2 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600"
-                    >
-                      Proでアップスケールする
-                    </button>
-                  </div>
-                )}
-                <PrimaryButton onClick={handleDownloadAll} disabled={batchEnhanceState.inProgress} variant="primary" className="w-full">
-                  すべてダウンロード (.zip)
-                </PrimaryButton>
-              </>
-            )}
+                  )}
+                  {!isPro && (
+                    <div className="rounded-lg border border-amber-200 bg-amber-50/70 p-2.5">
+                      <p className="text-[11px] text-amber-700 mb-2">Proなら高画質化（拡大）、高精度モードが使えます</p>
+                      <button
+                        type="button"
+                        onClick={() => goToProPurchase('sticky_download_upsell')}
+                        className="w-full inline-flex items-center justify-center px-3 py-2 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600"
+                      >
+                        Proで高画質化する
+                      </button>
+                    </div>
+                  )}
+                  <PrimaryButton onClick={handleDownloadAll} disabled={batchEnhanceState.inProgress} variant="primary" className="w-full">
+                    すべてダウンロード (.zip)
+                  </PrimaryButton>
+                </>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
     </div>
   );
 }

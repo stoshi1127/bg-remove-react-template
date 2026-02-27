@@ -14,13 +14,13 @@ type PricingTableProps = {
 const COMPARISON_ROWS: Array<{ label: string; free: string; pro: string }> = [
   { label: '料金', free: '無料', pro: '¥780/月' },
   { label: '広告', free: 'あり', pro: 'なし' },
-  { label: '髪の毛までくっきり切り抜き', free: '×', pro: '○' },
-  { label: '大きな写真もそのまま処理', free: '標準サイズ（スマホ写真等）', pro: '最大25MBの超高解像度まで対応' },
-  { label: '1K/2K/4Kまで拡大・高画質化', free: '×', pro: '○' },
+  { label: '高精度透過', free: '×', pro: '○' },
+  { label: '写真の処理', free: '最大4MB（4MB以上は圧縮）', pro: '最大25MBの超高解像度' },
+  { label: '高画質化機能', free: '×', pro: '○' },
   {
-    label: '好きな背景に合成',
-    free: 'テンプレート・単色のみ',
-    pro: 'テンプレート・単色・背景画像アップロード・プレミアムAI',
+    label: '背景合成',
+    free: 'テンプレート・単色',
+    pro: 'テンプレート・単色・任意背景・AI生成・自然な合成',
   },
   {
     label: 'プレミアムAI',
@@ -49,13 +49,13 @@ export default function PricingTable({
       <table className="w-full min-w-[280px] text-sm border-collapse">
         <thead>
           <tr>
-            <th className="text-left py-3 px-3 font-semibold text-gray-500 text-xs tracking-wider uppercase border-b border-gray-200">
+            <th className="py-3 px-3 font-semibold text-gray-500 text-s tracking-wider uppercase border-b border-gray-200 w-32 sm:w-36">
               機能・特徴
             </th>
-            <th className="text-center py-3 px-2 font-semibold text-gray-600 border-b border-gray-200 w-20 sm:w-28">
+            <th className="text-center py-3 px-2 font-semibold text-gray-600 border-b border-gray-200">
               <span className="bg-gray-100 text-gray-600 px-2.5 py-1 rounded-md text-xs font-medium">Free</span>
             </th>
-            <th className="text-center py-3 px-2 font-bold text-gray-900 border-b border-gray-200 w-24 sm:w-32 bg-gray-50/50">
+            <th className="text-center py-3 px-2 font-bold text-gray-900 border-b border-gray-200 bg-gray-50/50">
               <span className="bg-gray-900 text-white px-3 py-1 rounded-md text-xs font-medium shadow-sm">Pro</span>
             </th>
           </tr>

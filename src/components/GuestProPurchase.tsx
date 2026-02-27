@@ -2,6 +2,7 @@
 
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { trackAnalyticsEvent } from '@/lib/analytics/events';
 
 type GuestCheckoutResponse =
@@ -87,67 +88,70 @@ export default function GuestProPurchase({ open: controlledOpen, onOpenChange }:
         Proを購入する
       </button>
 
-      {open && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center px-4">
-          <div
-            className="fixed inset-0 bg-black/40"
-            onClick={() => !loading && setOpen(false)}
-            aria-hidden="true"
-          />
-          <div className="relative w-full max-w-md bg-white rounded-2xl shadow-xl border border-gray-200 p-6">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-lg font-bold text-gray-900">Proを購入する</h2>
-                <p className="text-sm font-semibold text-amber-700 mt-1">月額780円</p>
-                <p className="text-sm text-gray-600 mt-1">
-                  広告なし・高精度・大きな画像・プレミアムAIが使えます。メールアドレスを入力して購入に進みます。購入後は自動でログインします。
+      {open && typeof document !== 'undefined'
+        ? createPortal(
+          <div className="fixed inset-0 z-[120] flex items-center justify-center px-4">
+            <div
+              className="fixed inset-0 bg-black/40"
+              onClick={() => !loading && setOpen(false)}
+              aria-hidden="true"
+            />
+            <div className="relative w-full max-w-md bg-white rounded-2xl shadow-xl border border-gray-200 p-6 z-10">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h2 className="text-center text-lg font-bold text-gray-900">Proを購入する</h2>
+                  <p className="text-center text-3xl font-semibold text-amber-700 my-3">月額780円</p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    広告なし・高精度・大きな画像・プレミアムAIが使えます。メールアドレスを入力して購入に進みます。購入後は自動でログインします。
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => !loading && setOpen(false)}
+                  className="text-gray-400 hover:text-gray-700"
+                  aria-label="閉じる"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="mt-5 space-y-3">
+                <label className="block text-sm font-medium text-gray-700">
+                  メールアドレス
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="mt-1 block w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="you@example.com"
+                    disabled={loading}
+                  />
+                </label>
+
+                {message && (
+                  <div className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-xl p-3">
+                    {message}
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={submit}
+                  disabled={loading}
+                  className="w-full inline-flex items-center justify-center px-5 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 transition-colors disabled:opacity-60"
+                >
+                  {loading ? '準備中…' : '購入手続きへ進む'}
+                </button>
+
+                <p className="text-xs text-gray-500 leading-relaxed">
+                  すでにProの方は、上部メニューの「ログイン」からアカウントにアクセスしてください。
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => !loading && setOpen(false)}
-                className="text-gray-400 hover:text-gray-700"
-                aria-label="閉じる"
-              >
-                ×
-              </button>
             </div>
-
-            <div className="mt-5 space-y-3">
-              <label className="block text-sm font-medium text-gray-700">
-                メールアドレス
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="mt-1 block w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="you@example.com"
-                  disabled={loading}
-                />
-              </label>
-
-              {message && (
-                <div className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-xl p-3">
-                  {message}
-                </div>
-              )}
-
-              <button
-                type="button"
-                onClick={submit}
-                disabled={loading}
-                className="w-full inline-flex items-center justify-center px-5 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 transition-colors disabled:opacity-60"
-              >
-                {loading ? '準備中…' : '購入手続きへ進む'}
-              </button>
-
-              <p className="text-xs text-gray-500 leading-relaxed">
-                すでにProの方は、上部メニューの「ログイン」からアカウントにアクセスしてください。
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )
+        : null}
     </>
   );
 }
