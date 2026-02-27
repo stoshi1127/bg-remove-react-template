@@ -28,7 +28,8 @@ export default function ProCtaSection({ isLoggedIn }: ProCtaSectionProps) {
               高画質・無制限のProプラン
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto text-sm md:text-base leading-relaxed">
-              もっと綺麗に、もっと自由に。より高品質な画像加工を求める方へ。
+              もっと綺麗に、もっと自由に。より高品質な画像加工を求める方へ。<br />
+              Proは月額780円。広告なし・高精度・大きな画像・プレミアムAIが使えます。
             </p>
           </div>
 

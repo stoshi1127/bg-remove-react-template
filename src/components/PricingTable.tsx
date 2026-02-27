@@ -82,9 +82,6 @@ export default function PricingTable({
           ))}
         </tbody>
       </table>
-      <p className="mt-2 text-xs text-gray-500">
-        Proは月額780円。広告なし・高精度・大きな画像・プレミアムAIが使えます。
-      </p>
     </div>
   );
 }
