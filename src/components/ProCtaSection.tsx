@@ -51,18 +51,26 @@ export default function ProCtaSection({ isLoggedIn }: ProCtaSectionProps) {
           </div>
 
           {/* 簡易比較表 */}
-          <div className="mb-4 p-3 bg-white/70 rounded-xl border border-amber-100">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-semibold text-gray-800">FreeとProの違い</span>
-              <button
-                type="button"
-                onClick={() => setPricingModalOpen(true)}
-                className="text-sm font-medium text-amber-700 hover:text-amber-800 underline"
-              >
-                くわしく見る
-              </button>
+          <div className="mb-6 rounded-2xl bg-gradient-to-br from-amber-200 via-amber-100 to-orange-100 p-1 shadow-sm">
+            <div className="bg-white/95 backdrop-blur-sm rounded-xl p-4 md:p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-base font-bold text-gray-800 tracking-tight">FreeとProの違い</span>
+                  <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-900 bg-amber-100 rounded-full">Compare</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPricingModalOpen(true)}
+                  className="text-sm font-semibold text-amber-600 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
+                >
+                  くわしく見る
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+              <PricingTable variant="compact" source="top_cta" />
             </div>
-            <PricingTable variant="compact" source="top_cta" />
           </div>
 
           {!isLoggedIn ? (

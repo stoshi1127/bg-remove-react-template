@@ -11,7 +11,7 @@ type PricingTableProps = {
   className?: string;
 };
 
-const COMPARISON_ROWS = [
+const COMPARISON_ROWS: Array<{ label: string; free: string; pro: string }> = [
   { label: '料金', free: '無料', pro: '¥780/月' },
   { label: '広告', free: 'あり', pro: 'なし' },
   { label: '髪の毛までくっきり切り抜き', free: '×', pro: '○' },
@@ -27,7 +27,7 @@ const COMPARISON_ROWS = [
     free: '×',
     pro: '月30回（AIで背景を作る。消しゴムマジック・背景生成塗り足しも予定）',
   },
-] as const;
+];
 
 export default function PricingTable({
   variant = 'full',
@@ -49,24 +49,36 @@ export default function PricingTable({
       <table className="w-full min-w-[280px] text-sm border-collapse">
         <thead>
           <tr>
-            <th className="text-left py-2 px-3 font-semibold text-gray-700 border-b border-gray-200">
-              項目
+            <th className="text-left py-3 px-3 font-semibold text-gray-500 text-xs tracking-wider uppercase border-b border-gray-200">
+              機能・特徴
             </th>
-            <th className="text-center py-2 px-3 font-semibold text-gray-700 border-b border-gray-200 w-24">
-              無料
+            <th className="text-center py-3 px-2 font-semibold text-gray-600 border-b border-gray-200 w-20 sm:w-28">
+              <span className="bg-gray-100 text-gray-600 px-2.5 py-1 rounded-md text-xs font-medium">Free</span>
             </th>
-            <th className="text-center py-2 px-3 font-semibold text-amber-700 border-b border-amber-200 w-24 bg-amber-50/50">
-              Pro
+            <th className="text-center py-3 px-2 font-bold text-amber-700 border-b-2 border-amber-400 w-24 sm:w-32 bg-amber-50/80">
+              <div className="inline-flex items-center justify-center bg-gradient-to-r from-amber-500 to-orange-400 text-white px-3 py-1 rounded-full text-xs shadow-sm">
+                Pro
+              </div>
             </th>
           </tr>
         </thead>
         <tbody>
           {rows.map((row) => (
-            <tr key={row.label} className="border-b border-gray-100">
-              <td className="py-2 px-3 text-gray-800">{row.label}</td>
-              <td className="py-2 px-3 text-center text-gray-600">{row.free}</td>
-              <td className="py-2 px-3 text-center text-amber-800 font-medium bg-amber-50/30">
-                {row.pro}
+            <tr key={row.label} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
+              <td className="py-3 px-3 text-gray-700 text-xs sm:text-sm font-medium leading-relaxed">{row.label}</td>
+              <td className="py-3 px-2 text-center text-gray-500 text-xs sm:text-sm">
+                {row.free === '○' ? (
+                  <svg className="w-5 h-5 mx-auto text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                ) : row.free === '×' ? (
+                  <svg className="w-5 h-5 mx-auto text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                ) : row.free}
+              </td>
+              <td className="py-3 px-2 text-center text-amber-800 font-semibold bg-amber-50/50 text-xs sm:text-sm">
+                {row.pro === '○' ? (
+                  <svg className="w-5 h-5 mx-auto text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                ) : row.pro === '×' ? (
+                  <svg className="w-5 h-5 mx-auto text-amber-300/50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                ) : row.pro}
               </td>
             </tr>
           ))}
