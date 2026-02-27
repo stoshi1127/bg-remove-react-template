@@ -55,10 +55,8 @@ export default function PricingTable({
             <th className="text-center py-3 px-2 font-semibold text-gray-600 border-b border-gray-200 w-20 sm:w-28">
               <span className="bg-gray-100 text-gray-600 px-2.5 py-1 rounded-md text-xs font-medium">Free</span>
             </th>
-            <th className="text-center py-3 px-2 font-bold text-amber-700 border-b-2 border-amber-400 w-24 sm:w-32 bg-amber-50/80">
-              <div className="inline-flex items-center justify-center bg-gradient-to-r from-amber-500 to-orange-400 text-white px-3 py-1 rounded-full text-xs shadow-sm">
-                Pro
-              </div>
+            <th className="text-center py-3 px-2 font-bold text-gray-900 border-b border-gray-200 w-24 sm:w-32 bg-gray-50/50">
+              <span className="bg-gray-900 text-white px-3 py-1 rounded-md text-xs font-medium shadow-sm">Pro</span>
             </th>
           </tr>
         </thead>

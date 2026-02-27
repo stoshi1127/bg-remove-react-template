@@ -82,16 +82,9 @@ export default function GuestProPurchase({ open: controlledOpen, onOpenChange }:
       <button
         type="button"
         onClick={handleOpenClick}
-        className="relative group w-full inline-flex items-center justify-center px-8 py-4 rounded-xl font-bold text-white overflow-hidden shadow-lg transition-all hover:shadow-xl hover:-translate-y-0.5"
+        className="w-full inline-flex items-center justify-center px-6 py-4 rounded-xl font-semibold text-white bg-gray-900 hover:bg-gray-800 transition-colors shadow-sm text-base"
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 bg-[length:200%_auto] animate-gradient-x group-hover:scale-105 transition-transform duration-500"></div>
-        <div className="absolute inset-0 border-2 border-white/20 rounded-xl group-hover:border-white/40 transition-colors"></div>
-        <span className="relative flex items-center gap-2 text-lg tracking-wide">
-          Proを購入する
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-        </span>
+        Proを購入する
       </button>
 
       {open && (
