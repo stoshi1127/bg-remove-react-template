@@ -15,7 +15,7 @@ const COMPARISON_ROWS: Array<{ label: string; free: string; pro: string }> = [
   { label: '料金', free: '無料', pro: '¥780/月' },
   { label: '広告', free: 'あり', pro: 'なし' },
   { label: '髪の毛までくっきり切り抜き', free: '×', pro: '○' },
-  { label: '大きな写真もそのまま処理', free: '4MB/8MP目安', pro: '25MB/90MP目安' },
+  { label: '大きな写真もそのまま処理', free: '標準サイズ（スマホ写真等）', pro: '最大25MBの超高解像度まで対応' },
   { label: '1K/2K/4Kまで拡大・高画質化', free: '×', pro: '○' },
   {
     label: '好きな背景に合成',

@@ -22,7 +22,7 @@ export default function ProCtaSection({ isLoggedIn }: ProCtaSectionProps) {
   return (
     <>
       <div id="pro" className="animate-fade-in-up mb-12 scroll-mt-28">
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 md:p-8 lg:p-10 max-w-5xl mx-auto">
+        <div className="bg-gradient-to-br from-white via-amber-50/30 to-orange-50/50 rounded-2xl border border-amber-100 shadow-sm p-6 md:p-8 lg:p-10 max-w-5xl mx-auto">
           <div className="text-center mb-10">
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4 tracking-tight">
               高画質・無制限のProプラン
@@ -40,7 +40,7 @@ export default function ProCtaSection({ isLoggedIn }: ProCtaSectionProps) {
                 <button
                   type="button"
                   onClick={() => setPricingModalOpen(true)}
-                  className="text-sm font-medium text-gray-500 hover:text-gray-800 transition-colors inline-flex items-center gap-1"
+                  className="text-sm font-medium text-amber-600 hover:text-amber-800 transition-colors inline-flex items-center gap-1"
                 >
                   すべての機能を比較する
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -51,9 +51,9 @@ export default function ProCtaSection({ isLoggedIn }: ProCtaSectionProps) {
             </div>
 
             {/* 右側：価格とCTA */}
-            <div className="flex flex-col justify-center items-center bg-gray-50 rounded-2xl p-6 md:p-8 border border-gray-100 h-full w-full">
+            <div className="flex flex-col justify-center items-center bg-white/60 backdrop-blur-sm rounded-2xl p-6 md:p-8 border border-amber-100 shadow-sm h-full w-full">
               <div className="text-center mb-8">
-                <span className="inline-block px-3 py-1 mb-4 text-xs font-semibold text-amber-700 bg-amber-50 rounded-full border border-amber-100">
+                <span className="inline-block px-3 py-1 mb-4 text-xs font-semibold text-amber-700 bg-amber-100/50 rounded-full border border-amber-200/50">
                   Premium Plan
                 </span>
                 <p className="text-4xl font-bold text-gray-900 tracking-tight">

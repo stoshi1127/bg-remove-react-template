@@ -82,7 +82,7 @@ export default function GuestProPurchase({ open: controlledOpen, onOpenChange }:
       <button
         type="button"
         onClick={handleOpenClick}
-        className="w-full inline-flex items-center justify-center px-6 py-4 rounded-xl font-semibold text-white bg-gray-900 hover:bg-gray-800 transition-colors shadow-sm text-base"
+        className="w-full inline-flex items-center justify-center px-6 py-4 rounded-xl font-bold text-white bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 transition-colors shadow-md hover:shadow-lg transform hover:-translate-y-0.5 text-base"
       >
         Proを購入する
       </button>
