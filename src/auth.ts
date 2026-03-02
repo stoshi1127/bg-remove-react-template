@@ -87,8 +87,5 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         strategy: 'database',
         maxAge: 30 * 24 * 60 * 60, // 30 days
     },
-    // Use AUTH_SECRET for encryption/signing. 
-    // Vercel Preview/Staging often needs trustHost: true for domain verification.
-    trustHost: true,
-    secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
+    secret: process.env.NEXTAUTH_SECRET || 'fallback_secret_for_dev_mode_only',
 });

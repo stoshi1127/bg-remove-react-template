@@ -23,6 +23,11 @@ export default async function LoginPage({
         ? resolved?.error[0]
         : undefined;
 
+  const callbackUrl =
+    typeof resolved?.callbackUrl === 'string'
+      ? resolved.callbackUrl
+      : '/account';
+
   return (
     <div className="container mx-auto px-4 py-12 max-w-lg">
       <h1 className="text-2xl font-bold text-gray-900 mb-2">ログイン</h1>
@@ -31,7 +36,7 @@ export default async function LoginPage({
       </p>
 
       <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-soft">
-        <LoginForm error={error} />
+        <LoginForm error={error} callbackUrl={callbackUrl} />
       </div>
 
       <div className="mt-6 bg-blue-50 border border-blue-100 rounded-2xl p-5">

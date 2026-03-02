@@ -4,7 +4,7 @@ import { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { signIn } from 'next-auth/react';
 
-export default function LoginForm({ error }: { error?: string }) {
+export default function LoginForm({ error, callbackUrl }: { error?: string, callbackUrl: string }) {
   const errorMessage = useMemo(() => {
     if (error === 'expired') return 'リンクの有効期限が切れています。もう一度お試しください。';
     if (error === 'invalid') return 'リンクが無効です。もう一度お試しください。';
@@ -31,6 +31,7 @@ export default function LoginForm({ error }: { error?: string }) {
       const res = await signIn('resend', {
         email,
         redirect: false,
+        callbackUrl,
       });
 
       // Privacy: Always show the same UX regardless of account existence.
