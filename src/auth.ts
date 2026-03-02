@@ -18,6 +18,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     adapter: PrismaAdapter(prisma),
     providers: [
         Resend({
+            apiKey: process.env.AUTH_RESEND_KEY || process.env.RESEND_API_KEY,
             from: process.env.EMAIL_FROM,
             // override sendVerificationRequest to only allow existing users
             sendVerificationRequest: async ({ identifier: email, url, provider }) => {
