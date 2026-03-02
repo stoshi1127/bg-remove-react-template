@@ -3,12 +3,12 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { normalizeEmail, isValidEmail } from '@/lib/auth/email';
 import { getSiteUrl } from '@/lib/auth/siteUrl';
-import { generateRandomToken, sha256Hex } from '@/lib/auth/crypto';
+import { generateRandomToken, sha256Hex, hashNormalizedEmail } from '@/lib/billing/crypto';
 import { getStripeClient } from '@/lib/billing/stripe';
 import { getStripeMode } from '@/lib/billing/stripeMode';
 import { getProPriceId, isBillingEnabled } from '@/lib/billing/config';
 import { computeEntitlementFromSubscription } from '@/lib/billing/entitlement';
-import { encryptEmail, hashNormalizedEmail } from '@/lib/billing/pendingCheckoutEmail';
+import { encryptEmail } from '@/lib/billing/pendingCheckoutEmail';
 
 export const runtime = 'nodejs';
 

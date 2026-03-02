@@ -1,7 +1,5 @@
 import crypto from 'crypto';
 
-import { sha256Hex } from '@/lib/auth/crypto';
-
 type EncodedEmail = string;
 
 function getKey(): Buffer {
@@ -21,10 +19,7 @@ function fromB64url(s: string): Buffer {
   return Buffer.from(s, 'base64url');
 }
 
-export function hashNormalizedEmail(email: string): string {
-  // Pepper is included in sha256Hex via AUTH_SECRET, so this is resistant to rainbow tables.
-  return sha256Hex(email);
-}
+// hashNormalizedEmail is now imported from @/lib/billing/crypto where it computes the hash with pepper.
 
 export function encryptEmail(email: string): EncodedEmail {
   const key = getKey();
@@ -34,7 +29,7 @@ export function encryptEmail(email: string): EncodedEmail {
   const tag = cipher.getAuthTag();
 
   // v1.<iv>.<tag>.<ciphertext>
-  return `v1.${b64url(iv)}.${b64url(tag)}.${b64url(ciphertext)}`;
+  return `v1.${b64url(iv)}.${b64url(tag)}.${b64url(ciphertext)} `;
 }
 
 export function decryptEmail(encoded: EncodedEmail): string {

@@ -53,9 +53,8 @@ pnpm install
 - **必須（背景透過）**: `REPLICATE_API_TOKEN`
 - **必須（会員ログイン）**: `POSTGRES_PRISMA_URL`, `POSTGRES_URL_NON_POOLING`, `RESEND_API_KEY`, `EMAIL_FROM`
 - **必須（Pro課金 / Stripe）**: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID_PRO_TEST`（本番は `STRIPE_PRICE_ID_PRO_LIVE`）
+- **必須（認証 / NextAuth）**: `AUTH_SECRET`（NextAuthのセッションやCSRFトークン暗号化用）
 - **必須（Pro直送アップロード）**: `BLOB_READ_WRITE_TOKEN`
-- **推奨**: `NEXT_PUBLIC_SITE_URL`（OGP/ログインリンク生成用。未設定の場合は `http://localhost:3000` を使用）
-- **必須（ゲスト購入）**: `AUTH_SECRET`（ゲスト購入時の一時データ（`PendingCheckout`）を暗号化して保存するため）
 - **任意**: `BILLING_ENABLED`（課金導線の一括OFF。ロールバック用）, `STRIPE_MODE`（未指定時は `STRIPE_SECRET_KEY` のprefixから推定）
 - **任意（アップロード制御）**:
   - `UPLOAD_DIRECT_ENABLED` / `NEXT_PUBLIC_UPLOAD_DIRECT_ENABLED`（Proの直送経路ON/OFF）
@@ -166,15 +165,15 @@ Pro向けの直送アップロード用トークンを発行します（Vercel B
 curl -X POST -F "file=@./test.jpg" "http://localhost:3000/api/remove-bg" --output out.png
 ```
 
-### 認証（マジックリンク）
+### 認証（NextAuth.js マジックリンク）
 
-- `POST /api/auth/request-link`
-  - 入力: JSON `{ "email": "you@example.com" }`
-  - 出力: `200`（アカウント有無は返しません）
-- `GET /auth/callback?token=...`
-  - マジックリンク着地。成功時はセッションCookieを設定して `/account` へリダイレクト
-- `POST /api/auth/logout`
-  - セッションを失効してCookieを削除します
+NextAuth.js (Auth.js v5) を使用したパスワードレス認証（マジックリンク）を導入しています。
+「セキュリティ対策として、事前にデータベースに存在するユーザーのみがログイン可能とし、未登録ユーザーにはシステムから一切メールを送信しない」カスタムEmailProviderを利用しています。
+
+- `/login` 画面から登録済みのメールアドレスを入力し、送信ボタンを押下
+- `POST /api/auth/signin/resend`（NextAuth標準機能）が呼ばれます
+- 送信されたメール内のリンク (`/api/auth/callback/resend?token=...`) をクリックすると、セッションクッキーが発行され `/account` 等へ遷移できます
+- ログアウトは `/api/auth/signout` などを経由してセッション破棄が行われます
 
 ### 課金（Stripe / Proサブスク）
 

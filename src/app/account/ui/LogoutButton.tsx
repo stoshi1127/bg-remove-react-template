@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { signOut } from 'next-auth/react';
 
 export default function LogoutButton() {
   const [loading, setLoading] = useState(false);
@@ -8,9 +9,9 @@ export default function LogoutButton() {
   const logout = async () => {
     setLoading(true);
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-    } finally {
-      window.location.href = '/login';
+      await signOut({ callbackUrl: '/login' });
+    } catch {
+      setLoading(false);
     }
   };
 

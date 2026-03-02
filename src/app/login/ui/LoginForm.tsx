@@ -1,34 +1,43 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
+import { signIn } from 'next-auth/react';
 
 export default function LoginForm({ error }: { error?: string }) {
   const errorMessage = useMemo(() => {
     if (error === 'expired') return 'リンクの有効期限が切れています。もう一度お試しください。';
     if (error === 'invalid') return 'リンクが無効です。もう一度お試しください。';
+    if (error === '1') return 'ログインエラーが発生しました。もう一度お試しください。';
     return null;
   }, [error]);
 
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
 
+  useEffect(() => {
+    // If we land here with ?sent=1, show success
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('sent') === '1') {
+      setStatus('sent');
+    }
+  }, []);
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus('sending');
 
     try {
-      const res = await fetch('/api/auth/request-link', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+      const res = await signIn('resend', {
+        email,
+        redirect: false,
       });
 
       // Privacy: Always show the same UX regardless of account existence.
-      if (res.ok) {
-        setStatus('sent');
-      } else {
+      if (res?.error) {
         setStatus('error');
+      } else {
+        setStatus('sent');
       }
     } catch {
       setStatus('error');

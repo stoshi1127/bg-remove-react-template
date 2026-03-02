@@ -2,25 +2,13 @@ import { NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/db';
 import { normalizeEmail } from '@/lib/auth/email';
-import { createSession } from '@/lib/auth/session';
-import { SESSION_COOKIE_NAME } from '@/lib/auth/constants';
 import { getStripeClient } from '@/lib/billing/stripe';
 import { getStripeMode } from '@/lib/billing/stripeMode';
 import { decryptEmail } from '@/lib/billing/pendingCheckoutEmail';
 
 export const runtime = 'nodejs';
 
-function setSessionCookie(res: NextResponse, token: string, expiresAt: Date) {
-  res.cookies.set({
-    name: SESSION_COOKIE_NAME,
-    value: token,
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
-    expires: expiresAt,
-  });
-}
+// Removed manual session cookie setting as NextAuth handles it.
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
@@ -75,7 +63,7 @@ export async function GET(req: Request) {
     }
 
     const email = normalizeEmail(decryptEmail(pending.emailEnc));
-    const user = await prisma.user.upsert({
+    await prisma.user.upsert({
       where: { email },
       create: { email, plan: 'pro', isPro: true, proValidUntil: null, lastLoginAt: now },
       update: { plan: 'pro', isPro: true, proValidUntil: null, lastLoginAt: now },
@@ -95,10 +83,11 @@ export async function GET(req: Request) {
       });
     }
 
-    const { token, expiresAt } = await createSession(user.id);
-    const res = NextResponse.redirect(new URL('/account?billing=success', url));
+    // Under NextAuth, we cannot manually create session tokens easily in this API route.
+    // Instead, we redirect the user to the login page so they can receive a magic link
+    // to their newly created Pro account.
+    const res = NextResponse.redirect(new URL('/login?billing=success', url));
     res.headers.set('Cache-Control', 'no-store');
-    setSessionCookie(res, token, expiresAt);
     return res;
   } catch (error) {
     console.error('billing success error:', error);

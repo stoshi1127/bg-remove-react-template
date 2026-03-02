@@ -1,64 +1,50 @@
-import { cookies } from 'next/headers';
 import type { User } from '@prisma/client';
+import { auth } from '@/auth';
+import { SHA256 } from 'crypto-js';
 
-import { prisma } from '@/lib/db';
-import { SESSION_COOKIE_NAME, SESSION_TTL_DAYS } from '@/lib/auth/constants';
-import { generateRandomToken, sha256Hex } from '@/lib/auth/crypto';
+// Removed constant imports as they are managed by NextAuth now
+// Removed generation since NextAuth manages session tokens
+export function sha256Hex(data: string): string {
+  return SHA256(data).toString();
+}
 
 type CurrentUser = Pick<User, 'id' | 'email' | 'createdAt' | 'lastLoginAt' | 'plan' | 'isPro' | 'proValidUntil'>;
 
 export async function getCurrentUser(): Promise<CurrentUser | null> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
-  if (!token) return null;
+  const session = await auth();
 
-  const sessionTokenHash = sha256Hex(token);
-  const now = new Date();
+  if (!session?.user?.id) {
+    return null;
+  }
 
-  const session = await prisma.session.findFirst({
-    where: {
-      sessionTokenHash,
-      revokedAt: null,
-      expiresAt: { gt: now },
-    },
-    include: { user: true },
+  // NextAuth tokenizes the session, but we also want to return the same shape as before.
+  // We can fetch the user from the DB to ensure freshness, or just return from session.
+  // To keep it perfectly consistent with previous behavior, let's fetch from DB using the ID.
+  // Note: if performance is critical, we could just return the session data, but the previous implementation also hit the DB.
+
+  const { prisma } = await import('@/lib/db');
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id }
   });
 
-  if (!session) return null;
+  if (!user) return null;
 
   return {
-    id: session.user.id,
-    email: session.user.email,
-    createdAt: session.user.createdAt,
-    lastLoginAt: session.user.lastLoginAt,
-    plan: session.user.plan,
-    isPro: session.user.isPro,
-    proValidUntil: session.user.proValidUntil,
+    id: user.id,
+    email: user.email,
+    createdAt: user.createdAt,
+    lastLoginAt: user.lastLoginAt,
+    plan: user.plan,
+    isPro: user.isPro,
+    proValidUntil: user.proValidUntil,
   };
 }
 
-export async function createSession(userId: string): Promise<{ token: string; expiresAt: Date }> {
-  const token = generateRandomToken(32);
-  const sessionTokenHash = sha256Hex(token);
-  const expiresAt = new Date(Date.now() + SESSION_TTL_DAYS * 24 * 60 * 60 * 1000);
-
-  await prisma.session.create({
-    data: {
-      userId,
-      sessionTokenHash,
-      expiresAt,
-    },
-  });
-
-  return { token, expiresAt };
+export async function createSession(): Promise<{ token: string; expiresAt: Date }> {
+  throw new Error("createSession is deprecated. NextAuth handles sessions automatically.");
 }
 
-export async function revokeSessionByToken(token: string): Promise<void> {
-  const sessionTokenHash = sha256Hex(token);
-
-  await prisma.session.updateMany({
-    where: { sessionTokenHash, revokedAt: null },
-    data: { revokedAt: new Date() },
-  });
+export async function revokeSessionByToken(): Promise<void> {
+  throw new Error("revokeSessionByToken is deprecated. NextAuth handles sessions automatically.");
 }
-

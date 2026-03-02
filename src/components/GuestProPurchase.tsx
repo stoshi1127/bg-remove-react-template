@@ -1,7 +1,7 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { trackAnalyticsEvent } from '@/lib/analytics/events';
 
@@ -26,10 +26,10 @@ export default function GuestProPurchase({ open: controlledOpen, onOpenChange }:
 
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : internalOpen;
-  const setOpen = (v: boolean) => {
+  const setOpen = useCallback((v: boolean) => {
     if (!isControlled) setInternalOpen(v);
     onOpenChange?.(v);
-  };
+  }, [isControlled, onOpenChange]);
 
   useEffect(() => {
     if (autoOpenedRef.current) return;
