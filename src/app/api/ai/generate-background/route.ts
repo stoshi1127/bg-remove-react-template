@@ -100,7 +100,7 @@ export async function POST(req: NextRequest) {
             const errorData = await startResponse.json().catch(() => ({ detail: 'unknown' }));
             console.error('[generate-background] Replicate start error:', errorData);
             return NextResponse.json(
-                { error: 'AI処理の開始に失敗しました。もう一度お試しください。' },
+                { error: 'AI処理の開始に失敗しました。もう一度お試しください。', details: errorData },
                 { status: 502 }
             );
         }

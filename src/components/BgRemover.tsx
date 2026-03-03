@@ -687,7 +687,8 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
 
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
-        setAiBgError(errData.error || 'AI処理に失敗しました。もう一度お試しください。');
+        const detailMsg = errData.details ? ` (${JSON.stringify(errData.details)})` : '';
+        setAiBgError((errData.error || 'AI処理に失敗しました。もう一度お試しください。') + detailMsg);
         return;
       }
 
@@ -776,7 +777,8 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
 
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
-        setAiBgError(errData.error || 'AI処理に失敗しました。もう一度お試しください。');
+        const detailMsg = errData.details ? ` (${JSON.stringify(errData.details)})` : '';
+        setAiBgError((errData.error || 'AI処理に失敗しました。もう一度お試しください。') + detailMsg);
         return;
       }
 
@@ -2355,8 +2357,8 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                 }}
                 disabled={blendBusy}
                 className={`w-full py-2.5 rounded-lg text-sm font-semibold transition-all ${blendBusy
-                    ? 'bg-teal-300 text-white cursor-wait'
-                    : 'bg-gradient-to-r from-teal-600 to-cyan-600 text-white hover:from-teal-700 hover:to-cyan-700 shadow-md'
+                  ? 'bg-teal-300 text-white cursor-wait'
+                  : 'bg-gradient-to-r from-teal-600 to-cyan-600 text-white hover:from-teal-700 hover:to-cyan-700 shadow-md'
                   }`}
               >
                 {blendBusy ? (
