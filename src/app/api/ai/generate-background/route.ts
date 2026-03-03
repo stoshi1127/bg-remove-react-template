@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
     // --- Replicate API 呼び出し（bria/generate-background） ---
     const modelVersion =
         process.env.REPLICATE_GENERATE_BG_VERSION ||
-        'bria-ai/background-generation:9cc837aa47ef5cf67eeb6dd4fc0c7a62b6bb7e7db7d40e3e0c1c0b9303b5e5e0';
+        'bria-ai/background-generation:2555256f0896cc8ea04d7c0f16f1a8e999c0fd6af2817eb4867160ba777cfeb3';
 
     try {
         // mode に応じて input を組み立てる
