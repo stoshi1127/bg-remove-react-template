@@ -78,11 +78,10 @@ export async function POST(req: NextRequest) {
         if (mode === 'blend' && refImageDataUrl) {
             // blend: 参照画像の雰囲気で背景を再生成（光源・色調を自然に調和）
             replicateInput.ref_image_file = refImageDataUrl;
-            replicateInput.prompt = prompt || 'same style and lighting as the reference background';
+            replicateInput.bg_prompt = prompt || 'same style and lighting as the reference background';
         } else {
             // generate: テキストから背景生成
-            replicateInput.prompt = prompt || 'a natural, clean background';
-            replicateInput.refine_prompt = true;
+            replicateInput.bg_prompt = prompt || 'a natural, clean background';
         }
 
         const startResponse = await fetch('https://api.replicate.com/v1/predictions', {
