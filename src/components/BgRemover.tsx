@@ -1886,8 +1886,8 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
               : 'border-gray-200 hover:border-blue-300'
               }`}
           >
-            <p className="font-semibold text-gray-900">標準（速い）</p>
-            <p className="text-xs text-gray-600 mt-1">はやく仕上げたいときにおすすめ</p>
+            <p className="font-semibold text-gray-900">標準</p>
+            <p className="text-xs text-gray-600 mt-1">AIが自動で背景を切り抜きます</p>
           </button>
           <button
             type="button"
@@ -1901,7 +1901,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
               Pro
             </span>
             <p className="font-semibold text-gray-900">高精度（Pro）</p>
-            <p className="text-xs text-gray-600 mt-1">人物のフチまでていねいに仕上げる</p>
+            <p className="text-xs text-gray-600 mt-1">より高性能なAIで背景を切り抜きます</p>
             {!isPro && (
               <p className="text-[11px] text-amber-700 mt-2">Proで選べます</p>
             )}
@@ -2461,9 +2461,9 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
           </PrimaryButton>
         )}
 
-        {inputs.filter(input => input.status === 'completed').length > 1 && (
+        {hasCompletedResults && (
           <>
-            {!isPro && hasCompletedResults && (
+            {!isPro && (
               <div className="rounded-xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50/80 p-4 text-left shadow-sm">
                 <p className="text-sm font-bold text-amber-900">
                   Proならもっときれいに仕上がります
@@ -2501,96 +2501,100 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                 </button>
               </div>
             )}
-            {isPro && !batchEnhanceState.inProgress && (
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs text-gray-600 font-medium">一括高画質化（拡大）:</span>
-                <div className="inline-flex rounded-lg border border-purple-200 overflow-hidden">
-                  {(['1k', '2k', '4k'] as EnhanceTarget[]).map((target) => {
-                    const targetPx = toEnhanceLongSide(target);
-                    const eligibleCount = inputs.filter(
-                      i => i.status === 'completed' && (i.highQualityOutputUrl || i.outputUrl) && (i.outputLongSide ?? 0) < targetPx
-                    ).length;
-                    const isSelected = pendingBatchTarget === target;
-                    return (
-                      <button
-                        key={`batch-${target}`}
-                        type="button"
-                        onClick={() => setPendingBatchTarget(isSelected ? null : target)}
-                        disabled={busy || eligibleCount === 0}
-                        title={eligibleCount === 0 ? `全画像が既に${target.toUpperCase()}以上です` : `${eligibleCount}枚を${target.toUpperCase()}に高画質化（拡大）`}
-                        className={`px-3 py-2 text-sm font-semibold border-r last:border-r-0 border-purple-200 transition-colors ${isSelected
-                          ? 'bg-purple-600 text-white'
-                          : eligibleCount === 0
-                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                            : 'bg-white text-purple-700 hover:bg-purple-50'
-                          } disabled:opacity-60`}
-                      >
-                        {target === '1k' ? '1K' : target === '2k' ? '2K' : '4K'}
-                      </button>
+            {inputs.filter(input => input.status === 'completed').length > 1 && (
+              <>
+                {isPro && !batchEnhanceState.inProgress && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs text-gray-600 font-medium">一括高画質化（拡大）:</span>
+                    <div className="inline-flex rounded-lg border border-purple-200 overflow-hidden">
+                      {(['1k', '2k', '4k'] as EnhanceTarget[]).map((target) => {
+                        const targetPx = toEnhanceLongSide(target);
+                        const eligibleCount = inputs.filter(
+                          i => i.status === 'completed' && (i.highQualityOutputUrl || i.outputUrl) && (i.outputLongSide ?? 0) < targetPx
+                        ).length;
+                        const isSelected = pendingBatchTarget === target;
+                        return (
+                          <button
+                            key={`batch-${target}`}
+                            type="button"
+                            onClick={() => setPendingBatchTarget(isSelected ? null : target)}
+                            disabled={busy || eligibleCount === 0}
+                            title={eligibleCount === 0 ? `全画像が既に${target.toUpperCase()}以上です` : `${eligibleCount}枚を${target.toUpperCase()}に高画質化（拡大）`}
+                            className={`px-3 py-2 text-sm font-semibold border-r last:border-r-0 border-purple-200 transition-colors ${isSelected
+                              ? 'bg-purple-600 text-white'
+                              : eligibleCount === 0
+                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                : 'bg-white text-purple-700 hover:bg-purple-50'
+                              } disabled:opacity-60`}
+                          >
+                            {target === '1k' ? '1K' : target === '2k' ? '2K' : '4K'}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {pendingBatchTarget && (() => {
+                      const targetPx = toEnhanceLongSide(pendingBatchTarget);
+                      const eligible = inputs.filter(
+                        i => i.status === 'completed' && (i.highQualityOutputUrl || i.outputUrl) && (i.outputLongSide ?? 0) < targetPx
+                      );
+                      return (
+                        <div className="flex flex-col gap-2">
+                          <p className="text-xs text-gray-500">
+                            {eligible.length}枚が対象（長辺 {targetPx}px へ拡大）
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => { void handleBatchEnhance(pendingBatchTarget); }}
+                              className="inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700"
+                            >
+                              {eligible.length}枚を{pendingBatchTarget.toUpperCase()}に高画質化を実行
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setPendingBatchTarget(null)}
+                              className="text-xs text-gray-500 hover:text-gray-700"
+                            >
+                              キャンセル
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
+                {(() => {
+                  const enhancedByTarget = inputs
+                    .filter(i => i.status === 'completed' && i.wasEnhanced && (i.outputLongSide ?? 0) >= 1024)
+                    .reduce<Record<EnhanceTarget, number>>(
+                      (acc, i) => {
+                        const long = i.outputLongSide ?? 0;
+                        if (long >= toEnhanceLongSide('4k')) acc['4k'] = (acc['4k'] ?? 0) + 1;
+                        else if (long >= toEnhanceLongSide('2k')) acc['2k'] = (acc['2k'] ?? 0) + 1;
+                        else if (long >= toEnhanceLongSide('1k')) acc['1k'] = (acc['1k'] ?? 0) + 1;
+                        return acc;
+                      },
+                      { '1k': 0, '2k': 0, '4k': 0 }
                     );
-                  })}
-                </div>
-                {pendingBatchTarget && (() => {
-                  const targetPx = toEnhanceLongSide(pendingBatchTarget);
-                  const eligible = inputs.filter(
-                    i => i.status === 'completed' && (i.highQualityOutputUrl || i.outputUrl) && (i.outputLongSide ?? 0) < targetPx
-                  );
+                  const parts = (['4k', '2k', '1k'] as const)
+                    .filter(t => enhancedByTarget[t] > 0)
+                    .map(t => `${enhancedByTarget[t]}枚を${t.toUpperCase()}`);
+                  const upscaleSummary = parts.length > 0 ? parts.join('、') + 'に高画質化済み' : null;
                   return (
-                    <div className="flex flex-col gap-2">
-                      <p className="text-xs text-gray-500">
-                        {eligible.length}枚が対象（長辺 {targetPx}px へ拡大）
-                      </p>
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => { void handleBatchEnhance(pendingBatchTarget); }}
-                          className="inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700"
-                        >
-                          {eligible.length}枚を{pendingBatchTarget.toUpperCase()}に高画質化を実行
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setPendingBatchTarget(null)}
-                          className="text-xs text-gray-500 hover:text-gray-700"
-                        >
-                          キャンセル
-                        </button>
-                      </div>
+                    <div className="flex w-full flex-col items-center gap-1">
+                      {upscaleSummary && (
+                        <p className="text-sm text-gray-600">
+                          {upscaleSummary}
+                        </p>
+                      )}
+                      <PrimaryButton onClick={handleDownloadAll} disabled={busy || batchEnhanceState.inProgress} variant="primary" className="w-full">
+                        すべてダウンロード (.zip)
+                      </PrimaryButton>
                     </div>
                   );
                 })()}
-              </div>
+              </>
             )}
-            {(() => {
-              const enhancedByTarget = inputs
-                .filter(i => i.status === 'completed' && i.wasEnhanced && (i.outputLongSide ?? 0) >= 1024)
-                .reduce<Record<EnhanceTarget, number>>(
-                  (acc, i) => {
-                    const long = i.outputLongSide ?? 0;
-                    if (long >= toEnhanceLongSide('4k')) acc['4k'] = (acc['4k'] ?? 0) + 1;
-                    else if (long >= toEnhanceLongSide('2k')) acc['2k'] = (acc['2k'] ?? 0) + 1;
-                    else if (long >= toEnhanceLongSide('1k')) acc['1k'] = (acc['1k'] ?? 0) + 1;
-                    return acc;
-                  },
-                  { '1k': 0, '2k': 0, '4k': 0 }
-                );
-              const parts = (['4k', '2k', '1k'] as const)
-                .filter(t => enhancedByTarget[t] > 0)
-                .map(t => `${enhancedByTarget[t]}枚を${t.toUpperCase()}`);
-              const upscaleSummary = parts.length > 0 ? parts.join('、') + 'に高画質化済み' : null;
-              return (
-                <div className="flex w-full flex-col items-center gap-1">
-                  {upscaleSummary && (
-                    <p className="text-sm text-gray-600">
-                      {upscaleSummary}
-                    </p>
-                  )}
-                  <PrimaryButton onClick={handleDownloadAll} disabled={busy || batchEnhanceState.inProgress} variant="primary" className="w-full">
-                    すべてダウンロード (.zip)
-                  </PrimaryButton>
-                </div>
-              );
-            })()}
           </>
         )}
       </div>
@@ -2728,7 +2732,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
 
       {/* スティッキーCTA（元のCTAが画面外のときのみ表示） */}
       {!isCtaVisible && inputs.length > 0 && !busy && (
-        inputs.some(i => i.status === 'ready') || inputs.filter(i => i.status === 'completed').length > 1
+        inputs.some(i => i.status === 'ready') || hasCompletedResults
       ) && (
           <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-md border-t border-gray-200 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
             <div className="max-w-3xl mx-auto space-y-2">
@@ -2775,7 +2779,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                   </PrimaryButton>
                 </>
               )}
-              {!inputs.some(i => i.status === 'ready') && inputs.filter(i => i.status === 'completed').length > 1 && (
+              {!inputs.some(i => i.status === 'ready') && hasCompletedResults && (
                 <>
                   {(() => {
                     const enhancedByTarget = inputs

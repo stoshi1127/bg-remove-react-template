@@ -32,7 +32,7 @@ export default async function LoginPage({
     <div className="container mx-auto px-4 py-12 max-w-lg">
       <h1 className="text-2xl font-bold text-gray-900 mb-2">ログイン</h1>
       <p className="text-gray-600 mb-8">
-        メールアドレスにログインリンクを送信します。パスワードは不要です。
+        Googleアカウントでログインするか、Pro購入時に登録したメールアドレスにログインリンクを送信します。パスワードは不要です。
       </p>
 
       <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-soft">
@@ -40,10 +40,6 @@ export default async function LoginPage({
       </div>
 
       <div className="mt-6 bg-blue-50 border border-blue-100 rounded-2xl p-5">
-        <p className="text-sm text-gray-700 leading-relaxed">
-          ログインできるのは <span className="font-semibold">Pro購入済み（会員）</span> の方のみです。
-          まだProを購入していない場合は、先に購入手続きへ進んでください。
-        </p>
         <div className="mt-3">
           <Link
             href="/?buyPro=1#pro"

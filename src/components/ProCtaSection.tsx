@@ -61,7 +61,7 @@ export default function ProCtaSection({ isLoggedIn }: ProCtaSectionProps) {
                       onOpenChange={setGuestPurchaseOpen}
                     />
                     <p className="text-xs text-gray-500 text-center leading-relaxed mt-2">
-                      メールアドレスだけで簡単に登録できます
+                      メールアドレスまたはGoogleアカウントですぐに登録できます
                     </p>
                   </div>
                 ) : (
