@@ -186,3 +186,68 @@ export async function POST() {
   }
 }
 
+export async function GET(req: Request) {
+  try {
+    const stripeMode = getStripeMode();
+    if (!isBillingEnabled()) {
+      return NextResponse.redirect(new URL('/?billing=disabled', req.url));
+    }
+
+    const session = await getCurrentUser();
+    if (!session) {
+      return NextResponse.redirect(new URL('/login?error=checkout_requires_login', req.url));
+    }
+
+    // Double-charge prevention
+    const existingSub = await prisma.stripeSubscription.findFirst({
+      where: { userId: session.id, stripeMode },
+      orderBy: { updatedAt: 'desc' },
+    });
+    const entitlement = computeEntitlementFromSubscription({ subscription: existingSub, stripeMode });
+    if (entitlement.isPro) {
+      return NextResponse.redirect(new URL('/account?billing=already_pro', req.url));
+    }
+
+    const siteUrl = getSiteUrl();
+    const stripe = getStripeClient();
+    const priceId = getProPriceId();
+
+    const stripeCustomer = await prisma.stripeCustomer.findUnique({
+      where: { userId: session.id },
+      select: { stripeCustomerId: true, stripeMode: true },
+    });
+
+    const successUrl = `${siteUrl}/account?billing=success`;
+    const cancelUrl = `${siteUrl}/?buyPro=1&billing=cancel`;
+
+    const stripeSession = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      line_items: [{ price: priceId, quantity: 1 }],
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+      customer: stripeCustomer?.stripeCustomerId,
+      customer_email: stripeCustomer ? undefined : session.email,
+      client_reference_id: session.id,
+      metadata: {
+        userId: session.id,
+        plan: 'pro',
+        stripeMode,
+      },
+      allow_promotion_codes: true,
+      billing_address_collection: 'auto',
+      subscription_data: {
+        metadata: { userId: session.id, plan: 'pro', stripeMode },
+      },
+    });
+
+    if (!stripeSession.url) {
+      return NextResponse.redirect(new URL('/?billing=checkout_failed', req.url));
+    }
+
+    return NextResponse.redirect(stripeSession.url);
+  } catch (error) {
+    console.error('billing checkout GET error:', stripeErrorToObject(error));
+    return NextResponse.redirect(new URL('/?billing=checkout_failed', req.url));
+  }
+}
+

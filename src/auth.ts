@@ -2,6 +2,7 @@ import NextAuth from 'next-auth';
 import type { DefaultSession } from 'next-auth';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import Resend from 'next-auth/providers/resend';
+import Google from 'next-auth/providers/google';
 import { prisma } from '@/lib/db';
 
 declare module 'next-auth' {
@@ -64,8 +65,33 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 }
             },
         }),
+        Google({
+            clientId: process.env.AUTH_GOOGLE_ID,
+            clientSecret: process.env.AUTH_GOOGLE_SECRET,
+            allowDangerousEmailAccountLinking: true,
+        }),
     ],
     callbacks: {
+        async signIn({ user, account }) {
+            // For OAuth providers like Google, "user" contains the basic info (email, name)
+            // But if the user is not in the DB yet, we want to reject them.
+            if (account?.provider === 'google') {
+                if (!user.email) return false;
+
+                // Check if user exists in the database
+                const existingUser = await prisma.user.findUnique({
+                    where: { email: user.email },
+                });
+
+                if (!existingUser) {
+                    console.log(`Access Denied (Google Login): Unregistered email: ${user.email}`);
+                    // Return false to display an AccessDenied error (redirects to /login?error=AccessDenied)
+                    return false;
+                }
+            }
+            // Allow all other sign in attempts (Resend handles restrictions in sendVerificationRequest)
+            return true;
+        },
         async session({ session, user }) {
             if (session.user && user) {
                 // user object bound to db via adapter

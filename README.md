@@ -54,6 +54,7 @@ pnpm install
 - **必須（会員ログイン）**: `POSTGRES_PRISMA_URL`, `POSTGRES_URL_NON_POOLING`, `RESEND_API_KEY`, `EMAIL_FROM`
 - **必須（Pro課金 / Stripe）**: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID_PRO_TEST`（本番は `STRIPE_PRICE_ID_PRO_LIVE`）
 - **必須（認証 / NextAuth）**: `AUTH_SECRET`（NextAuthのセッションやCSRFトークン暗号化用）
+- **任意（Google連携）**: `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`（Googleログインを利用する場合）
 - **必須（Pro直送アップロード）**: `BLOB_READ_WRITE_TOKEN`
 - **任意**: `BILLING_ENABLED`（課金導線の一括OFF。ロールバック用）, `STRIPE_MODE`（未指定時は `STRIPE_SECRET_KEY` のprefixから推定）
 - **任意（アップロード制御）**:
