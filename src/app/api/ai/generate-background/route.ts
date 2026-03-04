@@ -77,9 +77,8 @@ export async function POST(req: NextRequest) {
         };
 
         if (mode === 'blend' && refImageDataUrl) {
-            // blend: 参照画像の雰囲気で背景を再生成（光源・色調を自然に調和）
+            // blend: 参照画像の雰囲気で背景を再生成（bg_prompt と ref_image は排他）
             replicateInput.ref_image_file = refImageDataUrl;
-            replicateInput.bg_prompt = prompt || 'same style and lighting as the reference background';
         } else {
             // generate: テキストから背景生成
             replicateInput.bg_prompt = prompt || 'a natural, clean background';
