@@ -114,6 +114,89 @@ async function urlToDataUrl(url: string): Promise<string> {
   });
 }
 
+/** アスペクト比に合わせてカンバス中心に画像を配置（パディング）する前処理 */
+async function padImageToRatio(blob: Blob, ratio: string): Promise<Blob> {
+  if (ratio === 'original' || ratio === 'fit-subject') {
+    return blob;
+  }
+
+  const useBitmap = 'createImageBitmap' in window;
+  let sourceImg: HTMLImageElement | ImageBitmap | null = null;
+  let objectUrl = '';
+
+  try {
+    if (useBitmap) {
+      sourceImg = await createImageBitmap(blob);
+    } else {
+      objectUrl = URL.createObjectURL(blob);
+      sourceImg = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error('画像読み込み失敗'));
+        img.src = objectUrl;
+      });
+    }
+
+    const imgWidth = sourceImg.width;
+    const imgHeight = sourceImg.height;
+
+    let targetWidth = imgWidth;
+    let targetHeight = imgHeight;
+
+    if (ratio === '1:1') {
+      const size = Math.max(imgWidth, imgHeight);
+      targetWidth = size;
+      targetHeight = size;
+    } else if (ratio === '16:9') {
+      // 16:9の枠に収める
+      if (imgWidth / imgHeight > 16 / 9) {
+        targetWidth = imgWidth;
+        targetHeight = Math.round(imgWidth * 9 / 16);
+      } else {
+        targetHeight = imgHeight;
+        targetWidth = Math.round(imgHeight * 16 / 9);
+      }
+    } else if (ratio === '4:3') {
+      // 4:3の枠に収める
+      if (imgWidth / imgHeight > 4 / 3) {
+        targetWidth = imgWidth;
+        targetHeight = Math.round(imgWidth * 3 / 4);
+      } else {
+        targetHeight = imgHeight;
+        targetWidth = Math.round(imgHeight * 4 / 3);
+      }
+    }
+
+    // 元と全く同じならそのまま返す
+    if (targetWidth === imgWidth && targetHeight === imgHeight) {
+      return blob;
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Canvas context no available');
+
+    // 背景は透明のまま、中央に描画
+    ctx.clearRect(0, 0, targetWidth, targetHeight);
+    const offsetX = Math.round((targetWidth - imgWidth) / 2);
+    const offsetY = Math.round((targetHeight - imgHeight) / 2);
+    ctx.drawImage(sourceImg as CanvasImageSource, offsetX, offsetY, imgWidth, imgHeight);
+
+    return await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((b) => {
+        if (b) resolve(b);
+        else reject(new Error('Canvas to Blob failed'));
+      }, 'image/png');
+    });
+  } finally {
+    if (objectUrl) URL.revokeObjectURL(objectUrl);
+    if (sourceImg && 'close' in sourceImg) sourceImg.close();
+  }
+}
+
+
 type BgRemoverMultiProps = {
   isPro?: boolean;
   adUserPlan?: AdUserPlan;
@@ -1315,8 +1398,17 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
         let response: Response;
         if (useAiApi) {
           // --- AI処理パス: bria/generate-background のみで処理 ---
-          // Vercel 4.5MB制限回避のため、BlobにアップロードしてURLを送る
+          // アスペクト比（selectedRatio）が指定されている場合、投げる前にカンバスを自動調整（パディング）する
           updateInputStatus(input.id, "processing");
+          try {
+            blobForRequest = await padImageToRatio(blobForRequest, selectedRatio);
+          } catch (padErr) {
+            console.warn('Canvas padding failed:', padErr);
+            // エラー時はフォールバックとして元の blobForRequest をそのまま使う
+          }
+          const paddedMeta = await getImageDimensions(blobForRequest);
+
+          // Vercel 4.5MB制限回避のため、BlobにアップロードしてURLを送る
           const uploadFile = blobForRequest instanceof File
             ? blobForRequest
             : new File([blobForRequest], nameForRequest, { type: blobForRequest.type || 'application/octet-stream' });
@@ -1326,8 +1418,8 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
             clientPayload: JSON.stringify({
               sizeBytes: uploadFile.size,
               mimeType: uploadFile.type,
-              width: imageMeta.width,
-              height: imageMeta.height,
+              width: paddedMeta.width,
+              height: paddedMeta.height,
             }),
           });
 
@@ -1475,7 +1567,21 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
 
               if (useAiApi) {
                 // AI処理時: 既に完成画像なのでテンプレート適用不要
-                // removedBgUrl をそのまま finalUrl として使う
+                // 出力が約1MP固定になるbriaモデルの制約を回避するため、元画像が大きい場合は自動で高画質化(アップスケール)する
+                const originalLongSide = Math.max(imageMeta.width, imageMeta.height);
+                if (originalLongSide > 1200) {
+                  try {
+                    updateInputStatus(input.id, "processing", "AI生成完了。高画質化しています...");
+                    let target: EnhanceTarget = '1k';
+                    if (originalLongSide > 2500) target = '4k';
+                    else if (originalLongSide > 1500) target = '2k';
+
+                    finalUrl = await runEnhance(removedBgUrl, target);
+                  } catch (enhanceErr) {
+                    console.warn('Auto enhance failed after bria generation:', enhanceErr);
+                    // 失敗時はアップスケール前の画像をそのまま使う
+                  }
+                }
               } else {
                 // 通常処理: 背景除去後の画像からバウンディングボックスを計算してテンプレ適用
                 const subjectBbox = await Promise.race([
@@ -2385,6 +2491,11 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
               <p className={`text-xs mt-1 ml-6 ${selectedTemplate && bgMode === 'normal' ? 'text-teal-600' : 'text-gray-500'}`}>
                 {!selectedTemplate && bgMode === 'normal' ? '先に背景（カラーや画像）を選んでください' : '選んだ背景に合わせてAIが影や明るさを自然に調整します'}
               </p>
+              {blendEnabled && (
+                <div className="mt-2 ml-6 text-xs text-teal-700 bg-white/60 p-2 rounded border border-teal-100">
+                  ✨ なじませる機能はAI合成専用の高画質モデルで処理されます。（高精度設定は自動適用）
+                </div>
+              )}
             </div>
           )}
 
