@@ -660,7 +660,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
       setBgMode('normal');
       setAiBgPreset(null); setAiBgPrompt('');
       trackAnalyticsEvent('bg_custom_image_applied', {});
-      setTimeout(() => scrollToSectionWithHeaderOffset(sectionFilesRef.current), 100);
+      setTimeout(() => scrollToSectionWithHeaderOffset(sectionBlendRef.current), 100);
     };
     reader.readAsDataURL(file);
     // input をリセット（同じファイルを再選択できるように）
@@ -2109,7 +2109,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
         </div>
 
         {/* --- ✨ AIで背景を作る（事前設定型、Pro / プレミアムAI回数消費） --- */}
-        {inputs.some(i => i.status === 'completed' && i.outputUrl) && (
+        {inputs.length > 0 && (
           <div className={`mt-4 p-4 rounded-xl border-2 transition-all ${bgMode === 'ai_generate' ? 'border-purple-500 ring-2 ring-purple-300 bg-gradient-to-r from-purple-50 to-indigo-50' : 'border-purple-200 bg-gradient-to-r from-purple-50/50 to-indigo-50/50'}`}>
             <div className="flex items-center justify-between mb-3">
               <h4 className="text-sm font-semibold text-purple-800 flex items-center gap-1.5">
@@ -2266,7 +2266,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                   setCustomBgImage(null);
                   setBgMode('normal');
                   setAiBgPreset(null); setAiBgPrompt('');
-                  setTimeout(() => scrollToSectionWithHeaderOffset(sectionFilesRef.current), 100);
+                  setTimeout(() => scrollToSectionWithHeaderOffset(sectionBlendRef.current), 100);
                 }}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                 id="color-picker"
@@ -2285,7 +2285,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                   setCustomBgImage(null);
                   setBgMode('normal');
                   setAiBgPreset(null); setAiBgPrompt('');
-                  setTimeout(() => scrollToSectionWithHeaderOffset(sectionFilesRef.current), 100);
+                  setTimeout(() => scrollToSectionWithHeaderOffset(sectionBlendRef.current), 100);
                 }}
                 className={`cursor-pointer rounded-lg border-2 ${selectedTemplate === template.src ? 'border-blue-500 ring-2 ring-blue-300' : 'border-transparent hover:border-blue-400'} overflow-hidden relative aspect-square transition-all`}
               >
