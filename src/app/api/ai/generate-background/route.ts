@@ -3,6 +3,7 @@ import { getCurrentUser } from '@/lib/auth/session';
 import { getPremiumUsage, consumePremiumUsage } from '@/lib/premiumUsage';
 
 export const runtime = 'nodejs';
+export const maxDuration = 90; // ポーリング最大90秒に合わせる
 
 /**
  * POST /api/ai/generate-background
@@ -98,7 +99,7 @@ export async function POST(req: NextRequest) {
 
         if (!startResponse.ok) {
             const errorData = await startResponse.json().catch(() => ({ detail: 'unknown' }));
-            console.error('[generate-background] Replicate start error:', errorData);
+            console.error('[generate-background] Replicate start error:', JSON.stringify({ status: startResponse.status, errorData }));
             return NextResponse.json(
                 { error: 'AI処理の開始に失敗しました。もう一度お試しください。', details: errorData },
                 { status: 502 }
@@ -140,7 +141,13 @@ export async function POST(req: NextRequest) {
         }
 
         if (prediction.status !== 'succeeded' || !prediction.output) {
-            console.error('[generate-background] prediction failed:', prediction);
+            console.error('[generate-background] prediction failed:', JSON.stringify({
+                status: prediction.status,
+                attempts,
+                maxAttempts,
+                error: prediction.error,
+                id: prediction.id,
+            }));
             return NextResponse.json(
                 { error: 'AI処理が混み合っているため、もう一度お試しください。回数は消費されません。' },
                 { status: 502 }
@@ -170,6 +177,7 @@ export async function POST(req: NextRequest) {
 
         const imageResponse = await fetch(outputUrl);
         if (!imageResponse.ok) {
+            console.error('[generate-background] image fetch failed:', JSON.stringify({ status: imageResponse.status, outputUrl: outputUrl?.slice(0, 80) }));
             return NextResponse.json(
                 { error: '生成された画像の取得に失敗しました。' },
                 { status: 502 }
