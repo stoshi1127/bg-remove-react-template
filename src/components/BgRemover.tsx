@@ -115,10 +115,11 @@ async function urlToDataUrl(url: string): Promise<string> {
 }
 
 /** アスペクト比に合わせてカンバス中心に画像を配置（パディング）する前処理 */
-async function padImageToRatio(blob: Blob, ratio: string): Promise<Blob> {
+async function padImageToRatio(blob: Blob, ratio: string, options?: { fillForAi?: boolean }): Promise<Blob> {
   if (ratio === 'original' || ratio === 'fit-subject') {
     return blob;
   }
+
 
   const useBitmap = 'createImageBitmap' in window;
   let sourceImg: HTMLImageElement | ImageBitmap | null = null;
@@ -178,11 +179,29 @@ async function padImageToRatio(blob: Blob, ratio: string): Promise<Blob> {
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('Canvas context no available');
 
-    // 背景は透明のまま、中央に描画
-    ctx.clearRect(0, 0, targetWidth, targetHeight);
+    if (options?.fillForAi) {
+      // AI処理用: 透明なパディングではなく、背景をぼかして埋めることでAIが境界を正しく認識できるようにする
+      ctx.save();
+      // 画像全体をカンバスに合わせてカバーするように描画（ぼかし用）
+      const scale = Math.max(targetWidth / imgWidth, targetHeight / imgHeight);
+      const bgW = imgWidth * scale;
+      const bgH = imgHeight * scale;
+      const bgX = (targetWidth - bgW) / 2;
+      const bgY = (targetHeight - bgH) / 2;
+
+      // 強いぼかしをかける
+      ctx.filter = 'blur(40px) brightness(0.9)';
+      ctx.drawImage(sourceImg as CanvasImageSource, bgX, bgY, bgW, bgH);
+      ctx.restore();
+    } else {
+      // 通常（非AI）処理: 背景は透明のまま
+      ctx.clearRect(0, 0, targetWidth, targetHeight);
+    }
+
     const offsetX = Math.round((targetWidth - imgWidth) / 2);
     const offsetY = Math.round((targetHeight - imgHeight) / 2);
     ctx.drawImage(sourceImg as CanvasImageSource, offsetX, offsetY, imgWidth, imgHeight);
+
 
     return await new Promise<Blob>((resolve, reject) => {
       canvas.toBlob((b) => {
@@ -1401,7 +1420,8 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
           // アスペクト比（selectedRatio）が指定されている場合、投げる前にカンバスを自動調整（パディング）する
           updateInputStatus(input.id, "processing");
           try {
-            blobForRequest = await padImageToRatio(blobForRequest, selectedRatio);
+            // useAiApi の場合は透明パディングではなく背景を埋めるオプションを指定
+            blobForRequest = await padImageToRatio(blobForRequest, selectedRatio, { fillForAi: true });
           } catch (padErr) {
             console.warn('Canvas padding failed:', padErr);
             // エラー時はフォールバックとして元の blobForRequest をそのまま使う
