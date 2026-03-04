@@ -3319,7 +3319,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                         : 'bg-gray-50 border border-gray-200 text-gray-600'
                         }`}
                     >
-                      仕上：{selectedProcessingMode === 'standard' ? '標準' : '高精度'}
+                      仕上：{selectedProcessingMode === 'standard' ? '標準' : selectedProcessingMode === 'pro_high_precision' ? '高精度' : 'AI画像合成'}
                     </button>
                     <button
                       type="button"
@@ -3333,7 +3333,17 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                       onClick={() => scrollToSectionWithHeaderOffset(sectionBgRef.current)}
                       className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-gray-50 border border-gray-200 text-gray-600 cursor-pointer hover:opacity-80 transition-opacity"
                     >
-                      背景：{selectedTemplate ? (templates.find(t => t.src === selectedTemplate)?.name ?? 'カスタム色') : '透過'}
+                      背景：{(() => {
+                        if (selectedProcessingMode === 'ai_generate') return 'AI生成';
+                        let baseName = '透過';
+                        if (selectedTemplate) {
+                          const t = templates.find(temp => temp.src === selectedTemplate);
+                          if (t) baseName = t.name;
+                          else if (selectedTemplate.startsWith('data:image/')) baseName = 'カスタム画像';
+                          else baseName = 'カスタム色';
+                        }
+                        return blendEnabled ? `${baseName} (なじませる)` : baseName;
+                      })()}
                     </button>
                     <button
                       type="button"
