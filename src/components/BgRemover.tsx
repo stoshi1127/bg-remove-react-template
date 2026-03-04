@@ -1444,7 +1444,13 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                 }),
               });
 
-              const aiBody: Record<string, any> = { imageUrl: blobResult.url };
+              const aiBody: {
+                imageUrl: string;
+                mode?: 'generate' | 'blend';
+                prompt?: string;
+                refImageUrl?: string;
+                refImageDataUrl?: string;
+              } = { imageUrl: blobResult.url };
               if (bgMode === 'ai_generate') {
                 aiBody.mode = 'generate';
                 aiBody.prompt = aiPrompt;
@@ -1460,7 +1466,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                 body: JSON.stringify(aiBody),
                 signal: combinedSignal,
               });
-            } catch (err: any) {
+            } catch (err) {
               console.error('2-phase AI processing failed:', err);
               throw err;
             }
@@ -1481,7 +1487,13 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
               }),
             });
 
-            const aiBody: Record<string, any> = { imageUrl: blobResult.url };
+            const aiBody: {
+              imageUrl: string;
+              mode?: 'generate' | 'blend';
+              prompt?: string;
+              refImageUrl?: string;
+              refImageDataUrl?: string;
+            } = { imageUrl: blobResult.url };
             if (bgMode === 'ai_generate') {
               aiBody.mode = 'generate';
               aiBody.prompt = aiPrompt;
