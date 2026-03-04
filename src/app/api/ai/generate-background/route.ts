@@ -81,8 +81,8 @@ export async function POST(req: NextRequest) {
         const isRefUrl = refImageInput && (refImageInput.startsWith('http://') || refImageInput.startsWith('https://'));
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const replicateInput: Record<string, any> = isImageUrl
-            ? { image_url: imageInput, original_quality: true }
-            : { image: imageInput, original_quality: true };
+            ? { image_url: imageInput }
+            : { image: imageInput };
 
         if (mode === 'blend' && refImageInput) {
             // blend: 参照画像の雰囲気で背景を再生成（bg_prompt と ref_image は排他）

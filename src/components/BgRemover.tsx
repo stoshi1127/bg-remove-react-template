@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 // heic2any は必要な時だけ動的 import します
 import Link from "next/link";
 import JSZip from 'jszip';
@@ -3006,7 +3007,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
 
       {/* 処理中・高画質化中モーダル */}
       {
-        (busy || enhancingFileId || batchEnhanceState.inProgress) && (
+        (busy || enhancingFileId || batchEnhanceState.inProgress) && typeof document !== 'undefined' && createPortal(
           <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4" role="dialog" aria-modal="true" aria-labelledby="processing-modal-title">
             <div
               className="fixed inset-0 bg-black/40"
@@ -3102,7 +3103,8 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                 })()
               ) : null}
             </div>
-          </div>
+          </div>,
+          document.body
         )
       }
 
