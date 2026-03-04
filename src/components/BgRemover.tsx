@@ -130,11 +130,13 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
   const [customBgImage, setCustomBgImage] = useState<string | null>(null); // 任意背景画像のData URL
   const [aiBgPrompt, setAiBgPrompt] = useState<string>(''); // AI背景生成のテキスト入力
   const [aiBgPreset, setAiBgPreset] = useState<string | null>(null); // 選択されたAIプリセット
-  const [aiBgBusy, setAiBgBusy] = useState(false); // AI背景生成中
   const [aiBgError, setAiBgError] = useState<string | null>(null); // AI背景生成エラー
-  const [blendBusy, setBlendBusy] = useState(false); // なじませる処理中
   const [premiumRemaining, setPremiumRemaining] = useState<number | null>(null); // 残回数
   const customBgInputRef = useRef<HTMLInputElement>(null);
+  // 背景処理モード: 'normal'=従来bg-remove, 'ai_generate'=bria/generate-background
+  const [bgMode, setBgMode] = useState<'normal' | 'ai_generate'>('normal');
+  // 「自然になじませる」ON/OFF（デフォルトOFF、テンプレ/カラー/カスタム画像選択時のみ有効）
+  const [blendEnabled, setBlendEnabled] = useState(false);
 
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -654,6 +656,8 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
       const dataUrl = reader.result as string;
       setCustomBgImage(dataUrl);
       setSelectedTemplate(dataUrl); // applyTemplate で使える形にする
+      setBgMode('normal');
+      setAiBgPreset(null); setAiBgPrompt('');
       trackAnalyticsEvent('bg_custom_image_applied', {});
       setTimeout(() => scrollToSectionWithHeaderOffset(sectionFilesRef.current), 100);
     };
@@ -662,158 +666,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
     e.target.value = '';
   }, [isPro, goToProPurchase, scrollToSectionWithHeaderOffset]);
 
-  // --- AI背景生成ハンドラ ---
-  const handleAiBgGenerate = useCallback(async (fileId: string) => {
-    if (!isPro) { goToProPurchase('ai_bg_generate'); return; }
-    if (premiumRemaining !== null && premiumRemaining <= 0) {
-      setAiBgError('今月のAI機能（30回）を使い切りました。来月にリセットされます。');
-      return;
-    }
-
-    const file = inputs.find(i => i.id === fileId);
-    if (!file?.outputUrl) {
-      setAiBgError('まず背景を透過してください。');
-      return;
-    }
-
-    // プリセットのpromptとユーザー入力を結合
-    const presetPrompt = aiBgPresets.find(p => p.key === aiBgPreset)?.prompt || '';
-    const fullPrompt = [presetPrompt, aiBgPrompt].filter(Boolean).join(', ');
-    if (!fullPrompt) {
-      setAiBgError('背景のスタイルを選ぶか、イメージを入力してください。');
-      return;
-    }
-
-    setAiBgBusy(true);
-    setAiBgError(null);
-    trackAnalyticsEvent('bg_generate_applied', { preset: aiBgPreset || 'custom', hasCustomPrompt: !!aiBgPrompt });
-
-    try {
-      const imageDataUrl = await urlToDataUrl(file.outputUrl);
-      const response = await fetch('/api/ai/generate-background', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          imageDataUrl,
-          prompt: fullPrompt,
-        }),
-      });
-
-      if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        const detailMsg = errData.details ? ` (${JSON.stringify(errData.details)})` : '';
-        setAiBgError((errData.error || 'AI処理に失敗しました。もう一度お試しください。') + detailMsg);
-        return;
-      }
-
-      // 残回数をヘッダーから取得
-      const remaining = response.headers.get('x-premium-remaining');
-      if (remaining !== null) setPremiumRemaining(Number(remaining));
-      trackAnalyticsEvent('premium_ai_consumed', { feature: 'bg_generate' });
-
-      const blob = await response.blob();
-      const resultUrl = URL.createObjectURL(blob);
-      registerObjectUrl(resultUrl);
-
-      // 結果をoutputUrlに反映
-      setInputs(prev => prev.map(i =>
-        i.id === fileId ? { ...i, outputUrl: resultUrl } : i
-      ));
-    } catch {
-      setAiBgError('AI処理中にエラーが発生しました。もう一度お試しください。');
-    } finally {
-      setAiBgBusy(false);
-    }
-  }, [isPro, goToProPurchase, premiumRemaining, inputs, aiBgPreset, aiBgPrompt, aiBgPresets]);
-
-  // --- 背景を自然になじませるハンドラ ---
-  const handleBlend = useCallback(async (fileId: string) => {
-    if (!isPro) { goToProPurchase('ai_bg_blend'); return; }
-    if (premiumRemaining !== null && premiumRemaining <= 0) {
-      setAiBgError('今月のAI機能（30回）を使い切りました。来月にリセットされます。');
-      return;
-    }
-
-    const file = inputs.find(i => i.id === fileId);
-    if (!file?.outputUrl) {
-      setAiBgError('まず背景を透過してください。');
-      return;
-    }
-
-    // 現在選択されている背景（テンプレまたは任意画像）を参照画像として使用
-    if (!selectedTemplate) {
-      setAiBgError('先に背景を選んでください。');
-      return;
-    }
-
-    // 背景がカラーコードの場合はキャンバスでData URLに変換
-    let refImageDataUrl: string;
-    if (selectedTemplate.startsWith('#')) {
-      const canvas = document.createElement('canvas');
-      canvas.width = 512; canvas.height = 512;
-      const ctx = canvas.getContext('2d');
-      if (ctx) { ctx.fillStyle = selectedTemplate; ctx.fillRect(0, 0, 512, 512); }
-      refImageDataUrl = canvas.toDataURL('image/png');
-    } else if (selectedTemplate.startsWith('data:')) {
-      // 任意アップロード画像（既にData URL）
-      refImageDataUrl = selectedTemplate;
-    } else {
-      // テンプレート画像（/templates/...)→ fetchしてData URL化
-      try {
-        const res = await fetch(selectedTemplate);
-        const blob = await res.blob();
-        refImageDataUrl = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.onerror = () => reject(new Error('read failed'));
-          reader.readAsDataURL(blob);
-        });
-      } catch {
-        setAiBgError('背景画像の読み込みに失敗しました。');
-        return;
-      }
-    }
-
-    setBlendBusy(true);
-    setAiBgError(null);
-    trackAnalyticsEvent('bg_blend_applied', {});
-
-    try {
-      const imageDataUrl = await urlToDataUrl(file.outputUrl);
-      const response = await fetch('/api/ai/generate-background', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          imageDataUrl,
-          mode: 'blend',
-          refImageDataUrl,
-        }),
-      });
-
-      if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        const detailMsg = errData.details ? ` (${JSON.stringify(errData.details)})` : '';
-        setAiBgError((errData.error || 'AI処理に失敗しました。もう一度お試しください。') + detailMsg);
-        return;
-      }
-
-      const remaining = response.headers.get('x-premium-remaining');
-      if (remaining !== null) setPremiumRemaining(Number(remaining));
-      trackAnalyticsEvent('premium_ai_consumed', { feature: 'bg_blend' });
-
-      const blob = await response.blob();
-      const resultUrl = URL.createObjectURL(blob);
-      registerObjectUrl(resultUrl);
-
-      setInputs(prev => prev.map(i =>
-        i.id === fileId ? { ...i, outputUrl: resultUrl } : i
-      ));
-    } catch {
-      setAiBgError('AI処理中にエラーが発生しました。もう一度お試しください。');
-    } finally {
-      setBlendBusy(false);
-    }
-  }, [isPro, goToProPurchase, premiumRemaining, inputs, selectedTemplate]);
+  // handleAiBgGenerate / handleBlend は handleRemove 内に統合済みのため削除
 
   const handleSelectProcessingMode = useCallback((nextMode: ProcessingMode) => {
     if (nextMode === 'pro_high_precision' && !isPro) {
@@ -1252,6 +1105,53 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
     cancelRequestedRef.current = false;
     const filesToProcess = candidates;
 
+    // --- AI処理モードの事前チェック ---
+    const useAiApi = bgMode === 'ai_generate' || (bgMode === 'normal' && blendEnabled && selectedTemplate);
+    if (useAiApi) {
+      if (!isPro) {
+        goToProPurchase('ai_bg_processing');
+        return;
+      }
+      // 残回数チェック
+      const needed = filesToProcess.length;
+      if (premiumRemaining !== null && premiumRemaining < needed) {
+        setAiBgError(`AI機能の残回数が足りません（必要: ${needed}回、残り: ${premiumRemaining}回）。来月にリセットされます。`);
+        return;
+      }
+    }
+
+    // blendモード用: 参照背景画像をData URLに変換（全ファイル共通なので事前に1回だけ変換）
+    let blendRefImageDataUrl: string | undefined;
+    if (bgMode === 'normal' && blendEnabled && selectedTemplate) {
+      try {
+        if (selectedTemplate.startsWith('#')) {
+          const canvas = document.createElement('canvas');
+          canvas.width = 512; canvas.height = 512;
+          const ctx = canvas.getContext('2d');
+          if (ctx) { ctx.fillStyle = selectedTemplate; ctx.fillRect(0, 0, 512, 512); }
+          blendRefImageDataUrl = canvas.toDataURL('image/png');
+        } else if (selectedTemplate.startsWith('data:')) {
+          blendRefImageDataUrl = selectedTemplate;
+        } else {
+          blendRefImageDataUrl = await urlToDataUrl(selectedTemplate);
+        }
+      } catch {
+        setAiBgError('背景画像の読み込みに失敗しました。');
+        return;
+      }
+    }
+
+    // AI背景生成用のプロンプトを事前構築
+    let aiPrompt = '';
+    if (bgMode === 'ai_generate') {
+      const presetPrompt = aiBgPresets.find(p => p.key === aiBgPreset)?.prompt || '';
+      aiPrompt = [presetPrompt, aiBgPrompt].filter(Boolean).join(', ');
+      if (!aiPrompt) {
+        setAiBgError('背景のスタイルを選ぶか、イメージを入力してください。');
+        return;
+      }
+    }
+
     // 大量ファイル処理時の自動調整
     if (filesToProcess.length > 20 && adaptiveConcurrency) {
       setMaxConcurrentProcesses(Math.min(3, maxConcurrentProcesses)); // 大量処理時は保守的に開始
@@ -1260,6 +1160,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
 
     setBusy(true);
     setMsg(null);
+    setAiBgError(null);
     setProgress(0);
     setProcessedCount(0);
 
@@ -1386,7 +1287,28 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
         }
 
         let response: Response;
-        if (isPro && USE_DIRECT_UPLOAD_FOR_PRO) {
+        if (useAiApi) {
+          // --- AI処理パス: bria/generate-background のみで処理 ---
+          updateInputStatus(input.id, "processing");
+          const imageDataUrl = await urlToDataUrl(URL.createObjectURL(blobForRequest));
+
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const aiBody: Record<string, any> = { imageDataUrl };
+          if (bgMode === 'ai_generate') {
+            aiBody.mode = 'generate';
+            aiBody.prompt = aiPrompt;
+          } else if (blendRefImageDataUrl) {
+            aiBody.mode = 'blend';
+            aiBody.refImageDataUrl = blendRefImageDataUrl;
+          }
+
+          response = await fetch('/api/ai/generate-background', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(aiBody),
+            signal: combinedSignal,
+          });
+        } else if (isPro && USE_DIRECT_UPLOAD_FOR_PRO) {
           const uploadFile = blobForRequest instanceof File
             ? blobForRequest
             : new File([blobForRequest], nameForRequest, { type: blobForRequest.type || 'application/octet-stream' });
@@ -1441,7 +1363,8 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
         // レスポンスチェック
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({ error: "不明なサーバーエラー" }));
-          const errorMessage = `背景除去エラー: ${errorData.error || response.statusText}`;
+          const errorLabel = useAiApi ? 'AI背景エラー' : '背景除去エラー';
+          const errorMessage = `${errorLabel}: ${errorData.error || response.statusText}`;
 
           // ログ記録：エラー
           addLog({
@@ -1464,9 +1387,18 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
           return;
         }
 
+        // AI API成功時: 残回数を更新
+        if (useAiApi) {
+          const remaining = response.headers.get('x-premium-remaining');
+          if (remaining !== null) setPremiumRemaining(Number(remaining));
+          trackAnalyticsEvent('premium_ai_consumed', {
+            feature: bgMode === 'ai_generate' ? 'bg_generate' : 'bg_blend',
+          });
+        }
+
         updateInputStatus(input.id, "processing");
         const imageBlob = await response.blob();
-        const appliedProcessingMode = (response.headers.get('x-processing-mode') as ProcessingMode | null) ?? requestedProcessingMode;
+        const appliedProcessingMode = useAiApi ? 'pro_high_precision' : ((response.headers.get('x-processing-mode') as ProcessingMode | null) ?? requestedProcessingMode);
 
         // ログ記録：後処理開始
         addLog({
@@ -1496,26 +1428,31 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
             try {
               const removedBgUrl = reader.result as string;
 
-              // 背景除去後の画像から、まず被写体のバウンディングボックスを計算する
-              const subjectBbox = await Promise.race([
-                calculateBoundingBox(removedBgUrl),
-                new Promise<undefined>((_, reject) =>
-                  setTimeout(() => reject(new Error('バウンディングボックス計算タイムアウト')), 15000)
-                )
-              ]);
-
               let finalUrl = removedBgUrl;
 
-              // アスペクト比がデフォルトでない場合、またはテンプレートが選択されている場合は常に画像処理を行う
-              if (selectedRatio !== '1:1' || selectedTemplate) {
-                const templateUrl = selectedTemplate ?? 'transparent';
-                // 計算したバウンディングボックスをテンプレート適用関数に渡す
-                finalUrl = await Promise.race([
-                  applyTemplate(removedBgUrl, templateUrl, selectedRatio, subjectBbox),
-                  new Promise<string>((_, reject) =>
-                    setTimeout(() => reject(new Error('テンプレート適用タイムアウト')), 30000)
+              if (useAiApi) {
+                // AI処理時: 既に完成画像なのでテンプレート適用不要
+                // removedBgUrl をそのまま finalUrl として使う
+              } else {
+                // 通常処理: 背景除去後の画像からバウンディングボックスを計算してテンプレ適用
+                const subjectBbox = await Promise.race([
+                  calculateBoundingBox(removedBgUrl),
+                  new Promise<undefined>((_, reject) =>
+                    setTimeout(() => reject(new Error('バウンディングボックス計算タイムアウト')), 15000)
                   )
                 ]);
+
+                // アスペクト比がデフォルトでない場合、またはテンプレートが選択されている場合は常に画像処理を行う
+                if (selectedRatio !== '1:1' || selectedTemplate) {
+                  const templateUrl = selectedTemplate ?? 'transparent';
+                  // 計算したバウンディングボックスをテンプレート適用関数に渡す
+                  finalUrl = await Promise.race([
+                    applyTemplate(removedBgUrl, templateUrl, selectedRatio, subjectBbox),
+                    new Promise<string>((_, reject) =>
+                      setTimeout(() => reject(new Error('テンプレート適用タイムアウト')), 30000)
+                    )
+                  ]);
+                }
               }
 
               updateInputStatus(input.id, "completed", undefined, finalUrl);
@@ -2176,6 +2113,9 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
               onClick={() => {
                 setSelectedTemplate(null);
                 setCustomBgImage(null);
+                setBgMode('normal');
+                setAiBgPreset(null); setAiBgPrompt('');
+                setBlendEnabled(false);
                 setTimeout(() => scrollToSectionWithHeaderOffset(sectionFilesRef.current), 100);
               }}
               className={`cursor-pointer rounded-lg border-2 ${!selectedTemplate ? 'border-blue-500 ring-2 ring-blue-300' : 'border-gray-200 hover:border-blue-400'} overflow-hidden relative aspect-square flex items-center justify-center bg-gray-100 transition-all`}
@@ -2188,6 +2128,8 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
               onClick={() => {
                 setSelectedTemplate(customColor);
                 setCustomBgImage(null);
+                setBgMode('normal');
+                setAiBgPreset(null); setAiBgPrompt('');
                 setTimeout(() => scrollToSectionWithHeaderOffset(sectionFilesRef.current), 100);
               }}
               className={`cursor-pointer rounded-lg border-2 ${selectedTemplate === customColor ? 'border-blue-500 ring-2 ring-blue-300' : 'border-gray-200 hover:border-blue-400'} overflow-hidden relative aspect-square flex items-center justify-center transition-all`}
@@ -2200,6 +2142,8 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                   setCustomColor(e.target.value);
                   setSelectedTemplate(e.target.value);
                   setCustomBgImage(null);
+                  setBgMode('normal');
+                  setAiBgPreset(null); setAiBgPrompt('');
                   setTimeout(() => scrollToSectionWithHeaderOffset(sectionFilesRef.current), 100);
                 }}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
@@ -2217,6 +2161,8 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                 onClick={() => {
                   setSelectedTemplate(template.src);
                   setCustomBgImage(null);
+                  setBgMode('normal');
+                  setAiBgPreset(null); setAiBgPrompt('');
                   setTimeout(() => scrollToSectionWithHeaderOffset(sectionFilesRef.current), 100);
                 }}
                 className={`cursor-pointer rounded-lg border-2 ${selectedTemplate === template.src ? 'border-blue-500 ring-2 ring-blue-300' : 'border-transparent hover:border-blue-400'} overflow-hidden relative aspect-square transition-all`}
@@ -2268,125 +2214,119 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
             />
           </div>
 
-          {/* --- AIで背景を作る（Pro / プレミアムAI回数消費） --- */}
-          {inputs.some(i => i.status === 'completed' && i.outputUrl) && (
-            <div className="mt-4 p-4 rounded-xl border border-purple-200 bg-gradient-to-r from-purple-50 to-indigo-50">
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="text-sm font-semibold text-purple-800 flex items-center gap-1.5">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
-                  AIで背景を作る
+          {/* --- ✨ AIで背景を作る（事前設定型、Pro / プレミアムAI回数消費） --- */}
+          <div className={`mt-4 p-4 rounded-xl border-2 transition-all ${bgMode === 'ai_generate' ? 'border-purple-500 ring-2 ring-purple-300 bg-gradient-to-r from-purple-50 to-indigo-50' : 'border-purple-200 bg-gradient-to-r from-purple-50/50 to-indigo-50/50'}`}>
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-sm font-semibold text-purple-800 flex items-center gap-1.5">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
+                ✨ AIで背景を作る
+                {!isPro && <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">Pro</span>}
+              </h4>
+              {isPro && premiumRemaining !== null && (
+                <span className="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded-full">
+                  残り {premiumRemaining} 回
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-gray-600 mb-3">好きなスタイルや場所を選ぶと、AIが自然な背景を作ります</p>
+
+            {/* プリセットボタン */}
+            <div className="flex flex-wrap gap-2 mb-3">
+              {aiBgPresets.map(preset => (
+                <button
+                  key={preset.key}
+                  onClick={() => {
+                    if (!isPro) {
+                      goToProPurchase('ai_bg_preset');
+                      trackAnalyticsEvent('pro_purchase_click_from_ai_bg', { feature: 'bg_generate', preset: preset.key });
+                      return;
+                    }
+                    if (aiBgPreset === preset.key) {
+                      // 同じプリセット再タップ → 解除 → normalモードに戻す
+                      setAiBgPreset(null);
+                      if (!aiBgPrompt) setBgMode('normal');
+                    } else {
+                      setAiBgPreset(preset.key);
+                      setBgMode('ai_generate');
+                      setSelectedTemplate(null); // テンプレ解除
+                      setCustomBgImage(null);
+                      setBlendEnabled(false);
+                    }
+                  }}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${aiBgPreset === preset.key
+                    ? 'bg-purple-600 text-white shadow-md'
+                    : 'bg-white text-purple-700 border border-purple-200 hover:bg-purple-100'
+                    }`}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+
+            {/* テキスト入力 */}
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="さらに詳しく（任意）例: 木のテーブルの上、窓際の光"
+                value={aiBgPrompt}
+                onChange={(e) => {
+                  setAiBgPrompt(e.target.value);
+                  if (e.target.value || aiBgPreset) {
+                    setBgMode('ai_generate');
+                    setSelectedTemplate(null);
+                    setCustomBgImage(null);
+                    setBlendEnabled(false);
+                  } else if (!aiBgPreset) {
+                    setBgMode('normal');
+                  }
+                }}
+                className="flex-1 px-3 py-2 text-sm border border-purple-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 bg-white"
+                disabled={!isPro || busy}
+              />
+            </div>
+
+            {bgMode === 'ai_generate' && (
+              <p className="mt-2 text-xs text-purple-600 font-medium">
+                ✓ 処理開始時にAIが背景を生成します（{inputs.filter(i => i.status === 'ready' || i.status === 'error').length}枚 × 1回消費）
+              </p>
+            )}
+          </div>
+
+          {/* --- 自然になじませる チェックボックス（テンプレ/カラー/カスタム画像選択時のみ） --- */}
+          {selectedTemplate && bgMode === 'normal' && (
+            <div className="mt-3 p-3 rounded-lg border border-teal-200 bg-teal-50/50">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={blendEnabled}
+                  onChange={(e) => {
+                    if (!isPro) {
+                      goToProPurchase('ai_bg_blend');
+                      trackAnalyticsEvent('pro_purchase_click_from_ai_bg', { feature: 'bg_blend' });
+                      return;
+                    }
+                    setBlendEnabled(e.target.checked);
+                  }}
+                  className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
+                  disabled={!isPro}
+                />
+                <span className="text-sm font-medium text-teal-800 flex items-center gap-1.5">
+                  自然になじませる（影・光を自動調整）
                   {!isPro && <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">Pro</span>}
-                </h4>
-                {isPro && premiumRemaining !== null && (
-                  <span className="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded-full">
-                    残り {premiumRemaining} 回
+                </span>
+                {isPro && premiumRemaining !== null && blendEnabled && (
+                  <span className="text-xs text-teal-600 bg-teal-100 px-2 py-0.5 rounded-full ml-auto">
+                    {inputs.filter(i => i.status === 'ready' || i.status === 'error').length}枚 × 1回消費
                   </span>
                 )}
-              </div>
-              <p className="text-xs text-gray-600 mb-3">好きなスタイルや場所を選ぶと、AIが自然な背景を作ります</p>
-
-              {/* プリセットボタン */}
-              <div className="flex flex-wrap gap-2 mb-3">
-                {aiBgPresets.map(preset => (
-                  <button
-                    key={preset.key}
-                    onClick={() => {
-                      if (!isPro) {
-                        goToProPurchase('ai_bg_preset');
-                        trackAnalyticsEvent('pro_purchase_click_from_ai_bg', { feature: 'bg_generate', preset: preset.key });
-                        return;
-                      }
-                      setAiBgPreset(aiBgPreset === preset.key ? null : preset.key);
-                    }}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${aiBgPreset === preset.key
-                      ? 'bg-purple-600 text-white shadow-md'
-                      : 'bg-white text-purple-700 border border-purple-200 hover:bg-purple-100'
-                      }`}
-                  >
-                    {preset.label}
-                  </button>
-                ))}
-              </div>
-
-              {/* テキスト入力 */}
-              <div className="flex gap-2 mb-3">
-                <input
-                  type="text"
-                  placeholder="さらに詳しく（任意）例: 木のテーブルの上、窓際の光"
-                  value={aiBgPrompt}
-                  onChange={(e) => setAiBgPrompt(e.target.value)}
-                  className="flex-1 px-3 py-2 text-sm border border-purple-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 bg-white"
-                  disabled={!isPro || aiBgBusy}
-                />
-              </div>
-
-              {/* 実行ボタン：最初の完了ファイルに対して実行 */}
-              <button
-                onClick={() => {
-                  const target = inputs.find(i => i.status === 'completed' && i.outputUrl);
-                  if (target) handleAiBgGenerate(target.id);
-                }}
-                disabled={aiBgBusy || (!aiBgPreset && !aiBgPrompt)}
-                className={`w-full py-2.5 rounded-lg text-sm font-semibold transition-all ${aiBgBusy
-                  ? 'bg-purple-300 text-white cursor-wait'
-                  : (!aiBgPreset && !aiBgPrompt)
-                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700 shadow-md'
-                  }`}
-              >
-                {aiBgBusy ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
-                    AIが背景を作っています...
-                  </span>
-                ) : '背景を作る'}
-              </button>
-
-              {/* エラー表示 */}
-              {aiBgError && (
-                <p className="mt-2 text-xs text-red-600 bg-red-50 p-2 rounded-lg">{aiBgError}</p>
-              )}
+              </label>
+              <p className="text-xs text-gray-500 mt-1 ml-6">選んだ背景に合わせてAIが影や明るさを自然に調整します</p>
             </div>
           )}
 
-          {/* --- 背景を自然になじませる（テンプレ/任意背景が選ばれている＆透過済みファイルがある場合） --- */}
-          {selectedTemplate && inputs.some(i => i.status === 'completed' && i.outputUrl) && (
-            <div className="mt-4 p-4 rounded-xl border border-teal-200 bg-gradient-to-r from-teal-50 to-cyan-50">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="text-sm font-semibold text-teal-800 flex items-center gap-1.5">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" /></svg>
-                  背景を自然になじませる
-                  {!isPro && <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">Pro</span>}
-                </h4>
-                {isPro && premiumRemaining !== null && (
-                  <span className="text-xs text-teal-600 bg-teal-100 px-2 py-1 rounded-full">
-                    残り {premiumRemaining} 回
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-gray-600 mb-3">影や明るさを調整して、写真に自然になじませます</p>
-              <button
-                onClick={() => {
-                  const target = inputs.find(i => i.status === 'completed' && i.outputUrl);
-                  if (target) handleBlend(target.id);
-                }}
-                disabled={blendBusy}
-                className={`w-full py-2.5 rounded-lg text-sm font-semibold transition-all ${blendBusy
-                  ? 'bg-teal-300 text-white cursor-wait'
-                  : 'bg-gradient-to-r from-teal-600 to-cyan-600 text-white hover:from-teal-700 hover:to-cyan-700 shadow-md'
-                  }`}
-              >
-                {blendBusy ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
-                    AIがなじませています...
-                  </span>
-                ) : '自然になじませる'}
-              </button>
-              {aiBgError && (
-                <p className="mt-2 text-xs text-red-600 bg-red-50 p-2 rounded-lg">{aiBgError}</p>
-              )}
-            </div>
+          {/* AIエラー表示 */}
+          {aiBgError && (
+            <p className="mt-2 text-xs text-red-600 bg-red-50 p-2 rounded-lg">{aiBgError}</p>
           )}
         </div>
       )}

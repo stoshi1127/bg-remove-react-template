@@ -1,31 +1,23 @@
-# タスクリスト (Plan 6: 背景機能拡張とプレミアムAI共通回数設計)
+# タスクリスト（Plan 6 改修：AI背景フロー再設計）
 
-## 調査フェーズ
-- [x] BgRemover.tsx の背景テンプレUI・applyTemplate 構造の調査
-- [x] premiumUsage.ts / premium-usage API の構造確認
-- [x] Replicate API 連携パターン（remove-bg/route.ts）の確認
-- [x] Prismaスキーマ・認証ヘルパーの確認
+## State / ロジック
+- [x] `bgMode`, `blendEnabled` state追加
+- [x] bgMode切り替えロジック（AIプリセット選択↔通常テンプレ選択）
+- [x] `handleRemove` に `ai_generate` / `blend` 分岐追加
+- [x] 複数ファイル対応：全件にAI処理 + 回数消費
+- [x] 残回数事前チェック（ファイル数 vs 残回数）
 
-## 実装フェーズ
+## UI
+- [x] 背景カスタマイズ内に「AIで背景を作る」を目立つカードとして配置
+- [x] 「自然になじませる」チェックボックス追加（デフォルトOFF、Pro限定）
+- [x] 処理開始ボタンにAI回数表示
+- [x] 旧UI削除（完了後トリガーのAI生成/blend セクション）
 
-### 1. 背景生成API（`/api/ai/generate-background`）
-- [x] `src/app/api/ai/generate-background/route.ts` 新規作成
-  - Replicate `bria/generate-background` 呼び出し
-  - 認証ガード（Pro判定）
-  - プレミアムAI回数消費（成功時のみ）
-  - blendモード追加（`ref_image_file` パラメータ対応）
+## 旧ハンドラ削除
+- [x] `handleAiBgGenerate` 削除
+- [x] `handleBlend` 削除
 
-### 2. BgRemover.tsx UI拡張
-- [x] 任意画像アップロード機能（Pro限定、回数消費なし）
-- [x] 「背景を作る」セクション（プリセット＋テキスト入力）
-- [x] 「背景を自然になじませる」ボタン（テンプレ/任意背景選択時に表示）
-- [x] プレミアムAI残回数表示
-- [x] Freeユーザー向けのPro導線（各ボタンにProバッジ・購入リダイレクト）
-
-### 3. Analytics イベント追加
-- [x] `bg_custom_image_applied` / `bg_generate_applied` / `bg_blend_applied`
-- [x] `premium_ai_consumed` / `pro_purchase_click_from_ai_bg`
-
-### 4. ドキュメント更新
-- [x] README.md 更新（環境変数・新API・blendモードの記載）
-- [x] task.md / walkthrough.md 更新
+## ドキュメント
+- [x] task.md 更新
+- [ ] README.md 更新
+- [ ] walkthrough.md 更新

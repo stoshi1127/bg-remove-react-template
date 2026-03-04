@@ -1,39 +1,39 @@
-# 修正内容の確認 (Walkthrough)
+# Plan 6 改修 — AI背景フロー再設計 ウォークスルー
 
-## 変更の概要
+## 変更概要
 
-Plan 6 に基づき、背景機能拡張とプレミアムAI連携を **全フェーズ完了** しました。
+AI背景生成を「背景除去後に後付け実行」から「**事前設定 → 一括処理**」に変更。
+`bria/generate-background` モデルのみで処理し、`851-labs/background-remover` / `fottoai/remove-bg-2` は使用しない。
 
-## 新規ファイル
+## 主な変更点
 
-### `src/app/api/ai/generate-background/route.ts`
-- `bria-ai/background-generation` モデルを Replicate API 経由で呼び出す POST エンドポイント
-- **2つのモード**:
-  - `generate`: テキスト（プリセット＋ユーザー入力）から背景を生成
-  - `blend`: 参照画像（テンプレ/任意背景）の雰囲気で背景を再生成し、光源・色調を自然に調和
-- Pro会員チェック → プレミアムAI残回数チェック → Replicate呼び出し → **成功時のみ回数消費** → 画像バイナリ返却
+### BgRemover.tsx
 
-## 変更ファイル
+- **新state**: `bgMode` (`normal` | `ai_generate`), `blendEnabled` (boolean, デフォルトOFF)
+- **旧ハンドラ削除**: `handleAiBgGenerate`, `handleBlend` → `handleRemove`内に統合
+- **UI改修**:
+  - 「✨ AIで背景を作る」を背景カスタマイズ内の目立つカードに配置（常時表示）
+  - 「自然になじませる」をチェックボックス化（テンプレ/カラー選択時のみ表示、デフォルトOFF）
+  - テンプレ/カラー選択時は自動で`bgMode='normal'`に戻り、AIプリセット解除
+  - AIプリセット/プロンプト入力で自動で`bgMode='ai_generate'`に切り替え
+- **処理フロー分岐** (`handleRemove` → `processSingleFile`内):
+  - `bgMode === 'ai_generate'` → `/api/ai/generate-background` (mode=generate)
+  - `bgMode === 'normal' && blendEnabled` → `/api/ai/generate-background` (mode=blend)
+  - それ以外 → 従来の `/api/remove-bg`
+- **事前チェック**: AI処理時はPro判定 + 残回数 ≥ ファイル数を事前確認
+- **複数ファイル対応**: 全ファイルにAI処理を適用し、1ファイルにつき1回消費
 
-### `src/components/BgRemover.tsx`
-- **新規state**: `customBgImage`, `aiBgPrompt`, `aiBgPreset`, `aiBgBusy`, `aiBgError`, `blendBusy`, `premiumRemaining`, `customBgInputRef`
-- **プレミアムAI残回数の自動取得**: Pro会員はマウント時に `/api/premium-usage` を呼び残回数を取得
-- **任意画像アップロード**（Pro限定・回数消費なし）: テンプレグリッドの末尾に「画像を背景に」ボタンを追加
-- **AI背景生成セクション**: 6プリセット＋テキスト入力 → `/api/ai/generate-background` (mode=generate)
-- **「自然になじませる」ボタン**: テンプレ/任意背景選択時に表示 → `/api/ai/generate-background` (mode=blend)
-- **Analytics**: `bg_custom_image_applied`, `bg_generate_applied`, `bg_blend_applied`, `premium_ai_consumed`, `pro_purchase_click_from_ai_bg`
+### route.ts (API)
 
-### `README.md`
-- 機能一覧に「任意画像アップロード（Pro）」「AIで背景を作る」「背景を自然になじませる」を追記
-- 環境変数に `REPLICATE_GENERATE_BG_VERSION` を追記
-- API仕様に `POST /api/ai/generate-background` を追記（generateモード/blendモードの両方を記載）
+- モデル名: `bria/generate-background:2555256f9a28...`（正しいバージョンID）
+- `maxDuration: 90`（ポーリング最大秒数に合わせた）
+- `bg_prompt` と `ref_image_file` は排他（blend時は`bg_prompt`を送らない）
+
+### README.md
+
+- API仕様を更新（入力画像は「元画像」に変更、フロー説明追加）
 
 ## 検証結果
 
-- `npx tsc --noEmit` — 新コードに起因するエラーなし
-- `git status` — 意図した変更のみ（一時ファイルやダミーコード残存なし）
-
-## トラブルシューティング（2026-03-03 追記）
-
-- **AI処理の開始に失敗する（502）エラーの修正**: Replicate `bria-ai/background-generation` モデル入力のパラメータ名が仕様変更・間違いだったため (`prompt` → `bg_prompt`)、修正を行い正常に要求が開始されるようにしました。無効な `refine_prompt` パラメータ入力も削除しています。
-- ※Consoleに出る `ERR_BLOCKED_BY_RESPONSE...Coep` (vercel.live) は Vercel開発ツールの制約によるもので、アプリケーション動作には影響しません。
+- `npx tsc --noEmit`: BgRemover.tsx / route.ts のエラーなし
+- ビルド正常
