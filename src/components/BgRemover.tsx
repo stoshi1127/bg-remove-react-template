@@ -1122,6 +1122,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
 
     // blendモード用: 参照背景画像をData URLに変換（全ファイル共通なので事前に1回だけ変換）
     let blendRefImageDataUrl: string | undefined;
+    let blendRefImageUrl: string | undefined; // Vercel 4.5MB制限回避のため、大きい場合はBlobにアップロード
     if (bgMode === 'normal' && blendEnabled && selectedTemplate) {
       try {
         if (selectedTemplate.startsWith('#')) {
@@ -1134,6 +1135,29 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
           blendRefImageDataUrl = selectedTemplate;
         } else {
           blendRefImageDataUrl = await urlToDataUrl(selectedTemplate);
+        }
+        // 大きい参照画像はBlobにアップロード（4.5MB制限回避）
+        if (blendRefImageDataUrl && !selectedTemplate.startsWith('#')) {
+          const res = await fetch(blendRefImageDataUrl);
+          const refBlob = await res.blob();
+          const refFile = new File([refBlob], 'ref.png', { type: refBlob.type || 'image/png' });
+          const img = new Image();
+          await new Promise<void>((resolve, reject) => {
+            img.onload = () => resolve();
+            img.onerror = reject;
+            img.src = blendRefImageDataUrl!;
+          });
+          const refResult = await uploadToBlob(refFile.name, refFile, {
+            access: 'public',
+            handleUploadUrl: '/api/upload/blob',
+            clientPayload: JSON.stringify({
+              sizeBytes: refFile.size,
+              mimeType: refFile.type,
+              width: img.naturalWidth,
+              height: img.naturalHeight,
+            }),
+          });
+          blendRefImageUrl = refResult.url;
         }
       } catch {
         setAiBgError('背景画像の読み込みに失敗しました。');
@@ -1289,17 +1313,34 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
         let response: Response;
         if (useAiApi) {
           // --- AI処理パス: bria/generate-background のみで処理 ---
+          // Vercel 4.5MB制限回避のため、BlobにアップロードしてURLを送る
           updateInputStatus(input.id, "processing");
-          const imageDataUrl = await urlToDataUrl(URL.createObjectURL(blobForRequest));
+          const uploadFile = blobForRequest instanceof File
+            ? blobForRequest
+            : new File([blobForRequest], nameForRequest, { type: blobForRequest.type || 'application/octet-stream' });
+          const blobResult = await uploadToBlob(uploadFile.name, uploadFile, {
+            access: 'public',
+            handleUploadUrl: '/api/upload/blob',
+            clientPayload: JSON.stringify({
+              sizeBytes: uploadFile.size,
+              mimeType: uploadFile.type,
+              width: imageMeta.width,
+              height: imageMeta.height,
+            }),
+          });
 
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const aiBody: Record<string, any> = { imageDataUrl };
+          const aiBody: Record<string, any> = { imageUrl: blobResult.url };
           if (bgMode === 'ai_generate') {
             aiBody.mode = 'generate';
             aiBody.prompt = aiPrompt;
-          } else if (blendRefImageDataUrl) {
+          } else if (blendRefImageUrl || blendRefImageDataUrl) {
             aiBody.mode = 'blend';
-            aiBody.refImageDataUrl = blendRefImageDataUrl;
+            if (blendRefImageUrl) {
+              aiBody.refImageUrl = blendRefImageUrl;
+            } else {
+              aiBody.refImageDataUrl = blendRefImageDataUrl;
+            }
           }
 
           response = await fetch('/api/ai/generate-background', {

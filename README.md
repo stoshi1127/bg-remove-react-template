@@ -215,10 +215,12 @@ Pro専用のAI背景生成・合成です。被写体を保ちながら、指定
 - **Runtime**: Node.js（maxDuration: 90s）
 - **認証**: ログイン済みかつ `isPro=true` のみ許可。プレミアムAI残回数 > 0 が必要
 - **Request（application/json）**:
-  - `imageDataUrl`: 元画像（Data URL）
+  - `imageUrl`: 元画像のURL（Blob等、推奨。Vercel 4.5MB制限回避のためフロントはBlobへ直接アップロード）
+  - `imageDataUrl`: 元画像（Data URL）。`imageUrl` がない場合のフォールバック
   - `mode`: `'generate'`（テキストから背景生成）または `'blend'`（参照画像になじませる）
   - `prompt`: 背景の説明テキスト（generate時に使用）
-  - `refImageDataUrl`: 参照背景画像（Data URL、blend時に使用。`bg_prompt`と排他）
+  - `refImageUrl`: 参照背景画像のURL（blend時、推奨）
+  - `refImageDataUrl`: 参照背景画像（Data URL、blend時。小さい場合のみ。`refImageUrl` がない場合のフォールバック）
 - **Response**:
   - 成功時: `200` + 画像バイナリ。ヘッダー `x-premium-remaining` で残回数を返却
   - 失敗時: `4xx/5xx` + JSON `{ error: string }`。失敗時は回数を消費しない

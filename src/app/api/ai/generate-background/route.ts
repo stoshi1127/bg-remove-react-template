@@ -11,10 +11,12 @@ export const maxDuration = 90; // ポーリング最大90秒に合わせる
  * Pro会員のみ利用可能。プレミアムAI回数を1消費する。
  *
  * Body (JSON):
- *   imageDataUrl: string         — 背景除去済みの前景画像 (data URI)
+ *   imageUrl: string             — 前景画像のURL（Blob等、推奨・4.5MB制限回避）
+ *   imageDataUrl?: string        — 前景画像 (data URI)、imageUrl がない場合のフォールバック
  *   mode: 'generate' | 'blend'   — 'generate'=テキストから背景生成, 'blend'=参照画像になじませる
  *   prompt?: string              — 背景の説明テキスト（generate時に使用）
- *   refImageDataUrl?: string     — 参照背景画像 (data URI, blend時に使用)
+ *   refImageUrl?: string         — 参照背景画像のURL（blend時、推奨）
+ *   refImageDataUrl?: string     — 参照背景画像 (data URI, blend時、小さい場合のみ)
  */
 export async function POST(req: NextRequest) {
     const replicateApiKey = process.env.REPLICATE_API_TOKEN;
@@ -44,20 +46,24 @@ export async function POST(req: NextRequest) {
     }
 
     // --- リクエストBody ---
-    let imageDataUrl: string;
+    let imageInput: string; // URL または data URI
     let prompt: string;
     let mode: 'generate' | 'blend' = 'generate';
-    let refImageDataUrl: string | undefined;
+    let refImageInput: string | undefined;
     try {
         const body = await req.json();
-        imageDataUrl = body.imageDataUrl;
+        const imageUrl = typeof body.imageUrl === 'string' ? body.imageUrl : null;
+        const imageDataUrl = typeof body.imageDataUrl === 'string' ? body.imageDataUrl : null;
+        imageInput = imageUrl || imageDataUrl || '';
         prompt = body.prompt ?? '';
         mode = body.mode === 'blend' ? 'blend' : 'generate';
-        refImageDataUrl = body.refImageDataUrl;
-        if (!imageDataUrl || typeof imageDataUrl !== 'string') {
+        const refImageUrl = typeof body.refImageUrl === 'string' ? body.refImageUrl : null;
+        const refImageDataUrl = typeof body.refImageDataUrl === 'string' ? body.refImageDataUrl : null;
+        refImageInput = refImageUrl || refImageDataUrl || undefined;
+        if (!imageInput) {
             return NextResponse.json({ error: '画像が必要です' }, { status: 400 });
         }
-        if (mode === 'blend' && (!refImageDataUrl || typeof refImageDataUrl !== 'string')) {
+        if (mode === 'blend' && !refImageInput) {
             return NextResponse.json({ error: '参照する背景画像が必要です' }, { status: 400 });
         }
     } catch {
@@ -70,15 +76,21 @@ export async function POST(req: NextRequest) {
         'bria/generate-background:2555256f9a283b27092a99741d35251c180d6712e572d19a1c3912b45c80c995';
 
     try {
-        // mode に応じて input を組み立てる
+        // mode に応じて input を組み立てる（URL は image_url/ref_image_url、data URI は image/ref_image_file）
+        const isImageUrl = imageInput.startsWith('http://') || imageInput.startsWith('https://');
+        const isRefUrl = refImageInput && (refImageInput.startsWith('http://') || refImageInput.startsWith('https://'));
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const replicateInput: Record<string, any> = {
-            image: imageDataUrl,
-        };
+        const replicateInput: Record<string, any> = isImageUrl
+            ? { image_url: imageInput }
+            : { image: imageInput };
 
-        if (mode === 'blend' && refImageDataUrl) {
+        if (mode === 'blend' && refImageInput) {
             // blend: 参照画像の雰囲気で背景を再生成（bg_prompt と ref_image は排他）
-            replicateInput.ref_image_file = refImageDataUrl;
+            if (isRefUrl) {
+                replicateInput.ref_image_url = refImageInput;
+            } else {
+                replicateInput.ref_image_file = refImageInput;
+            }
         } else {
             // generate: テキストから背景生成
             replicateInput.bg_prompt = prompt || 'a natural, clean background';
@@ -98,7 +110,7 @@ export async function POST(req: NextRequest) {
 
         if (!startResponse.ok) {
             const errorData = await startResponse.json().catch(() => ({ detail: 'unknown' }));
-            console.error('[generate-background] Replicate start error:', JSON.stringify({ status: startResponse.status, errorData }));
+            console.error('[generate-background] Replicate start error:', errorData);
             return NextResponse.json(
                 { error: 'AI処理の開始に失敗しました。もう一度お試しください。', details: errorData },
                 { status: 502 }
@@ -140,13 +152,7 @@ export async function POST(req: NextRequest) {
         }
 
         if (prediction.status !== 'succeeded' || !prediction.output) {
-            console.error('[generate-background] prediction failed:', JSON.stringify({
-                status: prediction.status,
-                attempts,
-                maxAttempts,
-                error: prediction.error,
-                id: prediction.id,
-            }));
+            console.error('[generate-background] prediction failed:', prediction);
             return NextResponse.json(
                 { error: 'AI処理が混み合っているため、もう一度お試しください。回数は消費されません。' },
                 { status: 502 }
@@ -176,7 +182,7 @@ export async function POST(req: NextRequest) {
 
         const imageResponse = await fetch(outputUrl);
         if (!imageResponse.ok) {
-            console.error('[generate-background] image fetch failed:', JSON.stringify({ status: imageResponse.status, outputUrl: outputUrl?.slice(0, 80) }));
+            console.error('[generate-background] image fetch failed:', outputUrl);
             return NextResponse.json(
                 { error: '生成された画像の取得に失敗しました。' },
                 { status: 502 }
