@@ -10,7 +10,7 @@ type JsonBody = {
   processingMode?: string;
 };
 
-type ProcessingMode = 'standard' | 'pro_high_precision';
+type ProcessingMode = 'standard' | 'pro_high_precision' | 'ai_generate';
 
 function asString(v: unknown): string | null {
   return typeof v === 'string' && v.length > 0 ? v : null;

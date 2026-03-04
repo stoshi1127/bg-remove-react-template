@@ -57,7 +57,7 @@ import { trackAnalyticsEvent } from '@/lib/analytics/events';
 
 type AdUserPlan = 'pro' | 'free' | 'guest';
 type AdPlacement = 'after_cta' | 'bottom';
-type ProcessingMode = 'standard' | 'pro_high_precision';
+type ProcessingMode = 'standard' | 'pro_high_precision' | 'ai_generate';
 type EnhanceTarget = '1k' | '2k' | '4k';
 type OversizedPromptItem = {
   id: string;
@@ -2077,7 +2077,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
       {/* 処理モード選択 */}
       <div ref={sectionModeRef} className="space-y-2">
         <h3 className="text-base font-semibold text-gray-800">仕上がりモード</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <button
             type="button"
             onClick={() => handleSelectProcessingMode('standard')}
@@ -2089,6 +2089,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
             <p className="font-semibold text-gray-900">標準</p>
             <p className="text-xs text-gray-600 mt-1">AIが自動で背景を切り抜きます</p>
           </button>
+
           <button
             type="button"
             onClick={() => handleSelectProcessingMode('pro_high_precision')}
@@ -2106,19 +2107,45 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
               <p className="text-[11px] text-amber-700 mt-2">Proで選べます</p>
             )}
           </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              if (!isPro) {
+                goToProPurchase('ai_bg_mode');
+                trackAnalyticsEvent('pro_purchase_click_from_ai_bg', { feature: 'bg_generate_mode' });
+                return;
+              }
+              handleSelectProcessingMode('ai_generate');
+              setBgMode('ai_generate');
+            }}
+            className={`rounded-xl border px-4 py-3 text-left transition-colors relative ${selectedProcessingMode === 'ai_generate'
+              ? 'border-purple-500 bg-purple-50 ring-2 ring-purple-300'
+              : 'border-purple-200 hover:border-purple-300 bg-gradient-to-r from-purple-50/50 to-indigo-50/50'
+              } ${!isPro ? 'opacity-80' : ''}`}
+          >
+            <span className="absolute top-2 right-2 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+              Pro
+            </span>
+            <p className="font-semibold text-purple-900 flex items-center gap-1">
+              ✨ AIで背景を作る
+            </p>
+            <p className="text-xs text-purple-700 mt-1">好きなスタイルで新しい背景を生成</p>
+            {!isPro && (
+              <p className="text-[11px] text-amber-700 mt-2">Proで選べます</p>
+            )}
+          </button>
         </div>
 
-        {/* --- ✨ AIで背景を作る（事前設定型、Pro / プレミアムAI回数消費） --- */}
-        {inputs.length > 0 && (
-          <div className={`mt-4 p-4 rounded-xl border-2 transition-all ${bgMode === 'ai_generate' ? 'border-purple-500 ring-2 ring-purple-300 bg-gradient-to-r from-purple-50 to-indigo-50' : 'border-purple-200 bg-gradient-to-r from-purple-50/50 to-indigo-50/50'}`}>
+        {/* --- AIで背景を作る（詳細設定エリア） --- */}
+        {inputs.length > 0 && selectedProcessingMode === 'ai_generate' && (
+          <div className="mt-4 p-4 rounded-xl border border-purple-200 bg-gradient-to-r from-purple-50/30 to-indigo-50/30">
             <div className="flex items-center justify-between mb-3">
-              <h4 className="text-sm font-semibold text-purple-800 flex items-center gap-1.5">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
-                ✨ AIで背景を作る
-                {!isPro && <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">Pro</span>}
+              <h4 className="text-sm font-semibold text-purple-800">
+                プロンプトを設定
               </h4>
               {isPro && premiumRemaining !== null && (
-                <span className="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded-full">
+                <span className="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded-full border border-purple-200">
                   残り {premiumRemaining} 回
                 </span>
               )}
@@ -2131,22 +2158,11 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                 <button
                   key={preset.key}
                   onClick={() => {
-                    if (!isPro) {
-                      goToProPurchase('ai_bg_preset');
-                      trackAnalyticsEvent('pro_purchase_click_from_ai_bg', { feature: 'bg_generate', preset: preset.key });
-                      return;
-                    }
-                    if (aiBgPreset === preset.key) {
-                      // 同じプリセット再タップ → 解除 → normalモードに戻す
-                      setAiBgPreset(null);
-                      if (!aiBgPrompt) setBgMode('normal');
-                    } else {
-                      setAiBgPreset(preset.key);
-                      setBgMode('ai_generate');
-                      setSelectedTemplate(null); // テンプレ解除
-                      setCustomBgImage(null);
-                      setBlendEnabled(false);
-                    }
+                    setAiBgPreset(preset.key);
+                    setBgMode('ai_generate');
+                    setSelectedTemplate(null);
+                    setCustomBgImage(null);
+                    setBlendEnabled(false);
                   }}
                   className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${aiBgPreset === preset.key
                     ? 'bg-purple-600 text-white shadow-md'
@@ -2224,7 +2240,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
       )}
 
       {/* 背景テンプレート選択エリア */}
-      {inputs.length > 0 && (
+      {inputs.length > 0 && selectedProcessingMode !== 'ai_generate' && (
         <div ref={sectionBgRef} className="space-y-4 pt-4">
           <h3 className="text-base font-semibold text-gray-800">背景をカスタマイズ（オプション）</h3>
 
@@ -2337,37 +2353,39 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
           </div>
 
           {/* --- 自然になじませる チェックボックス（常時表示、背景選択時に有効） --- */}
-          <div ref={sectionBlendRef} className={`mt-3 p-3 rounded-lg border transition-all ${selectedTemplate && bgMode === 'normal' ? 'border-teal-400 bg-teal-50 ring-2 ring-teal-100' : 'border-gray-200 bg-gray-50'}`}>
-            <label className={`flex items-center gap-2 ${selectedTemplate && bgMode === 'normal' ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}>
-              <input
-                type="checkbox"
-                checked={blendEnabled}
-                onChange={(e) => {
-                  if (!selectedTemplate || bgMode !== 'normal') return;
-                  if (!isPro) {
-                    goToProPurchase('ai_bg_blend');
-                    trackAnalyticsEvent('pro_purchase_click_from_ai_bg', { feature: 'bg_blend' });
-                    return;
-                  }
-                  setBlendEnabled(e.target.checked);
-                }}
-                className={`w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500 ${(selectedTemplate && bgMode === 'normal') ? 'cursor-pointer' : 'cursor-not-allowed'}`}
-                disabled={(!selectedTemplate || bgMode !== 'normal') && blendEnabled === false}
-              />
-              <span className={`text-sm font-medium ${selectedTemplate && bgMode === 'normal' ? 'text-teal-800' : 'text-gray-600'} flex items-center gap-1.5`}>
-                自然になじませる（影・光を自動調整）
-                {!isPro && <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">Pro</span>}
-              </span>
-              {isPro && premiumRemaining !== null && blendEnabled && (
-                <span className="text-xs text-teal-600 bg-teal-200 px-2 py-0.5 rounded-full ml-auto font-medium shadow-sm border border-teal-300">
-                  {inputs.filter(i => i.status === 'ready' || i.status === 'error').length}枚 × 1回消費
+          {(selectedProcessingMode as string) !== 'ai_generate' && (
+            <div ref={sectionBlendRef} className={`mt-3 p-3 rounded-lg border transition-all ${selectedTemplate && bgMode === 'normal' ? 'border-teal-400 bg-teal-50 ring-2 ring-teal-100' : 'border-gray-200 bg-gray-50'}`}>
+              <label className={`flex items-center gap-2 ${selectedTemplate && bgMode === 'normal' ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}>
+                <input
+                  type="checkbox"
+                  checked={blendEnabled}
+                  onChange={(e) => {
+                    if (!selectedTemplate || bgMode !== 'normal') return;
+                    if (!isPro) {
+                      goToProPurchase('ai_bg_blend');
+                      trackAnalyticsEvent('pro_purchase_click_from_ai_bg', { feature: 'bg_blend' });
+                      return;
+                    }
+                    setBlendEnabled(e.target.checked);
+                  }}
+                  className={`w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500 ${(selectedTemplate && bgMode === 'normal') ? 'cursor-pointer' : 'cursor-not-allowed'}`}
+                  disabled={(!selectedTemplate || bgMode !== 'normal') && blendEnabled === false}
+                />
+                <span className={`text-sm font-medium ${selectedTemplate && bgMode === 'normal' ? 'text-teal-800' : 'text-gray-600'} flex items-center gap-1.5`}>
+                  自然になじませる（影・光を自動調整）
+                  {!isPro && <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">Pro</span>}
                 </span>
-              )}
-            </label>
-            <p className={`text-xs mt-1 ml-6 ${selectedTemplate && bgMode === 'normal' ? 'text-teal-600' : 'text-gray-500'}`}>
-              {!selectedTemplate && bgMode === 'normal' ? '先に背景（カラーや画像）を選んでください' : '選んだ背景に合わせてAIが影や明るさを自然に調整します'}
-            </p>
-          </div>
+                {isPro && premiumRemaining !== null && blendEnabled && (
+                  <span className="text-xs text-teal-600 bg-teal-200 px-2 py-0.5 rounded-full ml-auto font-medium shadow-sm border border-teal-300">
+                    {inputs.filter(i => i.status === 'ready' || i.status === 'error').length}枚 × 1回消費
+                  </span>
+                )}
+              </label>
+              <p className={`text-xs mt-1 ml-6 ${selectedTemplate && bgMode === 'normal' ? 'text-teal-600' : 'text-gray-500'}`}>
+                {!selectedTemplate && bgMode === 'normal' ? '先に背景（カラーや画像）を選んでください' : '選んだ背景に合わせてAIが影や明るさを自然に調整します'}
+              </p>
+            </div>
+          )}
 
           {/* AIエラー表示 */}
           {aiBgError && (
