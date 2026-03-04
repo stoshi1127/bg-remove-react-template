@@ -33,7 +33,7 @@
 - `bgMode: 'normal' | 'ai_generate'` — 現在の背景処理モード  
   - `normal`: 従来通りの背景除去 + テンプレ/カラー合成
   - `ai_generate`: bria/generate-background で一括処理
-- `blendEnabled: boolean` — 「自然になじませる」ON/OFF（**デフォルト: OFF**）
+- `blendEnabled: boolean` — 「自然になじませる」ON/OFF（**デフォルトOFF**）
 
 #### `handleRemove` の分岐追加
 - `bgMode === 'ai_generate'` の場合:
@@ -44,6 +44,24 @@
   - **`/api/remove-bg` は使わず** `/api/ai/generate-background`（mode=blend, ref_image_file=選択中の背景）を呼ぶ
   - bria モデルが被写体を保持しつつ背景を参照画像に合わせて再生成する
   - こちらも全ファイル × 1回消費
+
+## 2. 課題3: アスペクト比の反映（再修正：2段階処理の導入）
+
+**対象ファイル:** `src/components/BgRemover.tsx`
+
+**変更内容:**
+AI背景生成（Bria）において、入力画像の一部のみを書き換えて境界が残る問題を解決するため、アスペクト比指定がある場合は「先に背景を除去してからAIに渡す」フローに変更します。
+
+*   **処理フローの変更:**
+    1.  `useAiApi === true` かつ `selectedRatio !== 'original'` の場合。
+    2.  まず `/api/remove-bg` を呼び出し、被写体のみが抽出された透明なPNGを取得する。
+    3.  その透明PNGを `padImageToRatio` で指定の比率にパディング（透明な余白）する。
+    4.  「被写体以外がすべて透明」になった1:1等の画像を Bria API (`/api/ai/generate-background`) に送信。
+    5.  Briaが透明部分全体を新しい背景で埋めるため、境界のない完璧な合成結果が得られる。
+
+*   **注意点:** 
+    *   `selectedRatio === 'original'` の場合は、Briaに直接投げたほうが良い結果（影の付き方など）になることが多いため、既存の1段階フローを維持する。
+    *   2段階になることで処理時間が少し延びるため、プログレスバーやメッセージで「背景を抽出中...」などのフィードバックを適切に出す。
 
 ### BgRemover.tsx — UI
 

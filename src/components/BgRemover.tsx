@@ -115,7 +115,7 @@ async function urlToDataUrl(url: string): Promise<string> {
 }
 
 /** アスペクト比に合わせてカンバス中心に画像を配置（パディング）する前処理 */
-async function padImageToRatio(blob: Blob, ratio: string, options?: { fillForAi?: boolean }): Promise<Blob> {
+async function padImageToRatio(blob: Blob, ratio: string): Promise<Blob> {
   if (ratio === 'original' || ratio === 'fit-subject') {
     return blob;
   }
@@ -179,25 +179,8 @@ async function padImageToRatio(blob: Blob, ratio: string, options?: { fillForAi?
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('Canvas context no available');
 
-    if (options?.fillForAi) {
-      // AI処理用: 透明なパディングではなく、背景をぼかして埋めることでAIが境界を正しく認識できるようにする
-      ctx.save();
-      // 画像全体をカンバスに合わせてカバーするように描画（ぼかし用）
-      const scale = Math.max(targetWidth / imgWidth, targetHeight / imgHeight);
-      const bgW = imgWidth * scale;
-      const bgH = imgHeight * scale;
-      const bgX = (targetWidth - bgW) / 2;
-      const bgY = (targetHeight - bgH) / 2;
-
-      // 強いぼかしをかける
-      ctx.filter = 'blur(40px) brightness(0.9)';
-      ctx.drawImage(sourceImg as CanvasImageSource, bgX, bgY, bgW, bgH);
-      ctx.restore();
-    } else {
-      // 通常（非AI）処理: 背景は透明のまま
-      ctx.clearRect(0, 0, targetWidth, targetHeight);
-    }
-
+    // 背景は透明のまま、中央に描画
+    ctx.clearRect(0, 0, targetWidth, targetHeight);
     const offsetX = Math.round((targetWidth - imgWidth) / 2);
     const offsetY = Math.round((targetHeight - imgHeight) / 2);
     ctx.drawImage(sourceImg as CanvasImageSource, offsetX, offsetY, imgWidth, imgHeight);
@@ -1416,53 +1399,106 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
 
         let response: Response;
         if (useAiApi) {
-          // --- AI処理パス: bria/generate-background のみで処理 ---
-          // アスペクト比（selectedRatio）が指定されている場合、投げる前にカンバスを自動調整（パディング）する
+          // --- AI処理パス: bria/generate-background ---
           updateInputStatus(input.id, "processing");
-          try {
-            // useAiApi の場合は透明パディングではなく背景を埋めるオプションを指定
-            blobForRequest = await padImageToRatio(blobForRequest, selectedRatio, { fillForAi: true });
-          } catch (padErr) {
-            console.warn('Canvas padding failed:', padErr);
-            // エラー時はフォールバックとして元の blobForRequest をそのまま使う
-          }
-          const paddedMeta = await getImageDimensions(blobForRequest);
 
-          // Vercel 4.5MB制限回避のため、BlobにアップロードしてURLを送る
-          const uploadFile = blobForRequest instanceof File
-            ? blobForRequest
-            : new File([blobForRequest], nameForRequest, { type: blobForRequest.type || 'application/octet-stream' });
-          const blobResult = await uploadToBlob(uploadFile.name, uploadFile, {
-            access: 'public',
-            handleUploadUrl: '/api/upload/blob',
-            clientPayload: JSON.stringify({
-              sizeBytes: uploadFile.size,
-              mimeType: uploadFile.type,
-              width: paddedMeta.width,
-              height: paddedMeta.height,
-            }),
-          });
+          // アスペクト比指定（1:1等）があり、かつ被写体を確実に合成したい場合
+          // 「背景除去」→「パディング」→「AI背景生成」の2段階フローで行う
+          if (selectedRatio !== 'original' && selectedRatio !== 'fit-subject') {
+            try {
+              updateInputStatus(input.id, "processing", "背景を除去して比率を調整中...");
 
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const aiBody: Record<string, any> = { imageUrl: blobResult.url };
-          if (bgMode === 'ai_generate') {
-            aiBody.mode = 'generate';
-            aiBody.prompt = aiPrompt;
-          } else if (blendRefImageUrl || blendRefImageDataUrl) {
-            aiBody.mode = 'blend';
-            if (blendRefImageUrl) {
-              aiBody.refImageUrl = blendRefImageUrl;
-            } else {
-              aiBody.refImageDataUrl = blendRefImageDataUrl;
+              // Phase 1: 背景除去 (透明PNG取得)
+              // 直接Blobを送信するFormData方式を使用
+              const phase1FormData = new FormData();
+              phase1FormData.append("file", blobForRequest, nameForRequest);
+              phase1FormData.append("processingMode", requestedProcessingMode);
+              const phase1Res = await fetch("/api/remove-bg", {
+                method: "POST",
+                body: phase1FormData,
+                signal: combinedSignal,
+              });
+
+              if (!phase1Res.ok) throw new Error('背景除去（フェーズ1）に失敗しました');
+              const transparentBlob = await phase1Res.blob();
+
+              // Phase 2: アスペクト比に合わせてパディング
+              blobForRequest = await padImageToRatio(transparentBlob, selectedRatio);
+              const paddedMeta = await getImageDimensions(blobForRequest);
+
+              updateInputStatus(input.id, "processing", "AI背景を生成中...");
+
+              // Phase 3: AI合成（パディング済みの透明PNGを送信）
+              const uploadFile = blobForRequest instanceof File
+                ? blobForRequest
+                : new File([blobForRequest], nameForRequest, { type: 'image/png' });
+
+              const blobResult = await uploadToBlob(uploadFile.name, uploadFile, {
+                access: 'public',
+                handleUploadUrl: '/api/upload/blob',
+                clientPayload: JSON.stringify({
+                  sizeBytes: uploadFile.size,
+                  mimeType: uploadFile.type,
+                  width: paddedMeta.width,
+                  height: paddedMeta.height,
+                }),
+              });
+
+              const aiBody: Record<string, any> = { imageUrl: blobResult.url };
+              if (bgMode === 'ai_generate') {
+                aiBody.mode = 'generate';
+                aiBody.prompt = aiPrompt;
+              } else if (blendRefImageUrl || blendRefImageDataUrl) {
+                aiBody.mode = 'blend';
+                if (blendRefImageUrl) aiBody.refImageUrl = blendRefImageUrl;
+                else aiBody.refImageDataUrl = blendRefImageDataUrl;
+              }
+
+              response = await fetch('/api/ai/generate-background', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(aiBody),
+                signal: combinedSignal,
+              });
+            } catch (err: any) {
+              console.error('2-phase AI processing failed:', err);
+              throw err;
             }
+          } else {
+            // 元の比率のままの場合は、briaのセグメンテーション（影の描画等）を活かすため1段階で処理
+            const uploadFile = blobForRequest instanceof File
+              ? blobForRequest
+              : new File([blobForRequest], nameForRequest, { type: blobForRequest.type || 'application/octet-stream' });
+
+            const blobResult = await uploadToBlob(uploadFile.name, uploadFile, {
+              access: 'public',
+              handleUploadUrl: '/api/upload/blob',
+              clientPayload: JSON.stringify({
+                sizeBytes: uploadFile.size,
+                mimeType: uploadFile.type,
+                width: imageMeta.width,
+                height: imageMeta.height,
+              }),
+            });
+
+            const aiBody: Record<string, any> = { imageUrl: blobResult.url };
+            if (bgMode === 'ai_generate') {
+              aiBody.mode = 'generate';
+              aiBody.prompt = aiPrompt;
+            } else if (blendRefImageUrl || blendRefImageDataUrl) {
+              aiBody.mode = 'blend';
+              if (blendRefImageUrl) aiBody.refImageUrl = blendRefImageUrl;
+              else aiBody.refImageDataUrl = blendRefImageDataUrl;
+            }
+
+            response = await fetch('/api/ai/generate-background', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(aiBody),
+              signal: combinedSignal,
+            });
           }
 
-          response = await fetch('/api/ai/generate-background', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(aiBody),
-            signal: combinedSignal,
-          });
         } else if (isPro && USE_DIRECT_UPLOAD_FOR_PRO) {
           const uploadFile = blobForRequest instanceof File
             ? blobForRequest
@@ -2511,11 +2547,6 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
               <p className={`text-xs mt-1 ml-6 ${selectedTemplate && bgMode === 'normal' ? 'text-teal-600' : 'text-gray-500'}`}>
                 {!selectedTemplate && bgMode === 'normal' ? '先に背景（カラーや画像）を選んでください' : '選んだ背景に合わせてAIが影や明るさを自然に調整します'}
               </p>
-              {blendEnabled && (
-                <div className="mt-2 ml-6 text-xs text-teal-700 bg-white/60 p-2 rounded border border-teal-100">
-                  ✨ なじませる機能はAI合成専用の高画質モデルで処理されます。（高精度設定は自動適用）
-                </div>
-              )}
             </div>
           )}
 
