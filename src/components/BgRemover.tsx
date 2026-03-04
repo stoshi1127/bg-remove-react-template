@@ -164,6 +164,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
   const sectionModeRef = useRef<HTMLDivElement>(null);
   const sectionSizeRef = useRef<HTMLDivElement>(null);
   const sectionBgRef = useRef<HTMLDivElement>(null);
+  const sectionBlendRef = useRef<HTMLDivElement>(null);
   const sectionFilesRef = useRef<HTMLDivElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
   const [isCtaVisible, setIsCtaVisible] = useState<boolean>(true);
@@ -2106,6 +2107,86 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
             )}
           </button>
         </div>
+
+        {/* --- ✨ AIで背景を作る（事前設定型、Pro / プレミアムAI回数消費） --- */}
+        {inputs.some(i => i.status === 'completed' && i.outputUrl) && (
+          <div className={`mt-4 p-4 rounded-xl border-2 transition-all ${bgMode === 'ai_generate' ? 'border-purple-500 ring-2 ring-purple-300 bg-gradient-to-r from-purple-50 to-indigo-50' : 'border-purple-200 bg-gradient-to-r from-purple-50/50 to-indigo-50/50'}`}>
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-sm font-semibold text-purple-800 flex items-center gap-1.5">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
+                ✨ AIで背景を作る
+                {!isPro && <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">Pro</span>}
+              </h4>
+              {isPro && premiumRemaining !== null && (
+                <span className="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded-full">
+                  残り {premiumRemaining} 回
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-gray-600 mb-3">好きなスタイルや場所を選ぶと、AIが自然な背景を作ります</p>
+
+            {/* プリセットボタン */}
+            <div className="flex flex-wrap gap-2 mb-3">
+              {aiBgPresets.map(preset => (
+                <button
+                  key={preset.key}
+                  onClick={() => {
+                    if (!isPro) {
+                      goToProPurchase('ai_bg_preset');
+                      trackAnalyticsEvent('pro_purchase_click_from_ai_bg', { feature: 'bg_generate', preset: preset.key });
+                      return;
+                    }
+                    if (aiBgPreset === preset.key) {
+                      // 同じプリセット再タップ → 解除 → normalモードに戻す
+                      setAiBgPreset(null);
+                      if (!aiBgPrompt) setBgMode('normal');
+                    } else {
+                      setAiBgPreset(preset.key);
+                      setBgMode('ai_generate');
+                      setSelectedTemplate(null); // テンプレ解除
+                      setCustomBgImage(null);
+                      setBlendEnabled(false);
+                    }
+                  }}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${aiBgPreset === preset.key
+                    ? 'bg-purple-600 text-white shadow-md'
+                    : 'bg-white text-purple-700 border border-purple-200 hover:bg-purple-100'
+                    }`}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+
+            {/* テキスト入力 */}
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="さらに詳しく（任意）例: 木のテーブルの上、窓際の光"
+                value={aiBgPrompt}
+                onChange={(e) => {
+                  setAiBgPrompt(e.target.value);
+                  if (e.target.value || aiBgPreset) {
+                    setBgMode('ai_generate');
+                    setSelectedTemplate(null);
+                    setCustomBgImage(null);
+                    setBlendEnabled(false);
+                  } else if (!aiBgPreset) {
+                    setBgMode('normal');
+                  }
+                }}
+                className="flex-1 px-3 py-2 text-sm border border-purple-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 bg-white"
+                disabled={!isPro || busy}
+              />
+            </div>
+
+            {bgMode === 'ai_generate' && (
+              <p className="mt-2 text-xs text-purple-600 font-medium">
+                ✓ 処理開始時にAIが背景を生成します（{inputs.filter(i => i.status === 'ready' || i.status === 'error').length}枚 × 1回消費）
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       {/* ファイル数制限の案内 */}
@@ -2157,7 +2238,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                 setBgMode('normal');
                 setAiBgPreset(null); setAiBgPrompt('');
                 setBlendEnabled(false);
-                setTimeout(() => scrollToSectionWithHeaderOffset(sectionFilesRef.current), 100);
+                setTimeout(() => scrollToSectionWithHeaderOffset(sectionBlendRef.current), 100);
               }}
               className={`cursor-pointer rounded-lg border-2 ${!selectedTemplate ? 'border-blue-500 ring-2 ring-blue-300' : 'border-gray-200 hover:border-blue-400'} overflow-hidden relative aspect-square flex items-center justify-center bg-gray-100 transition-all`}
             >
@@ -2171,7 +2252,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                 setCustomBgImage(null);
                 setBgMode('normal');
                 setAiBgPreset(null); setAiBgPrompt('');
-                setTimeout(() => scrollToSectionWithHeaderOffset(sectionFilesRef.current), 100);
+                setTimeout(() => scrollToSectionWithHeaderOffset(sectionBlendRef.current), 100);
               }}
               className={`cursor-pointer rounded-lg border-2 ${selectedTemplate === customColor ? 'border-blue-500 ring-2 ring-blue-300' : 'border-gray-200 hover:border-blue-400'} overflow-hidden relative aspect-square flex items-center justify-center transition-all`}
               style={{ backgroundColor: customColor }}
@@ -2255,115 +2336,38 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
             />
           </div>
 
-          {/* --- ✨ AIで背景を作る（事前設定型、Pro / プレミアムAI回数消費） --- */}
-          <div className={`mt-4 p-4 rounded-xl border-2 transition-all ${bgMode === 'ai_generate' ? 'border-purple-500 ring-2 ring-purple-300 bg-gradient-to-r from-purple-50 to-indigo-50' : 'border-purple-200 bg-gradient-to-r from-purple-50/50 to-indigo-50/50'}`}>
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="text-sm font-semibold text-purple-800 flex items-center gap-1.5">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
-                ✨ AIで背景を作る
+          {/* --- 自然になじませる チェックボックス（常時表示、背景選択時に有効） --- */}
+          <div ref={sectionBlendRef} className={`mt-3 p-3 rounded-lg border transition-all ${selectedTemplate && bgMode === 'normal' ? 'border-teal-400 bg-teal-50 ring-2 ring-teal-100' : 'border-gray-200 bg-gray-50'}`}>
+            <label className={`flex items-center gap-2 ${selectedTemplate && bgMode === 'normal' ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}>
+              <input
+                type="checkbox"
+                checked={blendEnabled}
+                onChange={(e) => {
+                  if (!selectedTemplate || bgMode !== 'normal') return;
+                  if (!isPro) {
+                    goToProPurchase('ai_bg_blend');
+                    trackAnalyticsEvent('pro_purchase_click_from_ai_bg', { feature: 'bg_blend' });
+                    return;
+                  }
+                  setBlendEnabled(e.target.checked);
+                }}
+                className={`w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500 ${(selectedTemplate && bgMode === 'normal') ? 'cursor-pointer' : 'cursor-not-allowed'}`}
+                disabled={(!selectedTemplate || bgMode !== 'normal') && blendEnabled === false}
+              />
+              <span className={`text-sm font-medium ${selectedTemplate && bgMode === 'normal' ? 'text-teal-800' : 'text-gray-600'} flex items-center gap-1.5`}>
+                自然になじませる（影・光を自動調整）
                 {!isPro && <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">Pro</span>}
-              </h4>
-              {isPro && premiumRemaining !== null && (
-                <span className="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded-full">
-                  残り {premiumRemaining} 回
+              </span>
+              {isPro && premiumRemaining !== null && blendEnabled && (
+                <span className="text-xs text-teal-600 bg-teal-200 px-2 py-0.5 rounded-full ml-auto font-medium shadow-sm border border-teal-300">
+                  {inputs.filter(i => i.status === 'ready' || i.status === 'error').length}枚 × 1回消費
                 </span>
               )}
-            </div>
-            <p className="text-xs text-gray-600 mb-3">好きなスタイルや場所を選ぶと、AIが自然な背景を作ります</p>
-
-            {/* プリセットボタン */}
-            <div className="flex flex-wrap gap-2 mb-3">
-              {aiBgPresets.map(preset => (
-                <button
-                  key={preset.key}
-                  onClick={() => {
-                    if (!isPro) {
-                      goToProPurchase('ai_bg_preset');
-                      trackAnalyticsEvent('pro_purchase_click_from_ai_bg', { feature: 'bg_generate', preset: preset.key });
-                      return;
-                    }
-                    if (aiBgPreset === preset.key) {
-                      // 同じプリセット再タップ → 解除 → normalモードに戻す
-                      setAiBgPreset(null);
-                      if (!aiBgPrompt) setBgMode('normal');
-                    } else {
-                      setAiBgPreset(preset.key);
-                      setBgMode('ai_generate');
-                      setSelectedTemplate(null); // テンプレ解除
-                      setCustomBgImage(null);
-                      setBlendEnabled(false);
-                    }
-                  }}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${aiBgPreset === preset.key
-                    ? 'bg-purple-600 text-white shadow-md'
-                    : 'bg-white text-purple-700 border border-purple-200 hover:bg-purple-100'
-                    }`}
-                >
-                  {preset.label}
-                </button>
-              ))}
-            </div>
-
-            {/* テキスト入力 */}
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="さらに詳しく（任意）例: 木のテーブルの上、窓際の光"
-                value={aiBgPrompt}
-                onChange={(e) => {
-                  setAiBgPrompt(e.target.value);
-                  if (e.target.value || aiBgPreset) {
-                    setBgMode('ai_generate');
-                    setSelectedTemplate(null);
-                    setCustomBgImage(null);
-                    setBlendEnabled(false);
-                  } else if (!aiBgPreset) {
-                    setBgMode('normal');
-                  }
-                }}
-                className="flex-1 px-3 py-2 text-sm border border-purple-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 bg-white"
-                disabled={!isPro || busy}
-              />
-            </div>
-
-            {bgMode === 'ai_generate' && (
-              <p className="mt-2 text-xs text-purple-600 font-medium">
-                ✓ 処理開始時にAIが背景を生成します（{inputs.filter(i => i.status === 'ready' || i.status === 'error').length}枚 × 1回消費）
-              </p>
-            )}
+            </label>
+            <p className={`text-xs mt-1 ml-6 ${selectedTemplate && bgMode === 'normal' ? 'text-teal-600' : 'text-gray-500'}`}>
+              {!selectedTemplate && bgMode === 'normal' ? '先に背景（カラーや画像）を選んでください' : '選んだ背景に合わせてAIが影や明るさを自然に調整します'}
+            </p>
           </div>
-
-          {/* --- 自然になじませる チェックボックス（テンプレ/カラー/カスタム画像選択時のみ） --- */}
-          {selectedTemplate && bgMode === 'normal' && (
-            <div className="mt-3 p-3 rounded-lg border border-teal-200 bg-teal-50/50">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={blendEnabled}
-                  onChange={(e) => {
-                    if (!isPro) {
-                      goToProPurchase('ai_bg_blend');
-                      trackAnalyticsEvent('pro_purchase_click_from_ai_bg', { feature: 'bg_blend' });
-                      return;
-                    }
-                    setBlendEnabled(e.target.checked);
-                  }}
-                  className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
-                  disabled={!isPro}
-                />
-                <span className="text-sm font-medium text-teal-800 flex items-center gap-1.5">
-                  自然になじませる（影・光を自動調整）
-                  {!isPro && <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">Pro</span>}
-                </span>
-                {isPro && premiumRemaining !== null && blendEnabled && (
-                  <span className="text-xs text-teal-600 bg-teal-100 px-2 py-0.5 rounded-full ml-auto">
-                    {inputs.filter(i => i.status === 'ready' || i.status === 'error').length}枚 × 1回消費
-                  </span>
-                )}
-              </label>
-              <p className="text-xs text-gray-500 mt-1 ml-6">選んだ背景に合わせてAIが影や明るさを自然に調整します</p>
-            </div>
-          )}
 
           {/* AIエラー表示 */}
           {aiBgError && (
@@ -2784,7 +2788,8 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
             })}
           </ul>
         </div>
-      )}
+      )
+      }
 
       {/* 背景除去・一括ダウンロードボタン */}
       <div ref={ctaRef} className="flex flex-wrap items-center justify-center gap-4">
@@ -2965,141 +2970,148 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
         )}
       </div>
 
-      {shouldShowResultAd && adPlacement === 'after_cta' && (
-        <div className="border-t border-gray-100 pt-4">
-          <AdSlot
-            slotId="bgremover_result"
-            variant="A"
-            userPlan={adUserPlan}
-            href={adHref}
-            title={adTitle}
-            description={adDescription}
-            ctaLabel={adCtaLabel}
-          />
-        </div>
-      )}
+      {
+        shouldShowResultAd && adPlacement === 'after_cta' && (
+          <div className="border-t border-gray-100 pt-4">
+            <AdSlot
+              slotId="bgremover_result"
+              variant="A"
+              userPlan={adUserPlan}
+              href={adHref}
+              title={adTitle}
+              description={adDescription}
+              ctaLabel={adCtaLabel}
+            />
+          </div>
+        )
+      }
 
       {/* 処理中・高画質化中モーダル */}
-      {(busy || enhancingFileId || batchEnhanceState.inProgress) && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center px-4" role="dialog" aria-modal="true" aria-labelledby="processing-modal-title">
-          <div
-            className="fixed inset-0 bg-black/40"
-            aria-hidden="true"
-          />
-          <div className="relative w-full max-w-sm bg-white rounded-2xl shadow-xl border border-gray-200 p-6">
-            {busy ? (
-              <>
-                <h2 id="processing-modal-title" className="text-lg font-bold text-gray-900 mb-4">
-                  処理中
-                </h2>
-                {(() => {
-                  const uploadingCount = inputs.filter(i => i.status === 'uploading').length;
-                  const processingCount = inputs.filter(i => i.status === 'processing').length;
-                  return (uploadingCount > 0 || processingCount > 0) ? (
-                    <div className="flex flex-wrap gap-x-4 gap-y-1 mb-3 text-sm text-gray-700">
-                      {uploadingCount > 0 && <span>アップロード中: {uploadingCount}枚</span>}
-                      {processingCount > 0 && <span>AI背景除去中: {processingCount}枚</span>}
+      {
+        (busy || enhancingFileId || batchEnhanceState.inProgress) && (
+          <div className="fixed inset-0 z-[120] flex items-center justify-center px-4" role="dialog" aria-modal="true" aria-labelledby="processing-modal-title">
+            <div
+              className="fixed inset-0 bg-black/40"
+              aria-hidden="true"
+            />
+            <div className="relative w-full max-w-sm bg-white rounded-2xl shadow-xl border border-gray-200 p-6">
+              {busy ? (
+                <>
+                  <h2 id="processing-modal-title" className="text-lg font-bold text-gray-900 mb-4">
+                    処理中
+                  </h2>
+                  {(() => {
+                    const uploadingCount = inputs.filter(i => i.status === 'uploading').length;
+                    const processingCount = inputs.filter(i => i.status === 'processing').length;
+                    return (uploadingCount > 0 || processingCount > 0) ? (
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 mb-3 text-sm text-gray-700">
+                        {uploadingCount > 0 && <span>アップロード中: {uploadingCount}枚</span>}
+                        {processingCount > 0 && <span>AI背景除去中: {processingCount}枚</span>}
+                      </div>
+                    ) : null;
+                  })()}
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-800">
+                        {processedCount}/{inputs.filter(i => i.status === 'ready' || i.status === 'uploading' || i.status === 'processing' || i.status === 'completed' || i.status === 'error').length}枚完了
+                      </p>
+                      <p className="text-xs text-gray-600">{progress}%</p>
                     </div>
-                  ) : null;
-                })()}
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-800">
-                      {processedCount}/{inputs.filter(i => i.status === 'ready' || i.status === 'uploading' || i.status === 'processing' || i.status === 'completed' || i.status === 'error').length}枚完了
-                    </p>
-                    <p className="text-xs text-gray-600">{progress}%</p>
                   </div>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
-                  <div
-                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
-                <PrimaryButton
-                  onClick={handleCancel}
-                  variant="secondary"
-                  className="w-full bg-red-500 hover:bg-red-600 text-white border-red-500"
-                >
-                  <span className="flex items-center justify-center">
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                    処理をキャンセル
-                  </span>
-                </PrimaryButton>
-              </>
-            ) : batchEnhanceState.inProgress ? (
-              <>
-                <h2 id="processing-modal-title" className="text-lg font-bold text-gray-900 mb-4">
-                  一括高画質化（拡大）中
-                </h2>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-500 border-t-transparent flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-800">
-                      {batchEnhanceState.completed}/{batchEnhanceState.total}枚完了
-                    </p>
-                    <p className="text-xs text-purple-600">
-                      {batchEnhanceState.target ? batchEnhanceState.target.toUpperCase() : ''}
-                    </p>
+                  <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
+                    <div
+                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${progress}%` }}
+                    />
                   </div>
-                </div>
-                <div className="w-full bg-purple-100 rounded-full h-2 mb-6">
-                  <div
-                    className="bg-purple-600 h-2 rounded-full transition-all duration-300"
-                    style={{
-                      width: `${batchEnhanceState.total > 0
-                        ? Math.round((batchEnhanceState.completed / batchEnhanceState.total) * 100)
-                        : 0}%`
-                    }}
-                  />
-                </div>
-              </>
-            ) : enhancingFileId ? (
-              (() => {
-                const enhancingInput = inputs.find(i => i.id === enhancingFileId);
-                return (
-                  <>
-                    <h2 id="processing-modal-title" className="text-lg font-bold text-gray-900 mb-4">
-                      高画質化（拡大）中
-                    </h2>
-                    <div className="flex items-center gap-3">
-                      <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-500 border-t-transparent flex-shrink-0" />
-                      <p className="text-sm font-medium text-gray-800 truncate">
-                        {enhancingInput ? enhancingInput.name : '処理中...'}
+                  <PrimaryButton
+                    onClick={handleCancel}
+                    variant="secondary"
+                    className="w-full bg-red-500 hover:bg-red-600 text-white border-red-500"
+                  >
+                    <span className="flex items-center justify-center">
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      処理をキャンセル
+                    </span>
+                  </PrimaryButton>
+                </>
+              ) : batchEnhanceState.inProgress ? (
+                <>
+                  <h2 id="processing-modal-title" className="text-lg font-bold text-gray-900 mb-4">
+                    一括高画質化（拡大）中
+                  </h2>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-500 border-t-transparent flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-800">
+                        {batchEnhanceState.completed}/{batchEnhanceState.total}枚完了
+                      </p>
+                      <p className="text-xs text-purple-600">
+                        {batchEnhanceState.target ? batchEnhanceState.target.toUpperCase() : ''}
                       </p>
                     </div>
-                  </>
-                );
-              })()
-            ) : null}
+                  </div>
+                  <div className="w-full bg-purple-100 rounded-full h-2 mb-6">
+                    <div
+                      className="bg-purple-600 h-2 rounded-full transition-all duration-300"
+                      style={{
+                        width: `${batchEnhanceState.total > 0
+                          ? Math.round((batchEnhanceState.completed / batchEnhanceState.total) * 100)
+                          : 0}%`
+                      }}
+                    />
+                  </div>
+                </>
+              ) : enhancingFileId ? (
+                (() => {
+                  const enhancingInput = inputs.find(i => i.id === enhancingFileId);
+                  return (
+                    <>
+                      <h2 id="processing-modal-title" className="text-lg font-bold text-gray-900 mb-4">
+                        高画質化（拡大）中
+                      </h2>
+                      <div className="flex items-center gap-3">
+                        <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-500 border-t-transparent flex-shrink-0" />
+                        <p className="text-sm font-medium text-gray-800 truncate">
+                          {enhancingInput ? enhancingInput.name : '処理中...'}
+                        </p>
+                      </div>
+                    </>
+                  );
+                })()
+              ) : null}
+            </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
-      {shouldShowResultAd && adPlacement === 'bottom' && (
-        <div className="border-t border-gray-100 pt-4">
-          <AdSlot
-            slotId="bgremover_result"
-            variant="B"
-            userPlan={adUserPlan}
-            href={adHref}
-            title={adTitle}
-            description={adDescription}
-            ctaLabel={adCtaLabel}
-          />
-        </div>
-      )}
+      {
+        shouldShowResultAd && adPlacement === 'bottom' && (
+          <div className="border-t border-gray-100 pt-4">
+            <AdSlot
+              slotId="bgremover_result"
+              variant="B"
+              userPlan={adUserPlan}
+              href={adHref}
+              title={adTitle}
+              description={adDescription}
+              ctaLabel={adCtaLabel}
+            />
+          </div>
+        )
+      }
 
       {/* 全体メッセージ */}
       {msg && <p className={`text-sm p-3.5 rounded-md shadow ${inputs.some(i => i.status === 'error') && (msg.includes("エラー") || msg.includes("失敗")) ? 'text-red-800 bg-red-100 border border-red-300' : 'text-gray-800 bg-gray-100 border border-gray-300'}`}>{msg}</p>}
 
       {/* スティッキーCTA（元のCTAが画面外のときのみ表示） */}
-      {!isCtaVisible && inputs.length > 0 && !busy && (
-        inputs.some(i => i.status === 'ready') || hasCompletedResults
-      ) && (
+      {
+        !isCtaVisible && inputs.length > 0 && !busy && (
+          inputs.some(i => i.status === 'ready') || hasCompletedResults
+        ) && (
           <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-md border-t border-gray-200 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
             <div className="max-w-3xl mx-auto space-y-2">
               {inputs.some(i => i.status === 'ready') && (
@@ -3235,7 +3247,8 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
               )}
             </div>
           </div>
-        )}
-    </div>
+        )
+      }
+    </div >
   );
 }
