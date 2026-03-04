@@ -2120,17 +2120,17 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
               setBgMode('ai_generate');
             }}
             className={`rounded-xl border px-4 py-3 text-left transition-colors relative ${selectedProcessingMode === 'ai_generate'
-              ? 'border-purple-500 bg-purple-50 ring-2 ring-purple-300'
-              : 'border-purple-200 hover:border-purple-300 bg-gradient-to-r from-purple-50/50 to-indigo-50/50'
+              ? 'border-fuchsia-500 bg-fuchsia-50 ring-2 ring-fuchsia-200'
+              : 'border-gray-200 hover:border-fuchsia-300'
               } ${!isPro ? 'opacity-80' : ''}`}
           >
             <span className="absolute top-2 right-2 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
               Pro
             </span>
-            <p className="font-semibold text-purple-900 flex items-center gap-1">
-              ✨ AIで背景を作る
+            <p className="font-semibold text-gray-900 flex items-center gap-1">
+              AIで背景を作る
             </p>
-            <p className="text-xs text-purple-700 mt-1">好きなスタイルで新しい背景を生成</p>
+            <p className="text-xs text-gray-600 mt-1">好きなスタイルで新しい背景を生成</p>
             {!isPro && (
               <p className="text-[11px] text-amber-700 mt-2">Proで選べます</p>
             )}
@@ -2139,13 +2139,13 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
 
         {/* --- AIで背景を作る（詳細設定エリア） --- */}
         {inputs.length > 0 && selectedProcessingMode === 'ai_generate' && (
-          <div className="mt-4 p-4 rounded-xl border border-purple-200 bg-gradient-to-r from-purple-50/30 to-indigo-50/30">
+          <div className="mt-4 p-4 rounded-xl border border-fuchsia-200 bg-fuchsia-50/50">
             <div className="flex items-center justify-between mb-3">
-              <h4 className="text-sm font-semibold text-purple-800">
+              <h4 className="text-sm font-semibold text-gray-800">
                 プロンプトを設定
               </h4>
               {isPro && premiumRemaining !== null && (
-                <span className="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded-full border border-purple-200">
+                <span className="text-xs text-fuchsia-700 bg-white px-2 py-1 rounded-full border border-fuchsia-200 shadow-sm">
                   残り {premiumRemaining} 回
                 </span>
               )}
@@ -2165,8 +2165,8 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                     setBlendEnabled(false);
                   }}
                   className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${aiBgPreset === preset.key
-                    ? 'bg-purple-600 text-white shadow-md'
-                    : 'bg-white text-purple-700 border border-purple-200 hover:bg-purple-100'
+                    ? 'bg-fuchsia-600 text-white shadow-md'
+                    : 'bg-white text-fuchsia-700 border border-fuchsia-200 hover:bg-fuchsia-100'
                     }`}
                 >
                   {preset.label}
@@ -2191,13 +2191,13 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                     setBgMode('normal');
                   }
                 }}
-                className="flex-1 px-3 py-2 text-sm border border-purple-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 bg-white"
+                className="flex-1 px-3 py-2 text-sm border border-fuchsia-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-fuchsia-400 bg-white"
                 disabled={!isPro || busy}
               />
             </div>
 
             {bgMode === 'ai_generate' && (
-              <p className="mt-2 text-xs text-purple-600 font-medium">
+              <p className="mt-2 text-xs text-fuchsia-600 font-medium">
                 ✓ 処理開始時にAIが背景を生成します（{inputs.filter(i => i.status === 'ready' || i.status === 'error').length}枚 × 1回消費）
               </p>
             )}
@@ -2823,7 +2823,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                 <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-white border-opacity-60 mr-2"></div>
                 処理中...
               </span>
-            ) : `選択した画像（${inputs.filter(i => i.status === 'ready').length}枚）の背景を透過する`}
+            ) : `選択した画像（${inputs.filter(i => i.status === 'ready').length}枚）の${selectedProcessingMode === 'ai_generate' || selectedTemplate ? '背景を合成する' : '背景を透過する'}`}
           </PrimaryButton>
         )}
 
@@ -3007,12 +3007,12 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
       {/* 処理中・高画質化中モーダル */}
       {
         (busy || enhancingFileId || batchEnhanceState.inProgress) && (
-          <div className="fixed inset-0 z-[120] flex items-center justify-center px-4" role="dialog" aria-modal="true" aria-labelledby="processing-modal-title">
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4" role="dialog" aria-modal="true" aria-labelledby="processing-modal-title">
             <div
               className="fixed inset-0 bg-black/40"
               aria-hidden="true"
             />
-            <div className="relative w-full max-w-sm bg-white rounded-2xl shadow-xl border border-gray-200 p-6">
+            <div className="relative w-full max-w-sm bg-white rounded-2xl shadow-xl border border-gray-200 p-6 z-10">
               {busy ? (
                 <>
                   <h2 id="processing-modal-title" className="text-lg font-bold text-gray-900 mb-4">
@@ -3167,12 +3167,15 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                       {inputs.filter(i => i.status === 'ready').length}/30枚
                     </button>
                   </div>
-                  <PrimaryButton
-                    onClick={() => void handleRemove()}
-                    disabled={inputs.filter(i => i.status === 'ready').length === 0}
-                  >
-                    選択した画像（{inputs.filter(i => i.status === 'ready').length}枚）の背景を透過する
-                  </PrimaryButton>
+                  {!hasCompletedResults && (
+                    <PrimaryButton
+                      onClick={() => void handleRemove()}
+                      disabled={inputs.filter(i => i.status === 'ready').length === 0}
+                      className="w-full sm:w-auto"
+                    >
+                      選択した画像（{inputs.filter(i => i.status === 'ready').length}枚）の{selectedProcessingMode === 'ai_generate' || selectedTemplate ? '背景を合成する' : '背景を透過する'}
+                    </PrimaryButton>
+                  )}
                 </>
               )}
               {!inputs.some(i => i.status === 'ready') && hasCompletedResults && (
