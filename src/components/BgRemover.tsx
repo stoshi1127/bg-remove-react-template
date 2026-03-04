@@ -100,6 +100,19 @@ const PRO_OUTPUT_MAX_SIDE = Number(process.env.NEXT_PUBLIC_PRO_OUTPUT_MAX_SIDE_P
 const USE_DIRECT_UPLOAD_FOR_PRO = process.env.NEXT_PUBLIC_UPLOAD_DIRECT_ENABLED !== 'false';
 const PROCESSING_MODE_SESSION_KEY = 'bgremover_processing_mode';
 
+/** blob: または data: を Replicate が受け付ける data URI に変換 */
+async function urlToDataUrl(url: string): Promise<string> {
+  if (url.startsWith('data:')) return url;
+  const res = await fetch(url);
+  const blob = await res.blob();
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error('read failed'));
+    reader.readAsDataURL(blob);
+  });
+}
+
 type BgRemoverMultiProps = {
   isPro?: boolean;
   adUserPlan?: AdUserPlan;
@@ -676,11 +689,12 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
     trackAnalyticsEvent('bg_generate_applied', { preset: aiBgPreset || 'custom', hasCustomPrompt: !!aiBgPrompt });
 
     try {
+      const imageDataUrl = await urlToDataUrl(file.outputUrl);
       const response = await fetch('/api/ai/generate-background', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          imageDataUrl: file.outputUrl,
+          imageDataUrl,
           prompt: fullPrompt,
         }),
       });
@@ -765,11 +779,12 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
     trackAnalyticsEvent('bg_blend_applied', {});
 
     try {
+      const imageDataUrl = await urlToDataUrl(file.outputUrl);
       const response = await fetch('/api/ai/generate-background', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          imageDataUrl: file.outputUrl,
+          imageDataUrl,
           mode: 'blend',
           refImageDataUrl,
         }),
