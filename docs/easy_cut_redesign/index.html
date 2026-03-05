@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+
+<html lang="ja"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Easy Cut - AI Background Remover</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2b6cee",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen">
+<!-- Top Navigation Bar -->
+<header class="sticky top-0 z-50 w-full bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex items-center justify-between h-16">
+<div class="flex items-center gap-2">
+<div class="text-primary">
+<svg class="w-8 h-8" fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M24 4C25.7818 14.2173 33.7827 22.2182 44 24C33.7827 25.7818 25.7818 33.7827 24 44C22.2182 33.7827 14.2173 25.7818 4 24C14.2173 22.2182 22.2182 14.2173 24 4Z" fill="currentColor"></path>
+</svg>
+</div>
+<span class="text-xl font-extrabold tracking-tight">QuickTools</span>
+</div>
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-sm font-semibold text-primary border-b-2 border-primary pb-1" href="#">Easy Cut</a>
+<a class="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary transition-colors" href="#">Easy Tone</a>
+<a class="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary transition-colors" href="#">Easy Trimming</a>
+</nav>
+<div class="flex items-center gap-3">
+<button class="bg-primary hover:bg-primary/90 text-white px-5 py-2 rounded-lg text-sm font-bold transition-all shadow-sm">
+                        Buy Pro
+                    </button>
+<button class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white px-5 py-2 rounded-lg text-sm font-bold transition-all">
+                        Login
+                    </button>
+</div>
+</div>
+</div>
+</header>
+<main class="max-w-5xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+<!-- Hero Section -->
+<section class="mb-10 text-center md:text-left">
+<h1 class="text-4xl font-black tracking-tight text-slate-900 dark:text-white mb-3">イージーカット</h1>
+<p class="text-lg text-slate-600 dark:text-slate-400 max-w-2xl">
+                AIで背景を自動削除・置換。アスペクト比選択や一括ZIPダウンロードにも対応した、プロ仕様の切り抜きツールです。
+            </p>
+</section>
+<!-- Upload Area -->
+<section class="mb-10">
+<div class="group relative flex flex-col items-center justify-center w-full min-h-[240px] border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-primary dark:hover:border-primary rounded-2xl bg-white dark:bg-slate-900 transition-all cursor-pointer p-8 overflow-hidden">
+<div class="flex flex-col items-center gap-4">
+<div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-4xl">cloud_upload</span>
+</div>
+<div class="text-center">
+<p class="text-lg font-bold text-slate-900 dark:text-white">画像をドラッグ＆ドロップ、または選択</p>
+<p class="text-sm text-slate-500 mt-1">対応形式: JPG, PNG, WebP (最大10MB)</p>
+</div>
+<button class="mt-2 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white px-8 py-2.5 rounded-lg text-sm font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                        ファイルを選択
+                    </button>
+</div>
+</div>
+</section>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+<!-- Left Column: Settings -->
+<div class="lg:col-span-8 space-y-8">
+<!-- Mode Selection -->
+<section>
+<h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">auto_fix_high</span>
+                        切り抜きモード設定
+                    </h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<div class="relative p-4 rounded-xl border-2 border-primary bg-primary/5 cursor-pointer transition-all">
+<div class="flex justify-between items-start mb-2">
+<span class="material-symbols-outlined text-primary">draw</span>
+<div class="w-5 h-5 rounded-full border-4 border-primary bg-white flex items-center justify-center">
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+</div>
+</div>
+<p class="font-bold text-slate-900 dark:text-white">スタンダード</p>
+<p class="text-xs text-slate-500 mt-1">高速で標準的な切り抜き</p>
+</div>
+<div class="relative p-4 rounded-xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 transition-all cursor-pointer">
+<div class="flex justify-between items-start mb-2">
+<span class="material-symbols-outlined text-slate-400">high_quality</span>
+<span class="bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider">Pro</span>
+</div>
+<p class="font-bold text-slate-900 dark:text-white">高精度</p>
+<p class="text-xs text-slate-500 mt-1">複雑な輪郭をより細かく抽出</p>
+</div>
+<div class="relative p-4 rounded-xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 transition-all cursor-pointer">
+<div class="flex justify-between items-start mb-2">
+<span class="material-symbols-outlined text-slate-400">magic_button</span>
+<span class="bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider">Pro</span>
+</div>
+<p class="font-bold text-slate-900 dark:text-white">AI背景生成</p>
+<p class="text-xs text-slate-500 mt-1">背景をAIで新たに作成</p>
+</div>
+</div>
+</section>
+<!-- Output Size -->
+<section>
+<h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">aspect_ratio</span>
+                        出力サイズ設定
+                    </h2>
+<div class="flex flex-wrap gap-3">
+<button class="px-5 py-2.5 rounded-lg border border-primary bg-primary text-white text-sm font-bold">1:1</button>
+<button class="px-5 py-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-primary text-slate-700 dark:text-slate-300 text-sm font-bold transition-colors">16:9</button>
+<button class="px-5 py-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-primary text-slate-700 dark:text-slate-300 text-sm font-bold transition-colors">4:3</button>
+<button class="px-5 py-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-primary text-slate-700 dark:text-slate-300 text-sm font-bold transition-colors">Original</button>
+<button class="px-5 py-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-primary text-slate-700 dark:text-slate-300 text-sm font-bold transition-colors">Fit to Subject</button>
+</div>
+</section>
+<!-- Background Customization -->
+<section>
+<div class="flex items-center justify-between mb-4">
+<h2 class="text-xl font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">wallpaper</span>
+                            背景カスタマイズ
+                        </h2>
+<button class="text-primary text-sm font-bold flex items-center gap-1 hover:underline">
+<span class="material-symbols-outlined text-sm">upload</span>
+                            画像をアップロード
+                        </button>
+</div>
+<div class="grid grid-cols-4 sm:grid-cols-6 gap-3">
+<div class="group relative aspect-square rounded-lg border-2 border-primary bg-white flex items-center justify-center cursor-pointer overflow-hidden">
+<span class="material-symbols-outlined text-slate-400 group-hover:scale-110 transition-transform">block</span>
+<p class="absolute bottom-1 text-[10px] font-bold">None</p>
+</div>
+<div class="group relative aspect-square rounded-lg border-2 border-transparent bg-white shadow-sm flex items-center justify-center cursor-pointer overflow-hidden hover:border-slate-200">
+<span class="material-symbols-outlined text-primary">add</span>
+<p class="absolute bottom-1 text-[10px] font-bold">Custom</p>
+</div>
+<!-- Grid Items -->
+<div class="relative aspect-square rounded-lg bg-white border border-slate-200 cursor-pointer overflow-hidden">
+<div class="w-full h-full bg-white"></div>
+</div>
+<div class="relative aspect-square rounded-lg bg-white border border-slate-200 cursor-pointer overflow-hidden">
+<div class="w-full h-full bg-gradient-to-br from-blue-100 to-indigo-200" data-alt="Blue and indigo gradient background"></div>
+</div>
+<div class="relative aspect-square rounded-lg bg-white border border-slate-200 cursor-pointer overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Dark red brick wall texture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCciUogGYvQnrj67nYlxg1r2shdoESX1HCm76VKOcy_dtVmeekOxWIkNmHCADfPMfVwM4fECwHybcQicYVEMtPkOAi1UELTHX07F5htcWFRBi7y1lgjgAodo6BgoxwrMlNQl5om6ZzNja0cxPSi5PLWWEDpJ2bmCmSS8aqhTF7PfJ-GQWAabNWUZMhFSVQc1BIQUzMg6JLNg0RPkN_WFFefagOVMB9HjZtZMDVLWY3rYITrA4s5FImad4vkTbA-nTYM8kB9t9xp"/>
+</div>
+<div class="relative aspect-square rounded-lg bg-white border border-slate-200 cursor-pointer overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Dreamy soft bokeh light effect" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3eM_Jwbjo3E4mTC5hO7onLRYOhu78qs0i--sB-0wD3F2a25-AWCmknV-KphYJhrmF6u82mWr-rjrccpADpiI7h5l9JKNVRGAVkrjW3YCbTPkjHI3S8FG187bRSMFlCwbPlptQFL1smvsHoWS1NE2J3XnDyFXvR5I2lQD1JivC9csJBEAMs-l3aV7VHFAQU9y6jA52C5VUGHXoevPFwjlAXRxgrFEzaLZGnoI2eq3hD3W6WA3qAwbRU1vlXY2j5LwvbOFZ5dLN"/>
+</div>
+<div class="relative aspect-square rounded-lg bg-white border border-slate-200 cursor-pointer overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Warm natural wood grain texture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDqpXs9_Q4SuCQqeVi9hbVGc4tXqZRxas9YGWNHWCfrtvGbna3RI9lmuSh-cMXh3J-FOUNGNshfzokKhZmUzrY30k0-orHShGxHDz2ytuk7UFL_wipzwHDlt7sfsYKyJo-9SzuIPKLCf3yOXlNkqoV0NomH3HtRNv2R-WxHhYjDeIvfElfX32ZWnjrTqZxAsnIUONMwMaeMwUmay5wRdLD72Ivr8u1olk2C-UX8MD5olFZeetpCUr_OcP04xzUzVlz_TfFR0Piv"/>
+</div>
+<div class="relative aspect-square rounded-lg bg-white border border-slate-200 cursor-pointer overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Abstract white and grey marble texture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAX2xAppyXBaazuMhT0hwAs09OaNU1ln2W1yuoNJApv_uGIW0nVLdWVeJKUfbda-el6pG3el71OV5pfrVPhWHsRqY_P5SLv5xxyn3--2G-Z8PHlvTPP8tumaLrrBYAaCZoeKo3NHhCeoS0Qxh1nS1y1Csp607-cUrP-_BdpewDCEfQ2pyfrELrvTrR0QXM4w1wCdQOOpxEySuTRwXcY0Yxj3p1GHJJ6CczfYzWMCr2PjxwR55IBZwaOLaYVxgf1lbB4o_bBXeCe"/>
+</div>
+<div class="relative aspect-square rounded-lg bg-white border border-slate-200 cursor-pointer overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Soft natural light filtering through leaves" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAWnfdnh6hkF2dcSR722jI-S_FCNxPoQgedJNYdgjUswfcB51It7gR7fB8RkEwxnJqKi6VNq8vu5uAHo8ZQ5jAI7qrskjtuL2xbY9lmt_BmXc-C3VNwDnq7roGvG3_r-OVgk2OcErEhcUZ-60HkvNuIabcarJHNQfJCCc_iVlUED7e51vKf1I91p4nrXpGcntoyUfrqz_vXKJs7HCzdehYT-psWUk6nobPBfgy6YN7F5JL4NTGO6X5n4piG2VR-ae_DCJls16Q0"/>
+</div>
+<div class="relative aspect-square rounded-lg bg-white border border-slate-200 cursor-pointer overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Abstract colorful oil painting brushstrokes" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB2LJu-SQvHb_743qd1iXltRIU8QxO6Ll6BW7XprcQ46ag7Ss_uwQyWpCKxRy_YIAKCgQv_0zkud-0ViyWF2ZAZYnl1UBW-C9Y8WoydWZLko_uQNtKVHR74JD8EjCTuIakZiOIHA2IK76_nD_g9YRgb5jZgtKJkrl5fF1Q9XiRElNAQHsPYMtXrw6WZBKSPAJ1j9v_yg0hNJdv3h9lHrE8DyHmY2Gn_Qna-cbf7uqIWaYd01lhWSu-pp-EGuecNrRuJJGsl_1no"/>
+</div>
+<div class="relative aspect-square rounded-lg bg-white border border-slate-200 cursor-pointer overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Minimalist geometric abstract wallpaper pattern" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmXL1EH6ybBbYeVOTPvmue0YaWJ7F2G2LJIPxkIPaOigqWnZFsBE0_0_pKYAt-Zb3yE5i_wVd5RF-krQ9cwjXJuHUuL8pEq06hh3G8YhuTQJPRh0x_PBeSz8sdgH9HMjyM1lMjuPlesr3Px8AxQ6W9IG5AmRpJqQRmvAtppuJvbmKsqSV1vd71HWgNeGTN2vQvKVOOskIs40VGfoeMhPNPv8yyR5tDjaEdnr1rEYds18PxDV6MKaNxU7ZenqpeB_rVEQaFJHPz"/>
+</div>
+<div class="relative aspect-square rounded-lg bg-white border border-slate-200 cursor-pointer overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Soft cotton fabric texture close up" src="https://lh3.googleusercontent.com/aida-public/AB6AXuADTQQh8iA0Dt2zMKxj81WSoXcWye_LwruWEnWVt0eFMRsU1MFDLlX9DCanr_J6F7KWy4AkPiKTv0FBQlkc8uhgx5WUxXti7dKwdA0XnS9UDtVaGR6MSfGUfmBuC-0QQfmwI8I5_FHLu4A5-2glTfIMkSTevRsrvZxIvOyCwAKWfyIRmtTYNq3dIHt-T0hPjs4TnQAKEvAVG_r4pU6_limfD8TTy58qj6QfIcpQ-l8AqPa2ldxkVLIdfpEqCFomhN0b5P7-ShzP"/>
+</div>
+</div>
+</section>
+</div>
+<!-- Right Column: Summary & Actions -->
+<div class="lg:col-span-4">
+<div class="sticky top-24 space-y-6">
+<!-- Advanced Options Card -->
+<div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
+<h3 class="text-sm font-bold uppercase tracking-widest text-slate-500 mb-4">高度な設定</h3>
+<div class="flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-bold text-slate-900 dark:text-white flex items-center gap-1">
+                                    ナチュラルブレンド
+                                    <span class="bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded">Pro</span>
+</span>
+<span class="text-xs text-slate-500">影とライティングの自動調整</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+</label>
+</div>
+</div>
+<!-- Selected Files Card -->
+<div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
+<h3 class="text-sm font-bold uppercase tracking-widest text-slate-500 mb-4">選択中のファイル</h3>
+<div class="space-y-3 mb-6">
+<div class="flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+<div class="w-12 h-12 rounded bg-slate-200 dark:bg-slate-700 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Red athletic shoe product photography" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCdpG4Q34K5wWlfV4BzS9QJv4e8804LVjK_NeAKAzgDUqCHrns2IsCC6dVNj-g3-c9SafWtVo8KDexLRjEtJcIubkIe-Te8721uJ3JA8BQ4EoiIsMfWenYn6HXfd0AoYiWbFJYqFZb_sYhm5Y04wc71bA50YOi3CGY-BaWxgkZQImVw_k70R582If9JPILjhLsHRD4YWuzR77_t-WvudhdNAz125LgR5hfEbx1ruTwgIW9K5SvacNN_VEa2yP5dStsXYzuRQN37"/>
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-sm font-bold truncate text-slate-900 dark:text-white">processed_title-4 2.png</p>
+<p class="text-[11px] text-green-500 font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">check_circle</span>
+                                        アップロード済み
+                                    </p>
+</div>
+<button class="text-slate-400 hover:text-red-500 transition-colors">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+</div>
+<button class="w-full bg-primary hover:bg-primary/90 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined">auto_fix_high</span>
+                            背景を透過する (1枚)
+                        </button>
+<p class="text-center text-[10px] text-slate-400 mt-4 leading-relaxed">
+                            「背景を透過する」をクリックすることで、利用規約および<br/>プライバシーポリシーに同意したものとみなされます。
+                        </p>
+</div>
+</div>
+</div>
+</div>
+<!-- SEO/Description Footer Content (Optional but helps UI structure) -->
+<footer class="mt-20 pt-10 border-t border-slate-200 dark:border-slate-800 text-center">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-left max-w-4xl mx-auto">
+<div class="space-y-2">
+<h4 class="font-bold text-slate-900 dark:text-white">AIによる高精度な抽出</h4>
+<p class="text-sm text-slate-500 leading-relaxed">最新のディープラーニングモデルにより、髪の毛や細い紐などの複雑な輪郭もきれいに切り抜きます。</p>
+</div>
+<div class="space-y-2">
+<h4 class="font-bold text-slate-900 dark:text-white">一括処理・保存</h4>
+<p class="text-sm text-slate-500 leading-relaxed">複数の画像を一度に処理。Pro版なら、処理した全画像をZIPファイルでまとめてダウンロード可能です。</p>
+</div>
+<div class="space-y-2">
+<h4 class="font-bold text-slate-900 dark:text-white">自然な合成</h4>
+<p class="text-sm text-slate-500 leading-relaxed">新しい背景に合わせてライティングや影をAIが自動調整。違和感のない高品質な合成画像を作成します。</p>
+</div>
+</div>
+<div class="mt-16 pb-8 text-slate-400 text-xs">
+                © 2024 QuickTools - Easy Cut. All rights reserved.
+            </div>
+</footer>
+</main>
+</body></html>

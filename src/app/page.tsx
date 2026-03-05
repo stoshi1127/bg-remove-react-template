@@ -99,7 +99,7 @@ export default async function Home() {
     },
     "featureList": [
       "AI背景除去・背景透過",
-      "複数画像一括処理・バッチ処理", 
+      "複数画像一括処理・バッチ処理",
       "HEIC/HEIF形式自動変換",
       "高精度AI画像処理",
       "商用利用可能",
@@ -109,7 +109,7 @@ export default async function Home() {
     ],
     "screenshot": "https://bg.quicktools.jp/ogp.png",
     "creator": {
-      "@type": "Organization", 
+      "@type": "Organization",
       "name": "QuickTools",
       "url": "https://bg.quicktools.jp"
     },
@@ -139,7 +139,7 @@ export default async function Home() {
         }
       },
       {
-        "@type": "Question", 
+        "@type": "Question",
         "name": "HEIC形式にも対応していますか？",
         "acceptedAnswer": {
           "@type": "Answer",
@@ -199,7 +199,7 @@ export default async function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqStructuredData) }}
       />
-      
+
       {/* ヒーローセクション */}
       <section className="bg-white py-16 px-4">
         <div className="container mx-auto max-w-4xl text-center">
@@ -214,12 +214,12 @@ export default async function Home() {
           </div>
 
           {/* アップロードエリア - メイン */}
-          <div className="animate-fade-in-up mb-12" style={{animationDelay: '0.1s'}}>
+          <div className="animate-fade-in-up mb-12" style={{ animationDelay: '0.1s' }}>
             <div className="bg-white border-2 border-blue-200 rounded-2xl py-3 shadow-lg">
               <BgRemoverMulti isPro={isPro} adUserPlan={adUserPlan} />
             </div>
           </div>
-          
+
           {/* CTAセクション（比較表・料金表示・購入導線） */}
           <ProCtaSection isLoggedIn={isLoggedIn} />
         </div>
@@ -239,7 +239,7 @@ export default async function Home() {
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="animate-fade-in-up" style={{animationDelay: '0.1s'}}>
+              <div className="animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
                 <GuideCard
                   title="1. 画像をアップロード"
                   icon={
@@ -255,8 +255,8 @@ export default async function Home() {
                   背景透過したい画像をアップロードエリアにドラッグ＆ドロップするか、クリックしてファイルを選択します。複数画像も同時に選択可能です。
                 </GuideCard>
               </div>
-              
-              <div className="animate-fade-in-up" style={{animationDelay: '0.2s'}}>
+
+              <div className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
                 <GuideCard
                   title="2. 背景をカスタマイズ"
                   icon={
@@ -272,8 +272,8 @@ export default async function Home() {
                   出力サイズを「16:9」や「被写体にフィット」などから選択。次に「背景なし」、多彩なテンプレート、またはカラーピッカーでお好みの背景に仕上げます。
                 </GuideCard>
               </div>
-              
-              <div className="animate-fade-in-up" style={{animationDelay: '0.3s'}}>
+
+              <div className="animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
                 <GuideCard
                   title="3. 加工画像をダウンロード"
                   icon={
@@ -299,7 +299,7 @@ export default async function Home() {
             <div className="text-center mb-12">
               <h3 className="text-2xl font-bold text-gray-900 mb-4">AI背景透過に便利な追加機能</h3>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="bg-white p-6 rounded-xl shadow-soft hover-lift">
                 <div className="flex items-start">
@@ -316,12 +316,12 @@ export default async function Home() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="bg-white p-6 rounded-xl shadow-soft hover-lift">
                 <div className="flex items-start">
                   <div className="bg-teal-100 p-3 rounded-xl mr-4">
                     <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="一括処理アイコン">
-                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
                     </svg>
                   </div>
                   <div>
@@ -361,6 +361,46 @@ export default async function Home() {
                     <h4 className="text-lg font-semibold text-gray-900 mb-2">豊富な出力サイズ設定</h4>
                     <p className="text-gray-600">
                       「16:9」や「4:3」などの定番比率に加え、元画像の比率を保つ「元画像に合わせる」、被写体の形にぴったり合わせる「被写体にフィット」が選択可能です。
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-xl shadow-soft hover-lift border-2 border-amber-100/50 relative overflow-hidden">
+                <div className="absolute top-0 right-0 bg-gradient-to-l from-amber-100/50 to-transparent w-32 h-32 transform rotate-45 translate-x-16 -translate-y-16"></div>
+                <div className="flex items-start relative z-10">
+                  <div className="bg-indigo-100 p-3 rounded-xl mr-4 flex-shrink-0 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="AI背景生成アイコン">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-2 flex items-center">
+                      AIで背景を生成・合成
+                      <span className="ml-2 text-[10px] font-bold bg-gradient-to-r from-amber-500 to-orange-400 text-white px-2 py-0.5 rounded-full shadow-sm">PRO</span>
+                    </h4>
+                    <p className="text-gray-600">
+                      「大理石のテーブルの上に置く」「南国のビーチ」など、テキストで指示するだけで、被写体の影や照明に合わせた自然でリアルな背景をAIが自動生成します。
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-xl shadow-soft hover-lift border-2 border-amber-100/50 relative overflow-hidden">
+                <div className="absolute top-0 right-0 bg-gradient-to-l from-amber-100/50 to-transparent w-32 h-32 transform rotate-45 translate-x-16 -translate-y-16"></div>
+                <div className="flex items-start relative z-10">
+                  <div className="bg-amber-100 p-3 rounded-xl mr-4 flex-shrink-0 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="Proプランアイコン">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-2 flex items-center">
+                      高画質出力・利用制限なし
+                      <span className="ml-2 text-[10px] font-bold bg-gradient-to-r from-amber-500 to-orange-400 text-white px-2 py-0.5 rounded-full shadow-sm">PRO</span>
+                    </h4>
+                    <p className="text-gray-600">
+                      大きなサイズの画像も画質を落とさずに高精細なまま処理可能。一日の変換枚数制限もなくなり、広告なしで快適に作業できます。
                     </p>
                   </div>
                 </div>
@@ -437,57 +477,7 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* X公式アカウント・フィードバックセクション */}
-        <section className="py-16 px-4">
-          <div className="container mx-auto max-w-3xl">
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 p-8 rounded-2xl text-center">
-              <div className="mb-8">
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">公式Xアカウントをフォロー！</h3>
-                <p className="text-gray-700 max-w-2xl mx-auto">
-                  毎日「今日は何の日」にちなんだ画像を投稿しています。新機能の紹介やお役立ち情報もお届けします。
-                </p>
-              </div>
-              
-              {/* X公式アカウントフォロー */}
-              <div className="bg-white p-8 rounded-xl shadow-soft max-w-md mx-auto">
-                <div className="bg-blue-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <svg className="w-10 h-10 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                  </svg>
-                </div>
-                <h4 className="text-xl font-semibold text-gray-900 mb-3">公式Xをフォロー</h4>
-                <p className="text-gray-600 mb-6">
-                  「今日は何の日」にちなんだ画像投稿や新機能情報を配信中
-                </p>
-                <a
-                  href="https://x.com/QuickToolsJP"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center px-8 py-4 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors duration-200 text-lg"
-                >
-                  <svg className="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                  </svg>
-                  フォローする
-                </a>
-              </div>
 
-              {/* 投稿内容の説明 */}
-              <div className="mt-8 pt-8 border-t border-blue-200">
-                <div className="flex items-center justify-center mb-3">
-                  <svg className="w-6 h-6 mr-2 text-orange-500" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                  </svg>
-                  <h4 className="text-lg font-semibold text-gray-900">毎日投稿中！</h4>
-                </div>
-                <p className="text-gray-600 text-sm">
-                  「猫の日」「桜の日」など、今日は何の日にちなんだテーマで画像を投稿しています。<br />
-                  季節の話題やトレンドに合わせた背景透過の活用例をお楽しみください。
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
 
         {/* SEO強化：活用事例セクション */}
         <section className="py-16 px-4">

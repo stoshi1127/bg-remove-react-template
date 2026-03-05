@@ -47,7 +47,7 @@ export default function RootLayout({
           gtag('config', 'G-YT0ZDBKL81');
         `}
       </Script>
-      
+
       {/* 構造化データ: Organization */}
       <Script id="organization-structured-data" type="application/ld+json" strategy="afterInteractive">
         {`
@@ -100,7 +100,7 @@ export default function RootLayout({
                   無料AI画像編集ツール。背景透過・HEIC変換・画像トリミングがすべて無料でご利用いただけます。
                 </p>
               </div>
-              
+
               <div>
                 <h3 className="text-lg font-semibold mb-4 text-white">ツール</h3>
                 <div className="space-y-2">
@@ -115,7 +115,7 @@ export default function RootLayout({
                   </Link>
                 </div>
               </div>
-              
+
               <div>
                 <h3 className="text-lg font-semibold mb-4 text-white">その他</h3>
                 <div className="space-y-2">
@@ -131,12 +131,25 @@ export default function RootLayout({
                 </div>
               </div>
             </div>
-            
+
             <div className="border-t border-gray-700 pt-6">
-              <div className="flex flex-col md:flex-row justify-between items-center space-y-2 md:space-y-0">
-                <p className="text-sm text-gray-400">
-                  無料AI画像編集ツール | 背景透過・HEIC変換・画像トリミング
-                </p>
+              <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+                <div className="flex flex-col md:flex-row items-center md:space-x-4 space-y-2 md:space-y-0">
+                  <p className="text-sm text-gray-400">
+                    無料AI画像編集ツール | 背景透過・HEIC変換・画像トリミング
+                  </p>
+                  <a
+                    href="https://x.com/QuickToolsJP"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gray-400 hover:text-white transition-colors duration-200"
+                    aria-label="X公式アカウント"
+                  >
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                    </svg>
+                  </a>
+                </div>
                 <p className="text-sm text-gray-400">
                   © 2025 QuickTools. All rights reserved.
                 </p>
