@@ -2250,36 +2250,58 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
       />
 
       {/* 処理モード選択 */}
-      <div ref={sectionModeRef} className="space-y-2">
-        <h3 className="text-base font-semibold text-gray-800">仕上がりモード</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div ref={sectionModeRef} className="space-y-4">
+        <h2 className="text-2xl font-black flex items-center gap-3">
+          <span className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+            <span className="material-symbols-outlined text-primary">auto_fix_high</span>
+          </span>
+          切り抜きモード設定
+        </h2>
+        <div className="grid grid-cols-1 gap-4">
           <button
             type="button"
             onClick={() => handleSelectProcessingMode('standard')}
-            className={`rounded-xl border px-4 py-3 text-left transition-colors ${selectedProcessingMode === 'standard'
-              ? 'border-blue-500 bg-blue-50'
-              : 'border-gray-200 hover:border-blue-300'
+            className={`relative p-6 rounded-2xl border-2 text-left transition-all cursor-pointer flex items-center gap-6 group ${selectedProcessingMode === 'standard'
+              ? 'border-primary bg-primary/5 shadow-sm'
+              : 'border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-primary/30'
               }`}
           >
-            <p className="font-semibold text-gray-900">標準</p>
-            <p className="text-xs text-gray-600 mt-1">AIが自動で背景を切り抜きます</p>
+            <div className={`w-16 h-16 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 ${selectedProcessingMode === 'standard' ? 'bg-white shadow-sm text-primary' : 'bg-slate-50 dark:bg-slate-800 text-slate-400'}`}>
+              <span className="material-symbols-outlined text-4xl">draw</span>
+            </div>
+            <div className="flex-1">
+              <p className="text-lg font-black text-slate-900 dark:text-white">標準</p>
+              <p className="text-sm text-slate-500 font-medium mt-1">AIが自動で背景を切り抜きます</p>
+            </div>
+            {selectedProcessingMode === 'standard' && (
+              <div className="w-8 h-8 rounded-full border-4 border-primary bg-white flex items-center justify-center shadow-sm">
+                <div className="w-3 h-3 rounded-full bg-primary"></div>
+              </div>
+            )}
           </button>
 
           <button
             type="button"
             onClick={() => handleSelectProcessingMode('pro_high_precision')}
-            className={`rounded-xl border px-4 py-3 text-left transition-colors relative ${selectedProcessingMode === 'pro_high_precision'
-              ? 'border-amber-500 bg-amber-50'
-              : 'border-gray-200 hover:border-amber-400'
-              } ${!isPro ? 'opacity-80' : ''}`}
+            className={`relative p-6 rounded-2xl border-2 text-left transition-all cursor-pointer flex items-center gap-6 group ${selectedProcessingMode === 'pro_high_precision'
+              ? 'border-pro-orange bg-pro-orange/5 shadow-sm'
+              : 'border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-pro-orange/30'
+              } ${!isPro ? 'opacity-90' : ''}`}
           >
-            <span className="absolute top-2 right-2 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
-              Pro
-            </span>
-            <p className="font-semibold text-gray-900">高精度（Pro）</p>
-            <p className="text-xs text-gray-600 mt-1">より高性能なAIで背景を切り抜きます</p>
-            {!isPro && (
-              <p className="text-[11px] text-amber-700 mt-2">Proで選べます</p>
+            <div className={`w-16 h-16 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 ${selectedProcessingMode === 'pro_high_precision' ? 'bg-white shadow-sm text-pro-orange' : 'bg-pro-orange/5 text-pro-orange'}`}>
+              <span className="material-symbols-outlined text-4xl">high_quality</span>
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <p className="text-lg font-black text-slate-900 dark:text-white">高精度</p>
+                <span className="bg-pro-orange text-white text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-widest shadow-sm">プロ</span>
+              </div>
+              <p className="text-sm text-slate-500 font-medium mt-1">より高性能なAIで背景を切り抜きます</p>
+            </div>
+            {selectedProcessingMode === 'pro_high_precision' && (
+              <div className="w-8 h-8 rounded-full border-4 border-pro-orange bg-white flex items-center justify-center shadow-sm">
+                <div className="w-3 h-3 rounded-full bg-pro-orange"></div>
+              </div>
             )}
           </button>
 
@@ -2294,20 +2316,25 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
               handleSelectProcessingMode('ai_generate');
               setBgMode('ai_generate');
             }}
-            className={`rounded-xl border px-4 py-3 text-left transition-colors relative ${selectedProcessingMode === 'ai_generate'
-              ? 'border-fuchsia-500 bg-fuchsia-50 ring-2 ring-fuchsia-200'
-              : 'border-gray-200 hover:border-fuchsia-300'
-              } ${!isPro ? 'opacity-80' : ''}`}
+            className={`relative p-6 rounded-2xl border-2 text-left transition-all cursor-pointer flex items-center gap-6 group ${selectedProcessingMode === 'ai_generate'
+              ? 'border-fuchsia-500 bg-fuchsia-50 shadow-sm'
+              : 'border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-fuchsia-300'
+              } ${!isPro ? 'opacity-90' : ''}`}
           >
-            <span className="absolute top-2 right-2 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
-              Pro
-            </span>
-            <p className="font-semibold text-gray-900 flex items-center gap-1">
-              AIで背景を作る
-            </p>
-            <p className="text-xs text-gray-600 mt-1">好きなスタイルで新しい背景を生成</p>
-            {!isPro && (
-              <p className="text-[11px] text-amber-700 mt-2">Proで選べます</p>
+            <div className={`w-16 h-16 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 ${selectedProcessingMode === 'ai_generate' ? 'bg-white shadow-sm text-fuchsia-500' : 'bg-fuchsia-50 text-fuchsia-500'}`}>
+              <span className="material-symbols-outlined text-4xl">magic_button</span>
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <p className="text-lg font-black text-slate-900 dark:text-white">AI背景生成</p>
+                <span className="bg-pro-orange text-white text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-widest shadow-sm">プロ</span>
+              </div>
+              <p className="text-sm text-slate-500 font-medium mt-1">好きなスタイルで新しい背景を生成</p>
+            </div>
+            {selectedProcessingMode === 'ai_generate' && (
+              <div className="w-8 h-8 rounded-full border-4 border-fuchsia-500 bg-white flex items-center justify-center shadow-sm">
+                <div className="w-3 h-3 rounded-full bg-fuchsia-500"></div>
+              </div>
             )}
           </button>
         </div>
@@ -2396,31 +2423,69 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
 
       {/* アスペクト比選択エリア */}
       {inputs.length > 0 && (
-        <div ref={sectionSizeRef} className="space-y-3 pt-4">
-          <h3 className="text-base font-semibold text-gray-800">仕上がりのサイズ</h3>
-          <div className="flex flex-wrap gap-3">
-            {aspectRatios.map(ratio => (
-              <RatioButton
-                key={ratio.key}
-                label={ratio.label}
-                isActive={selectedRatio === ratio.key}
-                onClick={() => {
-                  setSelectedRatio(ratio.key);
-                  setTimeout(() => scrollToSectionWithHeaderOffset(sectionBgRef.current), 100);
-                }}
-              />
-            ))}
+        <div ref={sectionSizeRef} className="space-y-4 pt-6">
+          <h2 className="text-2xl font-black mb-6 flex items-center gap-3">
+            <span className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <span className="material-symbols-outlined text-primary">aspect_ratio</span>
+            </span>
+            出力サイズ設定
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            {aspectRatios.map(ratio => {
+              const isActive = selectedRatio === ratio.key;
+              const iconMap: Record<string, string> = {
+                '1:1': 'crop_square',
+                '16:9': 'crop_16_9',
+                '4:3': 'crop_5_4',
+                'original': 'image',
+                'fit-subject': 'person_search'
+              };
+              const iconName = iconMap[ratio.key] || 'crop_original';
+              const labelMap: Record<string, string> = {
+                '1:1': '1:1',
+                '16:9': '16:9',
+                '4:3': '4:3',
+                'original': 'オリジナル',
+                'fit-subject': '被写体に合わせる'
+              };
+              const displayLabel = labelMap[ratio.key] || ratio.label;
+
+              return (
+                <button
+                  key={ratio.key}
+                  type="button"
+                  onClick={() => {
+                    setSelectedRatio(ratio.key);
+                    setTimeout(() => scrollToSectionWithHeaderOffset(sectionBgRef.current), 100);
+                  }}
+                  className={`flex flex-col items-center justify-center gap-2 px-4 py-4 rounded-2xl border-2 text-sm font-black shadow-sm transition-all ${isActive
+                    ? 'border-primary bg-primary text-white'
+                    : 'border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-primary text-slate-700 dark:text-slate-300'
+                    }`}
+                >
+                  <span className="material-symbols-outlined text-3xl">{iconName}</span>
+                  {displayLabel}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
 
       {/* 背景テンプレート選択エリア */}
       {inputs.length > 0 && selectedProcessingMode !== 'ai_generate' && (
-        <div ref={sectionBgRef} className="space-y-4 pt-4">
-          <h3 className="text-base font-semibold text-gray-800">背景をカスタマイズ（オプション）</h3>
+        <div ref={sectionBgRef} className="space-y-6 pt-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-black flex items-center gap-3">
+              <span className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                <span className="material-symbols-outlined text-primary">wallpaper</span>
+              </span>
+              背景カスタマイズ
+            </h2>
+          </div>
 
           {/* --- カラー・テンプレ（無料） --- */}
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
+          <div className="grid grid-cols-4 sm:grid-cols-6 gap-4">
             {/* 「背景なし」オプション */}
             <div
               onClick={() => {
@@ -2431,11 +2496,44 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                 setBlendEnabled(false);
                 setTimeout(() => scrollToSectionWithHeaderOffset(sectionBlendRef.current), 100);
               }}
-              className={`cursor-pointer rounded-lg border-2 ${!selectedTemplate ? 'border-blue-500 ring-2 ring-blue-300' : 'border-gray-200 hover:border-blue-400'} overflow-hidden relative aspect-square flex items-center justify-center bg-gray-100 transition-all`}
+              className={`group relative aspect-square rounded-2xl border-4 flex items-center justify-center cursor-pointer overflow-hidden shadow-sm transition-all w-full ${!selectedTemplate ? 'border-primary bg-white shadow-primary/10' : 'border-transparent bg-slate-100 dark:bg-slate-800 hover:bg-slate-200'}`}
             >
-              <div className="absolute inset-0" style={{ backgroundImage: 'linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)', backgroundSize: '20px 20px', backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px' }}></div>
-              <span className="relative z-10 text-sm font-medium text-gray-600 bg-white bg-opacity-75 px-2 py-1 rounded">なし</span>
+              <span className={`material-symbols-outlined text-4xl group-hover:scale-125 transition-transform ${!selectedTemplate ? 'text-primary' : 'text-slate-400'}`}>block</span>
+              <p className={`absolute bottom-2 text-[10px] font-black uppercase tracking-tighter ${!selectedTemplate ? 'text-primary' : 'text-slate-500'}`}>なし</p>
             </div>
+
+            {/* --- 画像を背景にする（Pro） --- */}
+            <div
+              onClick={() => {
+                if (!isPro) {
+                  goToProPurchase('custom_bg_upload');
+                  trackAnalyticsEvent('pro_purchase_click_from_ai_bg', { feature: 'custom_bg' });
+                  return;
+                }
+                customBgInputRef.current?.click();
+              }}
+              className={`group relative aspect-square rounded-2xl border-4 flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-all w-full ${customBgImage && selectedTemplate === customBgImage ? 'border-pro-orange bg-white shadow-sm shadow-orange-100' : 'border-transparent bg-pro-orange/5 hover:border-pro-orange/30'}`}
+            >
+              {customBgImage ? (
+                <img src={customBgImage} alt="アップロード画像" className="absolute inset-0 w-full h-full object-cover" />
+              ) : (
+                <>
+                  <span className="material-symbols-outlined text-4xl text-pro-orange group-hover:-translate-y-1 transition-transform">upload</span>
+                  <p className="mt-1 text-[10px] font-black uppercase tracking-tighter text-slate-900 dark:text-white">アップロード</p>
+                </>
+              )}
+              {!isPro && (
+                <span className="absolute top-2 right-2 bg-pro-orange text-white text-[8px] px-1.5 py-0.5 rounded-full font-black uppercase">プロ</span>
+              )}
+            </div>
+            <input
+              ref={customBgInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleCustomBgSelect}
+            />
+
             {/* カラーピッカー */}
             <div
               onClick={() => {
@@ -2445,8 +2543,8 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                 setAiBgPreset(null); setAiBgPrompt('');
                 setTimeout(() => scrollToSectionWithHeaderOffset(sectionBlendRef.current), 100);
               }}
-              className={`cursor-pointer rounded-lg border-2 ${selectedTemplate === customColor ? 'border-blue-500 ring-2 ring-blue-300' : 'border-gray-200 hover:border-blue-400'} overflow-hidden relative aspect-square flex items-center justify-center transition-all`}
-              style={{ backgroundColor: customColor }}
+              className={`group relative aspect-square rounded-2xl border-4 flex items-center justify-center cursor-pointer overflow-hidden transition-all w-full ${selectedTemplate === customColor ? 'border-primary ring-offset-2 ring-primary shadow-sm' : 'border-transparent hover:border-slate-300'}`}
+              style={{ backgroundColor: customColor || '#f8fafc' }}
             >
               <input
                 type="color"
@@ -2459,14 +2557,16 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                   setAiBgPreset(null); setAiBgPrompt('');
                   setTimeout(() => scrollToSectionWithHeaderOffset(sectionBlendRef.current), 100);
                 }}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
                 id="color-picker"
                 title="色を選択"
               />
-              <label htmlFor="color-picker" className="relative z-10 text-sm font-medium text-black mix-blend-difference bg-white bg-opacity-75 px-2 py-1 rounded cursor-pointer">
-                カスタム
-              </label>
+              <span className={`material-symbols-outlined text-4xl pointer-events-none relative z-10 group-hover:rotate-90 transition-transform ${selectedTemplate === customColor ? 'text-white drop-shadow-md' : 'text-primary'}`}>
+                {selectedTemplate === customColor ? 'check' : 'palette'}
+              </span>
+              <p className={`absolute bottom-2 z-10 text-[10px] font-black uppercase tracking-tighter pointer-events-none ${selectedTemplate === customColor ? 'text-white drop-shadow-md' : 'text-slate-700'}`}>カスタム</p>
             </div>
+
             {/* テンプレート画像 */}
             {templates.map((template) => (
               <div
@@ -2478,87 +2578,69 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                   setAiBgPreset(null); setAiBgPrompt('');
                   setTimeout(() => scrollToSectionWithHeaderOffset(sectionBlendRef.current), 100);
                 }}
-                className={`cursor-pointer rounded-lg border-2 ${selectedTemplate === template.src ? 'border-blue-500 ring-2 ring-blue-300' : 'border-transparent hover:border-blue-400'} overflow-hidden relative aspect-square transition-all`}
+                className={`relative aspect-square rounded-2xl overflow-hidden cursor-pointer transition-transform w-full bg-white border-2 hover:scale-105 ${selectedTemplate === template.src ? 'border-primary shadow-lg shadow-primary/20 scale-105 z-10 ring-4 ring-primary/20' : 'border-slate-100'}`}
               >
                 {template.src.startsWith('#') ? (
                   <div style={{ backgroundColor: template.src }} className="w-full h-full"></div>
                 ) : (
                   <img src={template.src} alt={template.name} className="w-full h-full object-cover" />
                 )}
-                <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs text-center py-0.5 font-semibold">{template.name}</div>
               </div>
             ))}
-
-            {/* --- 画像を背景にする（Pro） --- */}
-            <div
-              onClick={() => {
-                if (!isPro) {
-                  goToProPurchase('custom_bg_upload');
-                  trackAnalyticsEvent('pro_purchase_click_from_ai_bg', { feature: 'custom_bg' });
-                  return;
-                }
-                customBgInputRef.current?.click();
-              }}
-              className={`cursor-pointer rounded-lg border-2 ${customBgImage && selectedTemplate === customBgImage ? 'border-blue-500 ring-2 ring-blue-300' : 'border-dashed border-gray-300 hover:border-blue-400'} overflow-hidden relative aspect-square flex flex-col items-center justify-center transition-all bg-gray-50`}
-            >
-              {customBgImage ? (
-                <img src={customBgImage} alt="アップロード画像" className="w-full h-full object-cover" />
-              ) : (
-                <>
-                  <svg className="w-6 h-6 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  <span className="text-xs text-gray-500 text-center leading-tight">画像を{'\n'}背景に</span>
-                </>
-              )}
-              {!isPro && (
-                <div className="absolute top-1 right-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">Pro</div>
-              )}
-              {customBgImage && (
-                <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs text-center py-0.5 font-semibold">アップロード</div>
-              )}
-            </div>
-            <input
-              ref={customBgInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleCustomBgSelect}
-            />
           </div>
 
-          {/* --- 自然になじませる チェックボックス（常時表示、背景選択時に有効） --- */}
+          {/* --- 自然になじませる トグルスイッチ（高度な設定） --- */}
           {(selectedProcessingMode as string) !== 'ai_generate' && (
-            <div ref={sectionBlendRef} className={`mt-3 p-3 rounded-lg border transition-all ${selectedTemplate && bgMode === 'normal' ? 'border-teal-400 bg-teal-50 ring-2 ring-teal-100' : 'border-gray-200 bg-gray-50'}`}>
-              <label className={`flex items-center gap-2 ${selectedTemplate && bgMode === 'normal' ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}>
-                <input
-                  type="checkbox"
-                  checked={blendEnabled}
-                  onChange={(e) => {
-                    if (!selectedTemplate || bgMode !== 'normal') return;
-                    if (!isPro) {
-                      goToProPurchase('ai_bg_blend');
-                      trackAnalyticsEvent('pro_purchase_click_from_ai_bg', { feature: 'bg_blend' });
-                      return;
-                    }
-                    setBlendEnabled(e.target.checked);
-                  }}
-                  className={`w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500 ${(selectedTemplate && bgMode === 'normal') ? 'cursor-pointer' : 'cursor-not-allowed'}`}
-                  disabled={(!selectedTemplate || bgMode !== 'normal') && blendEnabled === false}
-                />
-                <span className={`text-sm font-medium ${selectedTemplate && bgMode === 'normal' ? 'text-teal-800' : 'text-gray-600'} flex items-center gap-1.5`}>
-                  自然になじませる（影・光を自動調整）
-                  {!isPro && <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">Pro</span>}
-                </span>
-                {isPro && premiumRemaining !== null && blendEnabled && (
-                  <span className="text-xs text-teal-600 bg-teal-200 px-2 py-0.5 rounded-full ml-auto font-medium shadow-sm border border-teal-300">
-                    {inputs.filter(i => i.status === 'ready' || i.status === 'error').length}枚 × 1回消費
-                  </span>
-                )}
-              </label>
-              <p className={`text-xs mt-1 ml-6 ${selectedTemplate && bgMode === 'normal' ? 'text-teal-600' : 'text-gray-500'}`}>
-                {!selectedTemplate && bgMode === 'normal' ? '先に背景（カラーや画像）を選んでください' : '選んだ背景に合わせてAIが影や明るさを自然に調整します'}
-              </p>
+            <div ref={sectionBlendRef} className="bg-white dark:bg-slate-900 rounded-[2.5rem] border-2 border-slate-100 dark:border-slate-800 p-8 shadow-sm mt-8 transition-all">
+              <div className="flex items-center gap-4 mb-6">
+                <span className="material-symbols-outlined text-3xl text-slate-400">settings</span>
+                <h3 className="text-sm font-black uppercase tracking-[0.2em] text-slate-400">高度な設定</h3>
+              </div>
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+                  <div className="w-16 h-16 rounded-2xl bg-pro-orange/5 flex items-center justify-center text-pro-orange shrink-0">
+                    <span className="material-symbols-outlined text-4xl">flare</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-black text-xl text-slate-900 dark:text-white flex items-center gap-2">
+                      ナチュラルブレンド
+                      {!isPro && <span className="bg-pro-orange text-white text-[10px] px-2 py-0.5 rounded-full font-black uppercase shadow-sm">プロ</span>}
+                    </span>
+                    <span className="text-sm text-slate-500 font-medium">選んだ背景に合わせて影や明るさをAIが自動調整します</span>
+
+                    {/* 背景が選択されていない時の警告 */}
+                    {!selectedTemplate && bgMode === 'normal' && (
+                      <span className="text-xs text-amber-500 font-bold mt-1">※先に背景（カラーや画像）を選んでください</span>
+                    )}
+
+                    {/* Pro利用時の消費表示 */}
+                    {isPro && premiumRemaining !== null && blendEnabled && (
+                      <span className="text-xs text-pro-orange font-bold mt-1">
+                        ✓ {inputs.filter(i => i.status === 'ready' || i.status === 'error').length}枚 × 1回消費
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <label className={`relative inline-flex items-center ml-2 sm:ml-0 scale-125 shrink-0 ${selectedTemplate && bgMode === 'normal' ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}>
+                  <input
+                    type="checkbox"
+                    checked={blendEnabled}
+                    onChange={(e) => {
+                      if (!selectedTemplate || bgMode !== 'normal') return;
+                      if (!isPro) {
+                        goToProPurchase('ai_bg_blend');
+                        trackAnalyticsEvent('pro_purchase_click_from_ai_bg', { feature: 'bg_blend' });
+                        return;
+                      }
+                      setBlendEnabled(e.target.checked);
+                    }}
+                    disabled={!selectedTemplate && bgMode === 'normal'}
+                    className="sr-only peer"
+                  />
+                  <div className="w-14 h-7 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-pro-orange"></div>
+                </label>
+              </div>
             </div>
           )}
 
@@ -2571,418 +2653,429 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
 
       {/* 選択されたファイルリスト */}
       {inputs.length > 0 && (
-        <div ref={sectionFilesRef} className="space-y-4 pt-6">
-          <h3 className="text-base font-semibold text-gray-800">選択されたファイル</h3>
+        <div ref={sectionFilesRef} className="pt-6">
+          <div className="bg-slate-50 dark:bg-slate-900/50 rounded-[2.5rem] border-2 border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-inner">
+            <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
+              <span className="material-symbols-outlined text-2xl sm:text-3xl text-slate-400">folder_open</span>
+              <h3 className="text-sm font-black uppercase tracking-[0.2em] text-slate-500">選択中のファイル</h3>
+            </div>
 
-          <ul className="flex flex-col gap-4 list-none p-0 m-0">
-            {inputs.map(input => {
-              const processingTime = input.startTime && input.endTime
-                ? ((input.endTime - input.startTime) / 1000).toFixed(1)
-                : null;
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              const currentTime = input.startTime && !input.endTime
-                ? ((Date.now() - input.startTime) / 1000).toFixed(1)
-                : null;
-              const showComparison = input.status === 'completed' && input.outputUrl && input.previewUrl;
+            <ul className="flex flex-col gap-4 list-none p-0 m-0 mb-6 sm:mb-8">
+              {inputs.map(input => {
+                const processingTime = input.startTime && input.endTime
+                  ? ((input.endTime - input.startTime) / 1000).toFixed(1)
+                  : null;
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                const currentTime = input.startTime && !input.endTime
+                  ? ((Date.now() - input.startTime) / 1000).toFixed(1)
+                  : null;
+                const showComparison = input.status === 'completed' && input.outputUrl && input.previewUrl;
 
-              return (
-                <li key={input.id} className={`p-4 sm:p-5 transition-all duration-300 ease-in-out relative rounded-xl border border-gray-200 shadow-sm ${input.status === 'completed' ? 'bg-emerald-50/60 border-l-4 border-l-emerald-500' :
-                  input.status === 'error' ? 'bg-red-50/80 border-l-4 border-l-red-400' :
-                    input.status === 'processing' || input.status === 'uploading' ? 'bg-sky-50/80 border-l-4 border-l-sky-400' :
-                      'bg-white'
-                  }`}>
+                return (
+                  <li key={input.id} className={`flex flex-col gap-4 sm:gap-5 p-4 sm:p-5 transition-all duration-300 ease-in-out relative rounded-3xl border shadow-sm ${input.status === 'completed' ? 'bg-emerald-50/30 border-emerald-200' :
+                    input.status === 'error' ? 'bg-red-50/30 border-red-200' :
+                      input.status === 'processing' || input.status === 'uploading' ? 'bg-sky-50/30 border-sky-200' :
+                        'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+                    }`}>
 
 
-                  <div className="flex items-start space-x-3">
-                    <div
-                      className="flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden flex items-center justify-center relative bg-gray-100"
-                      style={input.outputUrl && input.status === 'completed' ? {
-                        backgroundImage: 'linear-gradient(45deg, #d1d5db 25%, transparent 25%), linear-gradient(-45deg, #d1d5db 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #d1d5db 75%), linear-gradient(-45deg, transparent 75%, #d1d5db 75%)',
-                        backgroundSize: '10px 10px',
-                        backgroundPosition: '0 0, 0 5px, 5px -5px, -5px 0px',
-                        backgroundColor: '#f3f4f6',
-                      } : undefined}
-                    >
-                      {/* 処理中のパルスアニメーション */}
-                      {(input.status === 'uploading' || input.status === 'processing') && (
-                        <div className="absolute inset-0 bg-blue-400 opacity-20 animate-pulse rounded"></div>
-                      )}
+                    <div className="flex items-center gap-4 sm:gap-5 w-full">
+                      <div
+                        className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden flex items-center justify-center relative bg-slate-100 border border-slate-100"
+                        style={input.outputUrl && input.status === 'completed' ? {
+                          backgroundImage: 'linear-gradient(45deg, #d1d5db 25%, transparent 25%), linear-gradient(-45deg, #d1d5db 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #d1d5db 75%), linear-gradient(-45deg, transparent 75%, #d1d5db 75%)',
+                          backgroundSize: '10px 10px',
+                          backgroundPosition: '0 0, 0 5px, 5px -5px, -5px 0px',
+                          backgroundColor: '#f3f4f6',
+                        } : undefined}
+                      >
+                        {/* 処理中のパルスアニメーション */}
+                        {(input.status === 'uploading' || input.status === 'processing') && (
+                          <div className="absolute inset-0 bg-blue-400 opacity-20 animate-pulse rounded"></div>
+                        )}
 
-                      {input.outputUrl ? (
-                        <img
-                          src={input.outputUrl}
-                          alt={`処理済み ${input.name}`}
-                          className="object-contain w-full h-full relative z-10"
-                        />
-                      ) : input.previewUrl && (input.status === 'ready' || input.status === 'uploading' || input.status === 'processing' || input.status === 'completed') ? (
-                        <img
-                          src={input.previewUrl}
-                          alt={`プレビュー ${input.name}`}
-                          className="object-contain w-full h-full relative z-10"
-                          onError={(e) => {
-                            // プレビューの読み込みエラー時（HEICファイルなど）はプレースホルダーを表示
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';
-                            const parent = target.parentElement;
-                            if (parent && !parent.querySelector('.fallback-icon')) {
-                              const fallbackDiv = document.createElement('div');
-                              fallbackDiv.className = 'fallback-icon flex flex-col items-center justify-center text-gray-500 w-full h-full relative z-10';
-                              fallbackDiv.innerHTML = `
+                        {input.outputUrl ? (
+                          <img
+                            src={input.outputUrl}
+                            alt={`処理済み ${input.name}`}
+                            className="object-contain w-full h-full relative z-10"
+                          />
+                        ) : input.previewUrl && (input.status === 'ready' || input.status === 'uploading' || input.status === 'processing' || input.status === 'completed') ? (
+                          <img
+                            src={input.previewUrl}
+                            alt={`プレビュー ${input.name}`}
+                            className="object-contain w-full h-full relative z-10"
+                            onError={(e) => {
+                              // プレビューの読み込みエラー時（HEICファイルなど）はプレースホルダーを表示
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              const parent = target.parentElement;
+                              if (parent && !parent.querySelector('.fallback-icon')) {
+                                const fallbackDiv = document.createElement('div');
+                                fallbackDiv.className = 'fallback-icon flex flex-col items-center justify-center text-gray-500 w-full h-full relative z-10';
+                                fallbackDiv.innerHTML = `
                                 <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                 </svg>
                                 <span class="text-xs">画像</span>
                               `;
-                              parent.appendChild(fallbackDiv);
-                            }
-                          }}
-                        />
-                      ) : input.status === 'converting' ? (
-                        <div className="flex flex-col items-center justify-center text-gray-500 relative z-10">
-                          <div className="animate-spin rounded-full h-6 w-6 border-2 border-blue-500 border-t-transparent mb-1"></div>
-                          <span className="text-xs">変換中</span>
-                        </div>
-                      ) : input.status === 'uploading' ? (
-                        <div className="flex flex-col items-center justify-center text-blue-600 relative z-10">
-                          <div className="animate-spin rounded-full h-6 w-6 border-2 border-blue-600 border-t-transparent mb-1"></div>
-                          <span className="text-xs font-medium">送信中</span>
-                        </div>
-                      ) : input.status === 'processing' ? (
-                        <div className="flex flex-col items-center justify-center text-blue-600 relative z-10">
-                          <div className="animate-pulse">
-                            <div className="flex space-x-1">
-                              <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                              <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                              <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-                            </div>
-                          </div>
-                          <span className="text-xs font-medium mt-1">処理中</span>
-                        </div>
-                      ) : input.status === 'pending' ? (
-                        <div className="flex flex-col items-center justify-center text-gray-500 relative z-10">
-                          <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          <span className="text-xs">待機中</span>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col items-center justify-center text-gray-500 relative z-10">
-                          <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                          <span className="text-xs">画像</span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <p className="text-sm font-medium text-gray-900 truncate">{input.name}</p>
-                        {/* 処理時間表示 */}
-                        {processingTime && (
-                          <span className="text-xs text-emerald-700 font-medium bg-emerald-100 px-2 py-1 rounded-full">
-                            {processingTime}秒
-                          </span>
-                        )}
-
-                      </div>
-
-                      <div className="flex items-center space-x-2">
-                        <p className={`text-xs font-medium ${input.status === 'error' ? 'text-red-700' :
-                          input.status === 'completed' ? 'text-emerald-700' :
-                            input.status === 'processing' || input.status === 'uploading' ? 'text-sky-600' :
-                              'text-gray-500'
-                          }`}>
-                          {input.status === 'pending' && (
-                            <span className="flex items-center">
-                              <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
-                              待機中
-                            </span>
-                          )}
-                          {input.status === 'converting' && (
-                            <span className="flex items-center">
-                              <div className="animate-spin rounded-full h-3 w-3 border border-blue-500 border-t-transparent mr-1"></div>
-                              写真を準備中...
-                            </span>
-                          )}
-                          {input.status === 'ready' && (
-                            <span className="flex items-center">
-                              <svg className="w-3 h-3 mr-1 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                              </svg>
-                              準備完了
-                            </span>
-                          )}
-                          {input.status === 'uploading' && (
-                            <span className="flex items-center">
-                              <div className="animate-spin rounded-full h-3 w-3 border border-blue-600 border-t-transparent mr-1"></div>
-                              アップロード中...
-                            </span>
-                          )}
-                          {input.status === 'processing' && (
-                            <span className="flex items-center">
-                              <div className="flex space-x-1 mr-2">
-                                <div className="w-1 h-1 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                                <div className="w-1 h-1 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '100ms' }}></div>
-                                <div className="w-1 h-1 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '200ms' }}></div>
-                              </div>
-                              AI背景除去中...
-                            </span>
-                          )}
-                          {input.status === 'completed' && (
-                            <span className="flex items-center text-emerald-700">
-                              <svg className="w-3 h-3 mr-1 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                              </svg>
-                              完了
-                            </span>
-                          )}
-                          {input.status === 'error' && (
-                            <span className="flex items-center">
-                              <svg className="w-3 h-3 mr-1 text-red-600" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                              </svg>
-                              エラー
-                            </span>
-                          )}
-                        </p>
-                      </div>
-                      {input.errorMessage && (
-                        <p className="text-xs text-red-600 mt-1 break-words bg-red-50 p-2 rounded border border-red-200">
-                          <strong>詳細:</strong> {input.errorMessage}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* 完了時: 元の画像 vs 透過後の比較表示 */}
-                  {showComparison && (
-                    <div className="mt-4 rounded-xl border border-emerald-200/80 bg-white/80 overflow-hidden shadow-inner">
-                      <div className="grid grid-cols-2 gap-0">
-                        <div className="flex flex-col p-2 sm:p-3 border-r border-gray-200">
-                          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">元の画像</span>
-                          <div className="aspect-square max-h-32 sm:max-h-40 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
-                            <img
-                              src={input.previewUrl}
-                              alt={`元画像 ${input.name}`}
-                              className="object-contain w-full h-full"
-                            />
-                          </div>
-                        </div>
-                        <div className="flex flex-col p-2 sm:p-3">
-                          <span className="text-xs font-semibold text-emerald-600 uppercase tracking-wider mb-2">透過後</span>
-                          <div
-                            className="aspect-square max-h-32 sm:max-h-40 rounded-lg overflow-hidden flex items-center justify-center flex-1 min-h-0"
-                            style={{
-                              backgroundImage: 'linear-gradient(45deg, #e5e7eb 25%, transparent 25%), linear-gradient(-45deg, #e5e7eb 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #e5e7eb 75%), linear-gradient(-45deg, transparent 75%, #e5e7eb 75%)',
-                              backgroundSize: '14px 14px',
-                              backgroundPosition: '0 0, 0 7px, 7px -7px, -7px 0px',
-                              backgroundColor: '#f9fafb',
+                                parent.appendChild(fallbackDiv);
+                              }
                             }}
-                          >
-                            <img
-                              src={input.outputUrl}
-                              alt={`透過後 ${input.name}`}
-                              className="object-contain w-full h-full relative z-10"
-                            />
+                          />
+                        ) : input.status === 'converting' ? (
+                          <div className="flex flex-col items-center justify-center text-gray-500 relative z-10">
+                            <div className="animate-spin rounded-full h-6 w-6 border-2 border-blue-500 border-t-transparent mb-1"></div>
+                            <span className="text-xs">変換中</span>
                           </div>
-                        </div>
+                        ) : input.status === 'uploading' ? (
+                          <div className="flex flex-col items-center justify-center text-blue-600 relative z-10">
+                            <div className="animate-spin rounded-full h-6 w-6 border-2 border-blue-600 border-t-transparent mb-1"></div>
+                            <span className="text-xs font-medium">送信中</span>
+                          </div>
+                        ) : input.status === 'processing' ? (
+                          <div className="flex flex-col items-center justify-center text-blue-600 relative z-10">
+                            <div className="animate-pulse">
+                              <div className="flex space-x-1">
+                                <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                                <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                                <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                              </div>
+                            </div>
+                            <span className="text-xs font-medium mt-1">処理中</span>
+                          </div>
+                        ) : input.status === 'pending' ? (
+                          <div className="flex flex-col items-center justify-center text-gray-500 relative z-10">
+                            <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span className="text-xs">待機中</span>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center text-gray-500 relative z-10">
+                            <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <span className="text-xs">画像</span>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="text-base sm:text-lg font-black text-slate-900 dark:text-white truncate">{input.name}</p>
+                          {/* 処理時間表示 */}
+                          {processingTime && (
+                            <span className="text-xs text-emerald-700 font-medium bg-emerald-100 px-2 py-1 rounded-full whitespace-nowrap ml-2">
+                              {processingTime}秒
+                            </span>
+                          )}
 
-                  {/* ボタンエリア - スマホでは下に配置 */}
-                  {(input.outputUrl && input.status === 'completed') || input.status === 'error' ? (
-                    <div className={`mt-4 pt-3 border-t ${input.status === 'completed' ? 'border-emerald-200/60' : 'border-red-200/60'}`}>
-                      {input.outputUrl && input.status === 'completed' && isPro && (
-                        <div className="mb-3 rounded-xl border p-3 border-purple-200 bg-purple-50">
-                          <p className="text-sm font-semibold text-gray-900">
-                            {input.lastProcessingMode === 'pro_high_precision' ? '高画質化（拡大）' : 'Pro機能'}
-                          </p>
-                          <p className="text-xs text-gray-600 mt-1">
-                            {input.lastProcessingMode === 'pro_high_precision'
-                              ? '画像を拡大して高解像度にできます。サイズを選んでから実行してください。'
-                              : '高精度で再処理したあと、高画質化（拡大）もできます。'}
-                          </p>
-                          <div className="mt-3 flex flex-wrap gap-2">
-                            <>
-                              {input.lastProcessingMode !== 'pro_high_precision' && (
-                                <button
-                                  type="button"
-                                  onClick={() => { void handleRemakeWithOriginal(input, 'edge_cleanup'); }}
-                                  disabled={batchEnhanceState.inProgress || enhancingFileId === input.id}
-                                  className="inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-60"
-                                >
-                                  {enhancingFileId === input.id ? '再処理中…' : '高精度で再処理'}
-                                </button>
-                              )}
-                              {enhancingFileId === input.id && pendingEnhance?.fileId !== input.id && (
-                                <div className="flex items-center gap-2 w-full py-1">
-                                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-purple-600 border-t-transparent" />
-                                  <span className="text-xs text-purple-700 font-medium">高画質化処理中…</span>
-                                </div>
-                              )}
-                              {input.wasEnhanced && enhancingFileId !== input.id && (
-                                <div className="flex items-center gap-1.5 w-full py-1 px-2 rounded-md bg-green-50 border border-green-200">
-                                  <svg className="w-4 h-4 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                  </svg>
-                                  <span className="text-xs text-green-700 font-medium">高画質化完了</span>
-                                </div>
-                              )}
-                              {enhancingFileId !== input.id && (
-                                <>
-                                  {input.outputWidth && input.outputHeight && (
-                                    <p className="text-xs text-gray-500">現在のサイズ: {input.outputWidth}×{input.outputHeight}px</p>
-                                  )}
-                                  <div className="inline-flex rounded-lg border border-purple-200 overflow-hidden">
-                                    {(['1k', '2k', '4k'] as EnhanceTarget[]).map((target) => {
-                                      const targetPx = toEnhanceLongSide(target);
-                                      const alreadyLargeEnough = (input.outputLongSide ?? 0) >= targetPx;
-                                      const isSelected = pendingEnhance?.fileId === input.id && pendingEnhance.target === target;
-                                      const afterDims = (input.outputWidth && input.outputHeight)
-                                        ? computeUpscaledDimensions(input.outputWidth, input.outputHeight, target)
-                                        : null;
-                                      const titleText = alreadyLargeEnough
-                                        ? `既に${target.toUpperCase()}以上のサイズです`
-                                        : afterDims
-                                          ? `${afterDims.width}×${afterDims.height}px に高画質化（拡大）`
-                                          : `${target.toUpperCase()}に高画質化（拡大）`;
-                                      return (
-                                        <button
-                                          key={target}
-                                          type="button"
-                                          onClick={() => {
-                                            if (isSelected) {
-                                              setPendingEnhance(null);
-                                            } else {
-                                              setPendingEnhance({ fileId: input.id, target });
-                                            }
-                                          }}
-                                          disabled={batchEnhanceState.inProgress || alreadyLargeEnough}
-                                          title={titleText}
-                                          className={`px-3 py-2 text-sm font-medium border-r last:border-r-0 border-purple-200 transition-colors ${isSelected
-                                            ? 'bg-purple-600 text-white'
-                                            : alreadyLargeEnough
-                                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                              : 'bg-white text-purple-700 hover:bg-purple-100'
-                                            } disabled:opacity-60`}
-                                        >
-                                          {target === '1k' ? '1K' : target === '2k' ? '2K' : '4K'}
-                                          {alreadyLargeEnough && ' ✓'}
-                                        </button>
-                                      );
-                                    })}
-                                  </div>
-                                  {pendingEnhance?.fileId === input.id && (() => {
-                                    const cur = { w: input.outputWidth ?? 0, h: input.outputHeight ?? 0 };
-                                    const after = computeUpscaledDimensions(cur.w, cur.h, pendingEnhance.target);
-                                    return (
-                                      <div className="flex flex-col gap-1.5">
-                                        <p className="text-xs text-gray-600">
-                                          <span className="font-medium">{cur.w}×{cur.h}</span>
-                                          <span className="mx-1.5 text-purple-400">→</span>
-                                          <span className="font-bold text-purple-700">{after.width}×{after.height}</span>
-                                        </p>
-                                        <div className="flex items-center gap-2">
-                                          <button
-                                            type="button"
-                                            onClick={() => {
-                                              const t = pendingEnhance.target;
-                                              setPendingEnhance(null);
-                                              void handleEnhanceForFile(input, t);
-                                            }}
-                                            className="inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700"
-                                          >
-                                            {pendingEnhance.target.toUpperCase()}に高画質化を実行
-                                          </button>
-                                          <button
-                                            type="button"
-                                            onClick={() => setPendingEnhance(null)}
-                                            className="text-xs text-gray-500 hover:text-gray-700"
-                                          >
-                                            キャンセル
-                                          </button>
-                                        </div>
-                                      </div>
-                                    );
-                                  })()}
-                                </>
-                              )}
-                            </>
-                          </div>
                         </div>
-                      )}
-                      {input.outputUrl && input.status === 'completed' && (
-                        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                          {/* ダウンロードボタン */}
-                          {!isPro && (
-                            <a
-                              href={input.outputUrl}
-                              download={`processed_${input.name.replace(/\.[^.]+$/, ".png")}`}
-                              className="flex-1 sm:flex-none"
-                            >
-                              <PrimaryButton variant="primary" size="sm" className="w-full sm:w-auto">
-                                保存
-                              </PrimaryButton>
-                            </a>
-                          )}
-                          {isPro && (
-                            <a
-                              href={input.highQualityOutputUrl || input.outputUrl}
-                              download={`processed_hq_${input.name.replace(/\.[^.]+$/, ".png")}`}
-                              className="flex-1 sm:flex-none"
-                            >
-                              <PrimaryButton variant="primary" size="sm" className="w-full sm:w-auto">
-                                {input.wasEnhanced ? '高画質化して保存' : '保存'}
-                              </PrimaryButton>
-                            </a>
-                          )}
-                          {/* イージートリミングで編集ボタン - Linkを使用 */}
-                          {input.boundingBox && input.outputUrl && (
-                            <Link
-                              href="/trim"
-                              onClick={() => {
-                                // localStorageに画像URLとバウンディングボックスを保存
-                                // outputUrlは既にData URLになっているはず
-                                localStorage.setItem('trimImage', input.outputUrl || '');
-                                localStorage.setItem('trimBoundingBox', JSON.stringify(input.boundingBox));
-                                // ページ遷移はLinkコンポーネントが行う
-                              }}
-                              passHref // Next.js 13/14のLinkで子要素がインタラクティブな場合に使用が推奨
-                              target="_blank" // ここで新しいタブで開く設定を追加
-                              rel="noopener noreferrer" // セキュリティのために追加
-                              className="flex-1 sm:flex-none"
-                            >
-                              <PrimaryButton variant="outline" size="sm" className="w-full sm:w-auto bg-white text-gray-800 hover:bg-gray-100 border-gray-300">
-                                イージートリミングで編集
-                              </PrimaryButton>
-                            </Link>
-                          )}
+
+                        <div className="flex items-center space-x-2 mt-1">
+                          <p className={`text-[13px] sm:text-sm font-black flex items-center gap-1.5 ${input.status === 'error' ? 'text-red-600' :
+                            input.status === 'completed' ? 'text-emerald-600' :
+                              input.status === 'processing' || input.status === 'uploading' ? 'text-sky-600' :
+                                'text-green-600'
+                            }`}>
+                            {input.status === 'pending' && (
+                              <span className="flex items-center">
+                                <span className="material-symbols-outlined text-[16px] mr-1.5">schedule</span>
+                                待機中
+                              </span>
+                            )}
+                            {input.status === 'converting' && (
+                              <span className="flex items-center">
+                                <div className="animate-spin rounded-full h-3 w-3 border-2 border-slate-400 border-t-transparent mr-1.5"></div>
+                                写真を準備中...
+                              </span>
+                            )}
+                            {input.status === 'ready' && (
+                              <span className="flex items-center">
+                                <span className="material-symbols-outlined text-[16px] mr-1.5">check_circle</span>
+                                準備完了
+                              </span>
+                            )}
+                            {input.status === 'uploading' && (
+                              <span className="flex items-center">
+                                <div className="animate-spin rounded-full h-3 w-3 border-2 border-blue-600 border-t-transparent mr-1.5"></div>
+                                アップロード中...
+                              </span>
+                            )}
+                            {input.status === 'processing' && (
+                              <span className="flex items-center">
+                                <div className="flex space-x-1 mr-2">
+                                  <div className="w-1 h-1 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                                  <div className="w-1 h-1 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '100ms' }}></div>
+                                  <div className="w-1 h-1 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '200ms' }}></div>
+                                </div>
+                                AI背景除去中...
+                              </span>
+                            )}
+                            {input.status === 'completed' && (
+                              <span className="flex items-center">
+                                <span className="material-symbols-outlined text-[16px] mr-1.5">check_circle</span>
+                                完了
+                              </span>
+                            )}
+                            {input.status === 'error' && (
+                              <span className="flex items-center">
+                                <span className="material-symbols-outlined text-[16px] mr-1.5">error</span>
+                                エラー
+                              </span>
+                            )}
+                          </p>
                         </div>
-                      )}
-                      {input.status === 'error' && (
+                        {input.errorMessage && (
+                          <p className="text-xs text-red-600 mt-1 break-words bg-red-50 p-2 rounded border border-red-200">
+                            <strong>詳細:</strong> {input.errorMessage}
+                          </p>
+                        )}
+                      </div>
+                      {!['processing', 'uploading', 'converting'].includes(input.status) && (
                         <button
-                          onClick={() => {
-                            updateInputStatus(input.id, 'ready', undefined);
-                            setMsg(null);
-                          }}
-                          className="w-full sm:w-auto px-3 py-1.5 rounded-md text-sm font-medium text-white bg-yellow-500 hover:bg-yellow-600 transition-colors"
-                          title="このファイルで再試行（エラークリア）"
+                          title="リストから削除"
+                          onClick={() => setInputs(prev => prev.filter(i => i.id !== input.id))}
+                          className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 flex items-center justify-center rounded-full bg-slate-100 hover:bg-red-100 hover:text-red-500 transition-all text-slate-400"
                         >
-                          再試行
+                          <span className="material-symbols-outlined text-[20px]">close</span>
                         </button>
                       )}
                     </div>
-                  ) : null}
-                </li>
-              );
-            })}
-          </ul>
+
+                    {/* 完了時: 元の画像 vs 透過後の比較表示 */}
+                    {showComparison && (
+                      <div className="mt-4 rounded-xl border border-emerald-200/80 bg-white/80 overflow-hidden shadow-inner">
+                        <div className="grid grid-cols-2 gap-0">
+                          <div className="flex flex-col p-2 sm:p-3 border-r border-gray-200">
+                            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">元の画像</span>
+                            <div className="aspect-square max-h-32 sm:max-h-40 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
+                              <img
+                                src={input.previewUrl}
+                                alt={`元画像 ${input.name}`}
+                                className="object-contain w-full h-full"
+                              />
+                            </div>
+                          </div>
+                          <div className="flex flex-col p-2 sm:p-3">
+                            <span className="text-xs font-semibold text-emerald-600 uppercase tracking-wider mb-2">透過後</span>
+                            <div
+                              className="aspect-square max-h-32 sm:max-h-40 rounded-lg overflow-hidden flex items-center justify-center flex-1 min-h-0"
+                              style={{
+                                backgroundImage: 'linear-gradient(45deg, #e5e7eb 25%, transparent 25%), linear-gradient(-45deg, #e5e7eb 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #e5e7eb 75%), linear-gradient(-45deg, transparent 75%, #e5e7eb 75%)',
+                                backgroundSize: '14px 14px',
+                                backgroundPosition: '0 0, 0 7px, 7px -7px, -7px 0px',
+                                backgroundColor: '#f9fafb',
+                              }}
+                            >
+                              <img
+                                src={input.outputUrl}
+                                alt={`透過後 ${input.name}`}
+                                className="object-contain w-full h-full relative z-10"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ボタンエリア - スマホでは下に配置 */}
+                    {(input.outputUrl && input.status === 'completed') || input.status === 'error' ? (
+                      <div className={`mt-4 pt-3 border-t ${input.status === 'completed' ? 'border-emerald-200/60' : 'border-red-200/60'}`}>
+                        {input.outputUrl && input.status === 'completed' && isPro && (
+                          <div className="mb-3 rounded-xl border p-3 border-purple-200 bg-purple-50">
+                            <p className="text-sm font-semibold text-gray-900">
+                              {input.lastProcessingMode === 'pro_high_precision' ? '高画質化（拡大）' : 'Pro機能'}
+                            </p>
+                            <p className="text-xs text-gray-600 mt-1">
+                              {input.lastProcessingMode === 'pro_high_precision'
+                                ? '画像を拡大して高解像度にできます。サイズを選んでから実行してください。'
+                                : '高精度で再処理したあと、高画質化（拡大）もできます。'}
+                            </p>
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              <>
+                                {input.lastProcessingMode !== 'pro_high_precision' && (
+                                  <button
+                                    type="button"
+                                    onClick={() => { void handleRemakeWithOriginal(input, 'edge_cleanup'); }}
+                                    disabled={batchEnhanceState.inProgress || enhancingFileId === input.id}
+                                    className="inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-60"
+                                  >
+                                    {enhancingFileId === input.id ? '再処理中…' : '高精度で再処理'}
+                                  </button>
+                                )}
+                                {enhancingFileId === input.id && pendingEnhance?.fileId !== input.id && (
+                                  <div className="flex items-center gap-2 w-full py-1">
+                                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-purple-600 border-t-transparent" />
+                                    <span className="text-xs text-purple-700 font-medium">高画質化処理中…</span>
+                                  </div>
+                                )}
+                                {input.wasEnhanced && enhancingFileId !== input.id && (
+                                  <div className="flex items-center gap-1.5 w-full py-1 px-2 rounded-md bg-green-50 border border-green-200">
+                                    <svg className="w-4 h-4 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                    </svg>
+                                    <span className="text-xs text-green-700 font-medium">高画質化完了</span>
+                                  </div>
+                                )}
+                                {enhancingFileId !== input.id && (
+                                  <>
+                                    {input.outputWidth && input.outputHeight && (
+                                      <p className="text-xs text-gray-500">現在のサイズ: {input.outputWidth}×{input.outputHeight}px</p>
+                                    )}
+                                    <div className="inline-flex rounded-lg border border-purple-200 overflow-hidden">
+                                      {(['1k', '2k', '4k'] as EnhanceTarget[]).map((target) => {
+                                        const targetPx = toEnhanceLongSide(target);
+                                        const alreadyLargeEnough = (input.outputLongSide ?? 0) >= targetPx;
+                                        const isSelected = pendingEnhance?.fileId === input.id && pendingEnhance.target === target;
+                                        const afterDims = (input.outputWidth && input.outputHeight)
+                                          ? computeUpscaledDimensions(input.outputWidth, input.outputHeight, target)
+                                          : null;
+                                        const titleText = alreadyLargeEnough
+                                          ? `既に${target.toUpperCase()}以上のサイズです`
+                                          : afterDims
+                                            ? `${afterDims.width}×${afterDims.height}px に高画質化（拡大）`
+                                            : `${target.toUpperCase()}に高画質化（拡大）`;
+                                        return (
+                                          <button
+                                            key={target}
+                                            type="button"
+                                            onClick={() => {
+                                              if (isSelected) {
+                                                setPendingEnhance(null);
+                                              } else {
+                                                setPendingEnhance({ fileId: input.id, target });
+                                              }
+                                            }}
+                                            disabled={batchEnhanceState.inProgress || alreadyLargeEnough}
+                                            title={titleText}
+                                            className={`px-3 py-2 text-sm font-medium border-r last:border-r-0 border-purple-200 transition-colors ${isSelected
+                                              ? 'bg-purple-600 text-white'
+                                              : alreadyLargeEnough
+                                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                                : 'bg-white text-purple-700 hover:bg-purple-100'
+                                              } disabled:opacity-60`}
+                                          >
+                                            {target === '1k' ? '1K' : target === '2k' ? '2K' : '4K'}
+                                            {alreadyLargeEnough && ' ✓'}
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                    {pendingEnhance?.fileId === input.id && (() => {
+                                      const cur = { w: input.outputWidth ?? 0, h: input.outputHeight ?? 0 };
+                                      const after = computeUpscaledDimensions(cur.w, cur.h, pendingEnhance.target);
+                                      return (
+                                        <div className="flex flex-col gap-1.5">
+                                          <p className="text-xs text-gray-600">
+                                            <span className="font-medium">{cur.w}×{cur.h}</span>
+                                            <span className="mx-1.5 text-purple-400">→</span>
+                                            <span className="font-bold text-purple-700">{after.width}×{after.height}</span>
+                                          </p>
+                                          <div className="flex items-center gap-2">
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                const t = pendingEnhance.target;
+                                                setPendingEnhance(null);
+                                                void handleEnhanceForFile(input, t);
+                                              }}
+                                              className="inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700"
+                                            >
+                                              {pendingEnhance.target.toUpperCase()}に高画質化を実行
+                                            </button>
+                                            <button
+                                              type="button"
+                                              onClick={() => setPendingEnhance(null)}
+                                              className="text-xs text-gray-500 hover:text-gray-700"
+                                            >
+                                              キャンセル
+                                            </button>
+                                          </div>
+                                        </div>
+                                      );
+                                    })()}
+                                  </>
+                                )}
+                              </>
+                            </div>
+                          </div>
+                        )}
+                        {input.outputUrl && input.status === 'completed' && (
+                          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                            {/* ダウンロードボタン */}
+                            {!isPro && (
+                              <a
+                                href={input.outputUrl}
+                                download={`processed_${input.name.replace(/\.[^.]+$/, ".png")}`}
+                                className="flex-1 sm:flex-none"
+                              >
+                                <PrimaryButton variant="primary" size="sm" className="w-full sm:w-auto">
+                                  保存
+                                </PrimaryButton>
+                              </a>
+                            )}
+                            {isPro && (
+                              <a
+                                href={input.highQualityOutputUrl || input.outputUrl}
+                                download={`processed_hq_${input.name.replace(/\.[^.]+$/, ".png")}`}
+                                className="flex-1 sm:flex-none"
+                              >
+                                <PrimaryButton variant="primary" size="sm" className="w-full sm:w-auto">
+                                  {input.wasEnhanced ? '高画質化して保存' : '保存'}
+                                </PrimaryButton>
+                              </a>
+                            )}
+                            {/* イージートリミングで編集ボタン - Linkを使用 */}
+                            {input.boundingBox && input.outputUrl && (
+                              <Link
+                                href="/trim"
+                                onClick={() => {
+                                  // localStorageに画像URLとバウンディングボックスを保存
+                                  // outputUrlは既にData URLになっているはず
+                                  localStorage.setItem('trimImage', input.outputUrl || '');
+                                  localStorage.setItem('trimBoundingBox', JSON.stringify(input.boundingBox));
+                                  // ページ遷移はLinkコンポーネントが行う
+                                }}
+                                passHref // Next.js 13/14のLinkで子要素がインタラクティブな場合に使用が推奨
+                                target="_blank" // ここで新しいタブで開く設定を追加
+                                rel="noopener noreferrer" // セキュリティのために追加
+                                className="flex-1 sm:flex-none"
+                              >
+                                <PrimaryButton variant="outline" size="sm" className="w-full sm:w-auto bg-white text-gray-800 hover:bg-gray-100 border-gray-300">
+                                  イージートリミングで編集
+                                </PrimaryButton>
+                              </Link>
+                            )}
+                          </div>
+                        )}
+                        {input.status === 'error' && (
+                          <button
+                            onClick={() => {
+                              updateInputStatus(input.id, 'ready', undefined);
+                              setMsg(null);
+                            }}
+                            className="w-full sm:w-auto px-3 py-1.5 rounded-md text-sm font-medium text-white bg-yellow-500 hover:bg-yellow-600 transition-colors"
+                            title="このファイルで再試行（エラークリア）"
+                          >
+                            再試行
+                          </button>
+                        )}
+                      </div>
+                    ) : null}
+                  </li>
+                );
+              })}
+            </ul>
+
+            <div className="text-center pt-2">
+              <p className="text-[10px] sm:text-[11px] text-slate-400 leading-relaxed font-medium">
+                「背景を透過する」または「背景を合成する」をクリックすることで、<br className="hidden sm:block" />利用規約およびプライバシーポリシーに同意したものとみなされます。
+              </p>
+            </div>
+          </div>
         </div>
-      )
-      }
+      )}
 
       {/* 背景除去・一括ダウンロードボタン */}
       <div ref={ctaRef} className="flex flex-wrap items-center justify-center gap-4">
@@ -3306,156 +3399,154 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
         !isCtaVisible && inputs.length > 0 && !busy && (
           inputs.some(i => i.status === 'ready') || hasCompletedResults
         ) && (
-          <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-md border-t border-gray-200 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-            <div className="max-w-3xl mx-auto space-y-2">
-              {inputs.some(i => i.status === 'ready') && (
-                <>
-                  <div className="flex flex-wrap items-center justify-center gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => scrollToSectionWithHeaderOffset(sectionModeRef.current)}
-                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium cursor-pointer hover:opacity-80 transition-opacity ${selectedProcessingMode === 'pro_high_precision'
-                        ? 'bg-amber-50 border border-amber-200 text-amber-700'
-                        : 'bg-gray-50 border border-gray-200 text-gray-600'
-                        }`}
-                    >
-                      仕上：{selectedProcessingMode === 'standard' ? '標準' : selectedProcessingMode === 'pro_high_precision' ? '高精度' : 'AI画像合成'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => scrollToSectionWithHeaderOffset(sectionSizeRef.current)}
-                      className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-gray-50 border border-gray-200 text-gray-600 cursor-pointer hover:opacity-80 transition-opacity"
-                    >
-                      サイズ：{{ '1:1': '1:1', '16:9': '16:9', '4:3': '4:3', 'original': '元画像', 'fit-subject': 'フィット' }[selectedRatio] ?? selectedRatio}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => scrollToSectionWithHeaderOffset(sectionBgRef.current)}
-                      className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-gray-50 border border-gray-200 text-gray-600 cursor-pointer hover:opacity-80 transition-opacity"
-                    >
-                      背景：{(() => {
-                        if (selectedProcessingMode === 'ai_generate') return 'AI生成';
-                        let baseName = '透過';
-                        if (selectedTemplate) {
-                          const t = templates.find(temp => temp.src === selectedTemplate);
-                          if (t) baseName = t.name;
-                          else if (selectedTemplate.startsWith('data:image/')) baseName = 'カスタム画像';
-                          else baseName = 'カスタム色';
-                        }
-                        return blendEnabled ? `${baseName} (なじませる)` : baseName;
-                      })()}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => scrollToSectionWithHeaderOffset(sectionFilesRef.current)}
-                      className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 border border-blue-200 text-blue-700 cursor-pointer hover:opacity-80 transition-opacity"
-                    >
-                      {inputs.filter(i => i.status === 'ready').length}/30枚
-                    </button>
-                  </div>
-                  {!hasCompletedResults && (
-                    <PrimaryButton
-                      onClick={() => void handleRemove()}
-                      disabled={inputs.filter(i => i.status === 'ready').length === 0}
-                      className="w-full sm:w-auto"
-                    >
+          <div className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-[100] flex flex-col items-end gap-2 sm:gap-3 pointer-events-none">
+            {inputs.some(i => i.status === 'ready') && (
+              <>
+                <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2 mb-1 pointer-events-auto">
+                  <button
+                    type="button"
+                    onClick={() => scrollToSectionWithHeaderOffset(sectionModeRef.current)}
+                    className="px-3 py-1.5 sm:px-4 sm:py-1.5 rounded-full bg-white/90 backdrop-blur border border-slate-200 text-slate-600 text-[10px] sm:text-xs font-bold shadow-sm cursor-pointer hover:bg-slate-50 transition-colors"
+                  >
+                    仕上：{selectedProcessingMode === 'standard' ? '標準' : selectedProcessingMode === 'pro_high_precision' ? '高精度' : 'AI生成'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => scrollToSectionWithHeaderOffset(sectionSizeRef.current)}
+                    className="px-3 py-1.5 sm:px-4 sm:py-1.5 rounded-full bg-white/90 backdrop-blur border border-slate-200 text-slate-600 text-[10px] sm:text-xs font-bold shadow-sm cursor-pointer hover:bg-slate-50 transition-colors"
+                  >
+                    サイズ：{{ '1:1': '1:1', '16:9': '16:9', '4:3': '4:3', 'original': '元画像', 'fit-subject': 'フィット' }[selectedRatio] ?? selectedRatio}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => scrollToSectionWithHeaderOffset(sectionBgRef.current)}
+                    className="px-3 py-1.5 sm:px-4 sm:py-1.5 rounded-full bg-white/90 backdrop-blur border border-slate-200 text-slate-600 text-[10px] sm:text-xs font-bold shadow-sm cursor-pointer hover:bg-slate-50 transition-colors"
+                  >
+                    背景：{(() => {
+                      if (selectedProcessingMode === 'ai_generate') return 'AI生成';
+                      let baseName = '透過';
+                      if (selectedTemplate) {
+                        const t = templates.find(temp => temp.src === selectedTemplate);
+                        if (t) baseName = t.name;
+                        else if (selectedTemplate.startsWith('data:image/')) baseName = 'カスタム画像';
+                        else baseName = 'カスタム色';
+                      }
+                      return blendEnabled ? `${baseName} (なじむ)` : baseName;
+                    })()}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => scrollToSectionWithHeaderOffset(sectionFilesRef.current)}
+                    className="px-3 py-1.5 sm:px-4 sm:py-1.5 rounded-full bg-blue-50 border border-blue-200 text-primary text-[10px] sm:text-xs font-black shadow-sm cursor-pointer hover:bg-blue-100 transition-colors"
+                  >
+                    {inputs.filter(i => i.status === 'ready').length}/30枚
+                  </button>
+                </div>
+                {!hasCompletedResults && (
+                  <button
+                    onClick={() => void handleRemove()}
+                    disabled={inputs.filter(i => i.status === 'ready').length === 0}
+                    className="pointer-events-auto flex items-center justify-center bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-4 sm:px-10 sm:py-5 rounded-2xl shadow-xl transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed group w-full sm:w-auto"
+                  >
+                    <span className="text-base sm:text-xl font-black">
                       選択した画像（{inputs.filter(i => i.status === 'ready').length}枚）の{selectedProcessingMode === 'ai_generate' || selectedTemplate ? '背景を合成する' : '背景を透過する'}
-                    </PrimaryButton>
-                  )}
-                </>
-              )}
-              {!inputs.some(i => i.status === 'ready') && hasCompletedResults && (
-                <>
-                  {(() => {
-                    const enhancedByTarget = inputs
-                      .filter(i => i.status === 'completed' && i.wasEnhanced && (i.outputLongSide ?? 0) >= 1024)
-                      .reduce<Record<EnhanceTarget, number>>(
-                        (acc, i) => {
-                          const long = i.outputLongSide ?? 0;
-                          if (long >= toEnhanceLongSide('4k')) acc['4k'] = (acc['4k'] ?? 0) + 1;
-                          else if (long >= toEnhanceLongSide('2k')) acc['2k'] = (acc['2k'] ?? 0) + 1;
-                          else if (long >= toEnhanceLongSide('1k')) acc['1k'] = (acc['1k'] ?? 0) + 1;
-                          return acc;
-                        },
-                        { '1k': 0, '2k': 0, '4k': 0 }
-                      );
-                    const parts = (['4k', '2k', '1k'] as const)
-                      .filter(t => enhancedByTarget[t] > 0)
-                      .map(t => `${enhancedByTarget[t]}枚を${t.toUpperCase()}`);
-                    const upscaleSummary = parts.length > 0 ? parts.join('、') + 'に高画質化済み' : null;
-                    return upscaleSummary ? (
-                      <p className="text-center text-[11px] font-medium text-gray-600">
-                        {upscaleSummary}
-                      </p>
-                    ) : null;
-                  })()}
-                  {isPro && !batchEnhanceState.inProgress && (
-                    <div className="rounded-lg border border-purple-200 bg-purple-50/70 p-2.5 space-y-2">
-                      <p className="text-[11px] font-semibold text-purple-700">一括高画質化（Pro）</p>
-                      <div className="inline-flex w-full rounded-lg border border-purple-200 overflow-hidden">
-                        {(['1k', '2k', '4k'] as EnhanceTarget[]).map((target) => {
-                          const targetPx = toEnhanceLongSide(target);
-                          const eligibleCount = inputs.filter(
-                            i => i.status === 'completed' && (i.highQualityOutputUrl || i.outputUrl) && (i.outputLongSide ?? 0) < targetPx
-                          ).length;
-                          const isSelected = pendingBatchTarget === target;
-                          return (
-                            <button
-                              key={`sticky-batch-${target}`}
-                              type="button"
-                              onClick={() => setPendingBatchTarget(isSelected ? null : target)}
-                              disabled={busy || eligibleCount === 0}
-                              className={`flex-1 px-2 py-1.5 text-xs font-semibold border-r last:border-r-0 border-purple-200 transition-colors ${isSelected
-                                ? 'bg-purple-600 text-white'
-                                : eligibleCount === 0
-                                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                  : 'bg-white text-purple-700 hover:bg-purple-100'
-                                }`}
-                            >
-                              {target === '1k' ? '1K' : target === '2k' ? '2K' : '4K'}
-                            </button>
-                          );
-                        })}
-                      </div>
-                      {pendingBatchTarget && (() => {
-                        const targetPx = toEnhanceLongSide(pendingBatchTarget);
-                        const eligible = inputs.filter(
+                    </span>
+                  </button>
+                )}
+              </>
+            )}
+            {!inputs.some(i => i.status === 'ready') && hasCompletedResults && (
+              <div className="pointer-events-auto w-full sm:w-auto bg-white/90 backdrop-blur-md p-3 sm:p-4 rounded-2xl shadow-xl border border-gray-200">
+
+                {(() => {
+                  const enhancedByTarget = inputs
+                    .filter(i => i.status === 'completed' && i.wasEnhanced && (i.outputLongSide ?? 0) >= 1024)
+                    .reduce<Record<EnhanceTarget, number>>(
+                      (acc, i) => {
+                        const long = i.outputLongSide ?? 0;
+                        if (long >= toEnhanceLongSide('4k')) acc['4k'] = (acc['4k'] ?? 0) + 1;
+                        else if (long >= toEnhanceLongSide('2k')) acc['2k'] = (acc['2k'] ?? 0) + 1;
+                        else if (long >= toEnhanceLongSide('1k')) acc['1k'] = (acc['1k'] ?? 0) + 1;
+                        return acc;
+                      },
+                      { '1k': 0, '2k': 0, '4k': 0 }
+                    );
+                  const parts = (['4k', '2k', '1k'] as const)
+                    .filter(t => enhancedByTarget[t] > 0)
+                    .map(t => `${enhancedByTarget[t]}枚を${t.toUpperCase()}`);
+                  const upscaleSummary = parts.length > 0 ? parts.join('、') + 'に高画質化済み' : null;
+                  return upscaleSummary ? (
+                    <p className="text-center text-[11px] font-medium text-gray-600">
+                      {upscaleSummary}
+                    </p>
+                  ) : null;
+                })()}
+                {isPro && !batchEnhanceState.inProgress && (
+                  <div className="rounded-lg border border-purple-200 bg-purple-50/70 p-2.5 space-y-2">
+                    <p className="text-[11px] font-semibold text-purple-700">一括高画質化（Pro）</p>
+                    <div className="inline-flex w-full rounded-lg border border-purple-200 overflow-hidden">
+                      {(['1k', '2k', '4k'] as EnhanceTarget[]).map((target) => {
+                        const targetPx = toEnhanceLongSide(target);
+                        const eligibleCount = inputs.filter(
                           i => i.status === 'completed' && (i.highQualityOutputUrl || i.outputUrl) && (i.outputLongSide ?? 0) < targetPx
-                        );
-                        if (eligible.length === 0) return null;
+                        ).length;
+                        const isSelected = pendingBatchTarget === target;
                         return (
                           <button
+                            key={`sticky-batch-${target}`}
                             type="button"
-                            onClick={() => { void handleBatchEnhance(pendingBatchTarget); }}
-                            className="w-full inline-flex items-center justify-center px-3 py-2 rounded-lg text-xs font-semibold text-white bg-purple-600 hover:bg-purple-700"
+                            onClick={() => setPendingBatchTarget(isSelected ? null : target)}
+                            disabled={busy || eligibleCount === 0}
+                            className={`flex-1 px-2 py-1.5 text-xs font-semibold border-r last:border-r-0 border-purple-200 transition-colors ${isSelected
+                              ? 'bg-purple-600 text-white'
+                              : eligibleCount === 0
+                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                : 'bg-white text-purple-700 hover:bg-purple-100'
+                              }`}
                           >
-                            {eligible.length}枚を{pendingBatchTarget.toUpperCase()}に高画質化
+                            {target === '1k' ? '1K' : target === '2k' ? '2K' : '4K'}
                           </button>
                         );
-                      })()}
+                      })}
                     </div>
-                  )}
-                  {!isPro && (
-                    <div className="rounded-lg border border-amber-200 bg-amber-50/70 p-2.5">
-                      <p className="text-[11px] text-amber-700 mb-2">Proなら高画質化（拡大）、高精度モードが使えます</p>
-                      <button
-                        type="button"
-                        onClick={() => goToProPurchase('sticky_download_upsell')}
-                        className="w-full inline-flex items-center justify-center px-3 py-2 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600"
-                      >
-                        Proで高画質化する
-                      </button>
-                    </div>
-                  )}
-                  <PrimaryButton onClick={handleDownloadAll} disabled={batchEnhanceState.inProgress} variant="primary" className="w-full">
-                    すべてダウンロード (.zip)
-                  </PrimaryButton>
-                </>
-              )}
-            </div>
+                    {pendingBatchTarget && (() => {
+                      const targetPx = toEnhanceLongSide(pendingBatchTarget);
+                      const eligible = inputs.filter(
+                        i => i.status === 'completed' && (i.highQualityOutputUrl || i.outputUrl) && (i.outputLongSide ?? 0) < targetPx
+                      );
+                      if (eligible.length === 0) return null;
+                      return (
+                        <button
+                          type="button"
+                          onClick={() => { void handleBatchEnhance(pendingBatchTarget); }}
+                          className="w-full inline-flex items-center justify-center px-3 py-2 rounded-lg text-xs font-semibold text-white bg-purple-600 hover:bg-purple-700"
+                        >
+                          {eligible.length}枚を{pendingBatchTarget.toUpperCase()}に高画質化
+                        </button>
+                      );
+                    })()}
+                  </div>
+                )}
+                {!isPro && (
+                  <div className="rounded-lg border border-amber-200 bg-amber-50/70 p-2.5">
+                    <p className="text-[11px] text-amber-700 mb-2">Proなら高画質化（拡大）、高精度モードが使えます</p>
+                    <button
+                      type="button"
+                      onClick={() => goToProPurchase('sticky_download_upsell')}
+                      className="w-full inline-flex items-center justify-center px-3 py-2 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600"
+                    >
+                      Proで高画質化する
+                    </button>
+                  </div>
+                )}
+                <PrimaryButton onClick={handleDownloadAll} disabled={batchEnhanceState.inProgress} variant="primary" className="w-full">
+                  すべてダウンロード (.zip)
+                </PrimaryButton>
+              </div>
+            )}
           </div>
         )
       }
-    </div >
+    </div>
   );
 }

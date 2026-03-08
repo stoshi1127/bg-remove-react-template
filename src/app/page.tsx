@@ -204,12 +204,12 @@ export default async function Home() {
       <section className="bg-white py-16 px-4">
         <div className="container mx-auto max-w-4xl text-center">
           {/* メインタイトル */}
-          <div className="animate-fade-in-up mb-8">
-            <h1 className="text-responsive-xl font-bold text-gray-900 mb-6">
+          <div className="animate-fade-in-up mb-12">
+            <h1 className="text-5xl md:text-6xl font-black tracking-tight text-slate-900 dark:text-white mb-6">
               {siteName}
             </h1>
-            <p className="text-responsive-md text-gray-600 mb-6 leading-relaxed max-w-2xl mx-auto">
-              AIが画像の背景を自動で切り抜き、多彩な背景（グラデーション、レンガなど）や好きな色に合成します。さらに「16:9」や「被写体にフィット」など豊富なアスペクト比を選び、ZIPで一括ダウンロードも可能。
+            <p className="text-xl text-slate-600 dark:text-slate-400 leading-relaxed max-w-2xl mx-auto">
+              AIで背景を自動削除・置換。アスペクト比選択や一括ZIPダウンロードにも対応した、クリエイティブを加速させるプロ仕様の切り抜きツール。
             </p>
           </div>
 

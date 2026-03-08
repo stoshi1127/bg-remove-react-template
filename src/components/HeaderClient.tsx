@@ -40,48 +40,56 @@ export default function HeaderClient({ isLoggedIn, isPro = false }: HeaderClient
   );
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-soft">
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex justify-between items-center">
+    <header className="sticky top-0 z-50 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-20">
           {/* ロゴ */}
-          <Link href="/" className="flex items-center space-x-3 hover:opacity-80 transition-opacity duration-200">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+          <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+            <div className="text-primary">
+              <svg className="w-10 h-10" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                <path d="M24 4C25.7818 14.2173 33.7827 22.2182 44 24C33.7827 25.7818 25.7818 33.7827 24 44C22.2182 33.7827 14.2173 25.7818 4 24C14.2173 22.2182 22.2182 14.2173 24 4Z" fill="currentColor"></path>
               </svg>
             </div>
-            <span className="text-xl font-bold text-gray-900">QuickTools</span>
+            <span className="text-2xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400">
+              QuickTools
+            </span>
           </Link>
 
           {/* PC用ナビゲーション */}
-          <nav className="hidden md:flex items-center space-x-1">
+          <nav className="hidden md:flex items-center gap-10">
             <Link
               href="/"
-              className="px-4 py-2 rounded-lg text-gray-700 hover:text-blue-600 hover:bg-gray-50 font-medium transition-colors duration-200"
+              className="text-sm font-bold text-primary relative after:content-[''] after:absolute after:bottom-[-8px] after:left-0 after:w-full after:h-1 after:bg-primary after:rounded-full"
             >
               イージーカット
             </Link>
             <Link
               href="/tone"
-              className="px-4 py-2 rounded-lg text-gray-700 hover:text-blue-600 hover:bg-gray-50 font-medium transition-colors duration-200"
+              className="text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-primary transition-colors"
             >
               イージートーン
             </Link>
             <Link
               href="/trim"
-              className="px-4 py-2 rounded-lg text-gray-700 hover:text-blue-600 hover:bg-gray-50 font-medium transition-colors duration-200"
+              className="text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-primary transition-colors"
             >
               イージートリミング
             </Link>
+          </nav>
 
-            <div className="w-px h-6 bg-gray-200 mx-1" aria-hidden="true" />
-
+          <div className="hidden md:flex items-center gap-4">
             {!isLoggedIn ? (
               <>
-                {ProLink}
+                <Link
+                  href="/?buyPro=1#pro"
+                  onClick={() => trackAnalyticsEvent('pro_purchase_click', { source: 'header' })}
+                  className="bg-pro-orange hover:bg-orange-600 text-white px-6 py-2.5 rounded-full text-sm font-extrabold transition-all shadow-md shadow-orange-200"
+                >
+                  Pro版を購入
+                </Link>
                 <Link
                   href="/login"
-                  className="px-4 py-2 rounded-lg text-gray-700 hover:text-blue-600 hover:bg-gray-50 font-medium transition-colors duration-200"
+                  className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white px-6 py-2.5 rounded-full text-sm font-extrabold transition-all"
                 >
                   ログイン
                 </Link>
@@ -96,13 +104,13 @@ export default function HeaderClient({ isLoggedIn, isPro = false }: HeaderClient
                 ) : null}
                 <Link
                   href="/account"
-                  className="px-4 py-2 rounded-lg text-gray-700 hover:text-blue-600 hover:bg-gray-50 font-medium transition-colors duration-200"
+                  className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white px-6 py-2.5 rounded-full text-sm font-extrabold transition-all"
                 >
                   アカウント
                 </Link>
               </div>
             )}
-          </nav>
+          </div>
 
 
 
