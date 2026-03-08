@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>料金プラン - QuickTools イージーカット</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Noto+Sans+JP:wght@400;500;700&amp;display=swap"
+    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+    rel="stylesheet" />
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#2b6cee",
+            "background-light": "#f6f6f8",
+            "background-dark": "#101622",
+          },
+          fontFamily: {
+            "display": ["Manrope", "Noto Sans JP", "sans-serif"]
+          },
+          borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+        },
+      },
+    }
+  </script>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen">
+  <div class="max-w-5xl mx-auto px-4 py-12 md:py-20">
+    <!-- Header Section -->
+    <div class="text-center mb-16">
+      <h1 class="text-3xl md:text-4xl font-bold mb-4">最適なプランをお選びください</h1>
+      <p class="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+        QuickTools イージーカットは、AIの力であなたの写真編集を劇的に進化させます。
+        プロの仕上がりを、誰でも簡単に。
+      </p>
+    </div>
+    <!-- Pricing Comparison Section -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+      <!-- Free Plan Card -->
+      <div
+        class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-8 flex flex-col h-full">
+        <div class="mb-8">
+          <h2 class="text-xl font-bold mb-2">無料プラン</h2>
+          <p class="text-slate-500 dark:text-slate-400 text-sm">まずは基本機能から始めたい方へ</p>
+          <div class="mt-6">
+            <span class="text-4xl font-bold">¥0</span>
+            <span class="text-slate-500 dark:text-slate-400">/月</span>
+          </div>
+        </div>
+        <div class="flex-grow space-y-4 mb-8">
+          <div class="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-800">
+            <span class="text-slate-600 dark:text-slate-300 flex items-center gap-2">
+              <span class="material-icons text-sm text-slate-400">check</span> 広告表示
+            </span>
+            <span class="font-medium">あり</span>
+          </div>
+          <div class="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-800">
+            <span class="text-slate-600 dark:text-slate-300 flex items-center gap-2">
+              <span class="material-icons text-sm text-slate-400">check</span> 写真の処理
+            </span>
+            <span class="font-medium">最大 4MB</span>
+          </div>
+          <div class="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-800">
+            <span class="text-slate-600 dark:text-slate-300 flex items-center gap-2">
+              <span class="material-icons text-sm text-slate-400 text-red-500">close</span> 背景合成
+            </span>
+            <span class="text-slate-400">テンプレート・単色</span>
+          </div>
+          <div class="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-800">
+            <span class="text-slate-600 dark:text-slate-300 flex items-center gap-2">
+              <span class="material-icons text-sm text-slate-400 text-red-500">close</span> プレミアムAI
+            </span>
+            <span class="text-slate-400">利用不可</span>
+          </div>
+        </div>
+        <button
+          class="w-full py-4 rounded-xl border-2 border-slate-200 dark:border-slate-700 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+          現在のプラン
+        </button>
+      </div>
+      <!-- Pro Plan Card (Highlighted) -->
+      <div
+        class="relative bg-white dark:bg-slate-900 rounded-xl shadow-2xl border-2 border-primary p-8 flex flex-col h-full transform md:scale-105">
+        <div
+          class="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-white text-xs font-bold px-4 py-1 rounded-full uppercase tracking-wider">
+          おすすめ
+        </div>
+        <div class="mb-8">
+          <h2 class="text-xl font-bold mb-2 flex items-center gap-2">
+            Proプラン
+            <span class="material-icons text-primary">verified</span>
+          </h2>
+          <p class="text-slate-500 dark:text-slate-400 text-sm">全ての機能で簡単に最高のクリエイティブを</p>
+          <div class="mt-6">
+            <span class="text-4xl font-bold text-primary">¥780</span>
+            <span class="text-slate-500 dark:text-slate-400">/月</span>
+          </div>
+        </div>
+        <div class="flex-grow space-y-4 mb-8">
+          <div class="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-800">
+            <span class="text-slate-600 dark:text-slate-300 flex items-center gap-2 font-medium">
+              <span class="material-icons text-sm text-primary">check_circle</span> 広告表示
+            </span>
+            <span class="font-bold text-primary">なし</span>
+          </div>
+          <div class="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-800">
+            <span class="text-slate-600 dark:text-slate-300 flex items-center gap-2 font-medium">
+              <span class="material-icons text-sm text-primary">check_circle</span> 写真の処理
+            </span>
+            <span class="font-bold">最大 25MB (超高解像度)</span>
+          </div>
+          <div class="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-800">
+            <span class="text-slate-600 dark:text-slate-300 flex items-center gap-2 font-medium">
+              <span class="material-icons text-sm text-primary">check_circle</span> 背景合成
+            </span>
+            <span class="font-bold">AI生成・自然な合成</span>
+          </div>
+          <div class="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-800">
+            <span class="text-slate-600 dark:text-slate-300 flex items-center gap-2 font-medium">
+              <span class="material-icons text-sm text-primary">check_circle</span> プレミアムAI機能
+            </span>
+            <span class="font-bold">全て利用可能</span>
+          </div>
+          <div class="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-800">
+            <span class="text-slate-600 dark:text-slate-300 flex items-center gap-2 font-medium">
+              <span class="material-icons text-sm text-primary">check_circle</span> サポート
+            </span>
+            <span class="font-bold">優先カスタマー対応</span>
+          </div>
+        </div>
+        <div class="space-y-3">
+          <button
+            class="w-full py-4 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/30 hover:bg-primary/90 transition-all transform active:scale-95">
+            Proプランを購入する
+          </button>
+          <p class="text-center text-xs text-slate-500 dark:text-slate-400">
+            メールアドレスまたはGoogleアカウントですぐに登録できます
+          </p>
+        </div>
+      </div>
+    </div>
+    <!-- Premium AI Features Showcase -->
+    <div class="mt-24">
+      <h3 class="text-2xl font-bold text-center mb-12">Proプラン限定：プレミアムAI機能</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Feature 1 -->
+        <div class="bg-white/50 dark:bg-slate-900/50 p-6 rounded-xl border border-slate-100 dark:border-slate-800">
+          <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+            <span class="material-icons text-primary">auto_fix_high</span>
+          </div>
+          <h4 class="font-bold mb-2">AI自動背景合成</h4>
+          <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+            被写体を認識し、シチュエーションに合わせた背景をAIが自動生成。違和感のない合成が可能です。
+          </p>
+        </div>
+        <!-- Feature 2 -->
+        <div class="bg-white/50 dark:bg-slate-900/50 p-6 rounded-xl border border-slate-100 dark:border-slate-800">
+          <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+            <span class="material-icons text-primary">high_quality</span>
+          </div>
+          <h4 class="font-bold mb-2">超解像アップスケーリング</h4>
+          <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+            ぼやけた画像や低解像度の写真も、AIが細部を補完して最大25MBの超高解像度へ復元します。
+          </p>
+        </div>
+        <!-- Feature 3 -->
+        <div class="bg-white/50 dark:bg-slate-900/50 p-6 rounded-xl border border-slate-100 dark:border-slate-800">
+          <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+            <span class="material-icons text-primary">cleaning_services</span>
+          </div>
+          <h4 class="font-bold mb-2">インテリジェント消しゴム</h4>
+          <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+            不要な映り込みをなぞるだけで、周りの風景に馴染ませながら魔法のように消去します。
+          </p>
+        </div>
+      </div>
+    </div>
+    <!-- Footer Help -->
+    <div class="mt-20 text-center border-t border-slate-200 dark:border-slate-800 pt-12">
+      <p class="text-slate-500 dark:text-slate-400 mb-4">プラン選びでお困りですか？</p>
+      <div class="flex flex-wrap justify-center gap-6">
+        <a class="text-primary hover:underline flex items-center gap-1 font-medium" href="#">
+          <span class="material-icons text-sm">help_outline</span> よくある質問
+        </a>
+        <a class="text-primary hover:underline flex items-center gap-1 font-medium" href="#">
+          <span class="material-icons text-sm">mail_outline</span> お問い合わせ
+        </a>
+        <a class="text-primary hover:underline flex items-center gap-1 font-medium" href="#">
+          <span class="material-icons text-sm">description</span> 利用規約
+        </a>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

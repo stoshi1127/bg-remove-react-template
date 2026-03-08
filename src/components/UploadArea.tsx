@@ -16,11 +16,8 @@ const UploadArea: React.FC<UploadAreaProps> = ({
   onFileSelect,
   onFilesSelect,
   accept = "image/*",
-  label = "クリックまたはドラッグ＆ドロップで画像を選択",
-  description = "画像ファイル (JPG, PNG, HEIC等) を1枚選択できます",
   disabled = false,
   previewImage = null,
-  shadow = "",
   multiple = false,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);

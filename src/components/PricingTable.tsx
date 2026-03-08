@@ -9,30 +9,23 @@ type PricingTableProps = {
   variant?: PricingTableVariant;
   source: 'top_cta' | 'modal' | 'account';
   className?: string;
+  renderProCta?: () => React.ReactNode;
 };
 
-const COMPARISON_ROWS: Array<{ label: string; free: string; pro: string }> = [
-  { label: '料金', free: '無料', pro: '¥780/月' },
-  { label: '広告', free: 'あり', pro: 'なし' },
-  { label: '高精度透過', free: '×', pro: '○' },
-  { label: '写真の処理', free: '最大4MB（4MB以上は圧縮）', pro: '最大25MBの超高解像度' },
-  { label: '高画質化機能', free: '×', pro: '○' },
-  {
-    label: '背景合成',
-    free: 'テンプレート・単色',
-    pro: 'テンプレート・単色・任意背景・AI生成・自然な合成',
-  },
-  {
-    label: 'プレミアムAI',
-    free: '×',
-    pro: '月30回（AIで背景を作る。消しゴムマジック・背景生成塗り足しも予定）',
-  },
+// 比較する機能リスト。Stitchのデザインに合わせて表示する
+const FEATURES = [
+  { label: '広告表示', free: 'あり', pro: 'なし' },
+  { label: '透過精度', free: '標準', pro: '高精度モデル使用可能' },
+  { label: '写真の処理', free: '最大 4MB', pro: '最大 25MB (超高解像度)' },
+  { label: '背景合成', free: 'テンプレート・単色', pro: 'AI生成・自然な合成' },
+  { label: 'プレミアムAI', free: '利用不可', pro: '月30回まで利用可能' },
 ];
 
 export default function PricingTable({
-  variant = 'full',
+  variant = 'full', // variantは現状維持（将来のための拡張用）
   source,
   className = '',
+  renderProCta,
 }: PricingTableProps) {
   const viewedRef = useRef(false);
 
@@ -42,46 +35,71 @@ export default function PricingTable({
     trackAnalyticsEvent('pricing_table_view', { source });
   }, [source]);
 
-  const rows = variant === 'compact' ? COMPARISON_ROWS.slice(0, 4) : COMPARISON_ROWS;
+  const features = variant === 'compact' ? FEATURES.slice(0, 4) : FEATURES;
 
   return (
-    <div className={`overflow-x-auto ${className}`} role="region" aria-label="FreeとProの比較">
-      <table className="w-full min-w-[280px] text-sm border-collapse">
-        <thead>
-          <tr>
-            <th className="py-3 px-3 font-semibold text-gray-500 text-s tracking-wider uppercase border-b border-gray-200 w-32 sm:w-36">
-              機能・特徴
-            </th>
-            <th className="text-center py-3 px-2 font-semibold text-gray-600 border-b border-gray-200 border-l border-gray-200/60">
-              <span className="bg-gray-100 text-gray-600 px-2.5 py-1 rounded-md text-xs font-medium">Free</span>
-            </th>
-            <th className="text-center py-3 px-2 font-bold text-gray-900 border-b border-gray-200 bg-amber-50/50 border-l border-amber-200/60">
-              <span className="bg-gray-900 text-white px-3 py-1 rounded-md text-xs font-medium shadow-sm">Pro</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr key={row.label} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
-              <td className="py-3 px-3 text-gray-700 text-xs sm:text-sm font-medium leading-relaxed">{row.label}</td>
-              <td className="py-3 px-2 text-center text-gray-500 text-xs sm:text-sm border-l border-gray-100">
-                {row.free === '○' ? (
-                  <svg className="w-5 h-5 mx-auto text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-                ) : row.free === '×' ? (
-                  <svg className="w-5 h-5 mx-auto text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                ) : row.free}
-              </td>
-              <td className="py-3 px-2 text-center text-amber-800 font-semibold bg-amber-50/50 text-xs sm:text-sm border-l border-amber-100/60">
-                {row.pro === '○' ? (
-                  <svg className="w-5 h-5 mx-auto text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-                ) : row.pro === '×' ? (
-                  <svg className="w-5 h-5 mx-auto text-amber-300/50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                ) : row.pro}
-              </td>
-            </tr>
+    <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 items-stretch ${className}`} role="region" aria-label="FreeとProの比較">
+      {/* Free Plan Card */}
+      <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 md:p-8 flex flex-col h-full">
+        <div className="mb-6 md:mb-8">
+          <h2 className="text-xl font-bold mb-2">無料プラン</h2>
+          <p className="text-slate-500 dark:text-slate-400 text-sm">まずは登録不要で基本機能から試したい方へ</p>
+          <div className="mt-4 md:mt-6">
+            <span className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">¥0</span>
+            <span className="text-slate-500 dark:text-slate-400">/月</span>
+          </div>
+        </div>
+        <div className="flex-grow space-y-3 md:space-y-4 mb-6 md:mb-8">
+          {features.map((feature) => (
+            <div key={`free-${feature.label}`} className="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-800">
+              <span className="text-slate-600 dark:text-slate-300 flex items-center gap-2 text-sm md:text-base">
+                <span className={`material-symbols-outlined text-sm sm:text-base ${feature.free === '利用不可' || feature.free === '-' ? 'text-red-500' : 'text-slate-400'}`}>
+                  {feature.free === '利用不可' || feature.free === '-' ? 'close' : 'check'}
+                </span>
+                {feature.label}
+              </span>
+              <span className={feature.free === '利用不可' || feature.free === '-' ? 'text-slate-400 text-sm md:text-base' : 'font-medium text-slate-800 dark:text-slate-200 text-sm md:text-base'}>{feature.free}</span>
+            </div>
           ))}
-        </tbody>
-      </table>
+        </div>
+        <div className="w-full py-3 md:py-4 rounded-xl border-2 border-slate-200 dark:border-slate-700 font-bold text-slate-600 dark:text-slate-400 text-center text-sm md:text-base bg-slate-50/50 dark:bg-slate-800/50">
+          現在のプラン
+        </div>
+      </div>
+
+      {/* Pro Plan Card (Highlighted) */}
+      <div className="relative bg-white dark:bg-slate-900 rounded-xl shadow-xl border-2 border-pro-orange p-6 md:p-8 flex flex-col h-full transform md:scale-[1.02] transition-transform">
+        <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-pro-orange text-white text-[10px] md:text-xs font-bold px-3 md:px-4 py-1 rounded-full uppercase tracking-wider shadow-sm z-10 whitespace-nowrap">
+          おすすめ
+        </div>
+        <div className="mb-6 md:mb-8">
+          <h2 className="text-xl font-bold mb-2 flex items-center gap-2 text-gray-900 dark:text-white justify-center">
+            Proプラン
+            <span className="material-symbols-outlined text-pro-orange" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+          </h2>
+          <p className="text-slate-500 dark:text-slate-400 text-sm">全ての機能で最高のクリエイティブを</p>
+          <div className="mt-4 md:mt-6">
+            <span className="text-3xl md:text-4xl font-bold text-pro-orange">¥780</span>
+            <span className="text-slate-500 dark:text-slate-400">/月</span>
+          </div>
+        </div>
+        <div className="flex-grow space-y-3 md:space-y-4 mb-6 md:mb-8">
+          {features.map((feature) => (
+            <div key={`pro-${feature.label}`} className="flex items-center justify-between py-2 border-b border-orange-50 dark:border-slate-800">
+              <span className="text-slate-600 dark:text-slate-300 flex items-center gap-2 font-medium text-sm md:text-base">
+                <span className="material-symbols-outlined text-sm sm:text-base text-pro-orange" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                {feature.label}
+              </span>
+              <span className="font-bold text-gray-800 dark:text-white text-sm md:text-base">{feature.pro}</span>
+            </div>
+          ))}
+        </div>
+        {renderProCta && (
+          <div className="mt-auto">
+            {renderProCta()}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

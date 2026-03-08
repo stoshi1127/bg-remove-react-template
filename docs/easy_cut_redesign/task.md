@@ -17,3 +17,9 @@
 - [x] 「高度な設定」および「フローティングアクションボタン」の実装
 - [/] 動作確認・微調整
 - [x] クリーンアップと walkthrough.md の追記
+
+## Phase 3: 料金プラン（Pro機能訴求）エリアのデザイン刷新
+- [x] `PricingTable.tsx` の2カラムカードUIへの置き換え
+- [x] `ProCtaSection.tsx` のレイアウト調整（Render Propsへの移行）
+- [x] `PricingModal.tsx` および `AccountPricingSection.tsx` の互換性調整
+- [x] 動作確認・微調整

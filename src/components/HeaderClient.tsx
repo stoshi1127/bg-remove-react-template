@@ -19,16 +19,6 @@ export default function HeaderClient({ isLoggedIn, isPro = false }: HeaderClient
 
   const closeMenu = () => setIsMenuOpen(false);
 
-  const ProLink = (
-    <Link
-      href="/?buyPro=1#pro"
-      onClick={() => trackAnalyticsEvent('pro_purchase_click', { source: 'header' })}
-      className="px-4 py-2 rounded-lg text-white bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 font-semibold transition-colors duration-200 shadow-sm"
-    >
-      Proを購入
-    </Link>
-  );
-
   const ProBadge = (
     <span
       className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold text-white bg-gradient-to-r from-amber-500 to-yellow-500 shadow-sm"

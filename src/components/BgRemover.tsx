@@ -44,7 +44,6 @@ type InFile = {
 
 import UploadArea from "./UploadArea";
 import PrimaryButton from "./PrimaryButton";
-import RatioButton from "./RatioButton";
 import AdSlot from "./AdSlot";
 import {
   normalizeDataUrlLongSide,

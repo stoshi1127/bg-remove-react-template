@@ -15,9 +15,15 @@ type GuestProPurchaseProps = {
   /** 外部から開閉を制御する場合 */
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  /** ボタンのUIを外部から注入する場合 */
+  triggerButton?: React.ReactNode;
 };
 
-export default function GuestProPurchase({ open: controlledOpen, onOpenChange }: GuestProPurchaseProps = {}) {
+export default function GuestProPurchase({
+  open: controlledOpen,
+  onOpenChange,
+  triggerButton,
+}: GuestProPurchaseProps = {}) {
   const [internalOpen, setInternalOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -81,13 +87,21 @@ export default function GuestProPurchase({ open: controlledOpen, onOpenChange }:
 
   return (
     <>
-      <button
-        type="button"
-        onClick={handleOpenClick}
-        className="w-full inline-flex items-center justify-center px-6 py-4 rounded-xl font-bold text-white bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 transition-colors shadow-md hover:shadow-lg transform hover:-translate-y-0.5 text-base"
-      >
-        Proを購入する
-      </button>
+      {triggerButton ? (
+        <div onClick={handleOpenClick} className="w-full relative group">
+          {/* onClickハンドラーをラップするため、divで囲んでクリックイベントを補足します */}
+          {triggerButton}
+          <div className="absolute inset-0 cursor-pointer" aria-hidden="true" />
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={handleOpenClick}
+          className="w-full inline-flex items-center justify-center px-6 py-4 rounded-xl font-bold text-white bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 transition-colors shadow-md hover:shadow-lg transform hover:-translate-y-0.5 text-base"
+        >
+          Proを購入する
+        </button>
+      )}
 
       {open && typeof document !== 'undefined'
         ? createPortal(
