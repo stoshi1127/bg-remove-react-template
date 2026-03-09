@@ -2785,8 +2785,10 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2 mb-1">
-                          <p className="text-sm sm:text-lg font-black text-slate-900 break-words">{input.name}</p>
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-2 mb-1 min-w-0">
+                          <p className="text-xs sm:text-sm font-semibold text-slate-900 leading-snug [overflow-wrap:anywhere] min-w-0">
+                            {input.name}
+                          </p>
                           {/* 処理時間表示 */}
                           {processingTime && (
                             <span className="text-xs text-emerald-700 font-medium bg-emerald-100 px-2 py-1 rounded-full whitespace-nowrap sm:ml-2 self-start">
@@ -2882,7 +2884,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                             </div>
                           </div>
                           <div className="flex flex-col p-2 sm:p-3">
-                            <span className="text-xs font-semibold text-emerald-600 uppercase tracking-wider mb-2">透過後</span>
+                            <span className="text-xs font-semibold text-emerald-600 uppercase tracking-wider mb-2">処理ß後</span>
                             <div
                               className="aspect-square max-h-32 sm:max-h-40 rounded-lg overflow-hidden flex items-center justify-center flex-1 min-h-0"
                               style={{
