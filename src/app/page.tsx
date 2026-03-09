@@ -221,7 +221,7 @@ export default async function Home() {
           </div>
 
           {/* CTAセクション（比較表・料金表示・購入導線） */}
-          <ProCtaSection isLoggedIn={isLoggedIn} />
+          <ProCtaSection isLoggedIn={isLoggedIn} isPro={isPro} />
         </div>
       </section>
 

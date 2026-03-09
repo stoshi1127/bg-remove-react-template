@@ -9,9 +9,10 @@ import PremiumFeatures from './PremiumFeatures';
 
 type ProCtaSectionProps = {
   isLoggedIn: boolean;
+  isPro?: boolean;
 };
 
-export default function ProCtaSection({ isLoggedIn }: ProCtaSectionProps) {
+export default function ProCtaSection({ isLoggedIn, isPro = false }: ProCtaSectionProps) {
   const [pricingModalOpen, setPricingModalOpen] = useState(false);
   const [guestPurchaseOpen, setGuestPurchaseOpen] = useState(false);
 
@@ -38,6 +39,7 @@ export default function ProCtaSection({ isLoggedIn }: ProCtaSectionProps) {
             <PricingTable
               variant="full"
               source="top_cta"
+              currentPlan={!isLoggedIn ? 'guest' : isPro ? 'pro' : 'free'}
               renderProCta={() => (
                 <div className="flex flex-col gap-3 w-full mt-4">
                   {!isLoggedIn ? (

@@ -78,9 +78,9 @@ export default async function AccountPage() {
             </div>
           )}
 
-          <div className="mt-4">
-            <AccountPricingSection />
-          </div>
+            <div className="mt-4">
+              <AccountPricingSection isPro={user.isPro} />
+            </div>
 
           {billingEnabled ? (
             <BillingButtons isPro={user.isPro} />
@@ -98,4 +98,3 @@ export default async function AccountPage() {
     </div>
   );
 }
-
