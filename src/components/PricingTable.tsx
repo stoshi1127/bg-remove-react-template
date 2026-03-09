@@ -64,13 +64,15 @@ export default function PricingTable({
             </div>
           ))}
         </div>
-        <div className="w-full py-3 md:py-4 rounded-xl border-2 border-slate-200 font-bold text-center text-sm md:text-base bg-slate-50/50">
-          {currentPlan === 'free' ? (
-            <span className="text-slate-600">現在のプラン</span>
-          ) : (
-            <span className="text-slate-500">無料で試せる</span>
-          )}
-        </div>
+        {currentPlan !== 'pro' && (
+          <div className="w-full py-3 md:py-4 rounded-xl border-2 border-slate-200 font-bold text-center text-sm md:text-base bg-slate-50/50">
+            {currentPlan === 'free' ? (
+              <span className="text-slate-600">現在のプラン</span>
+            ) : (
+              <span className="text-slate-500">無料で試せる</span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Pro Plan Card (Highlighted) */}
@@ -111,11 +113,6 @@ export default function PricingTable({
             </div>
           ))}
         </div>
-        {currentPlan === 'pro' && (
-          <div className="mt-auto mb-3 w-full py-3 rounded-xl border-2 border-pro-orange/20 bg-orange-50 text-center text-sm font-bold text-pro-orange">
-            現在のプラン
-          </div>
-        )}
         {renderProCta && (
           <div className="mt-auto">
             {renderProCta()}
