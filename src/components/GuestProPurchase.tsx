@@ -89,7 +89,6 @@ export default function GuestProPurchase({
     <>
       {triggerButton ? (
         <div onClick={handleOpenClick} className="w-full relative group">
-          {/* onClickハンドラーをラップするため、divで囲んでクリックイベントを補足します */}
           {triggerButton}
           <div className="absolute inset-0 cursor-pointer" aria-hidden="true" />
         </div>
@@ -97,7 +96,7 @@ export default function GuestProPurchase({
         <button
           type="button"
           onClick={handleOpenClick}
-          className="w-full inline-flex items-center justify-center px-6 py-4 rounded-xl font-bold text-white bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 transition-colors shadow-md hover:shadow-lg transform hover:-translate-y-0.5 text-base"
+          className="w-full inline-flex items-center justify-center px-6 py-4 rounded-xl font-bold text-white bg-pro-orange hover:bg-orange-600 transition-colors shadow-md hover:shadow-lg transform hover:-translate-y-0.5 text-base"
         >
           Proを購入する
         </button>
@@ -179,7 +178,7 @@ export default function GuestProPurchase({
                   type="button"
                   onClick={submit}
                   disabled={loading}
-                  className="w-full inline-flex items-center justify-center px-5 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 transition-colors disabled:opacity-60"
+                  className="w-full inline-flex items-center justify-center px-5 py-3 rounded-xl font-semibold text-white bg-pro-orange hover:bg-orange-600 transition-colors disabled:opacity-60"
                 >
                   {loading ? '準備中…' : '購入手続きへ進む'}
                 </button>
@@ -196,4 +195,3 @@ export default function GuestProPurchase({
     </>
   );
 }
-

@@ -23,3 +23,14 @@
 - [x] `ProCtaSection.tsx` のレイアウト調整（Render Propsへの移行）
 - [x] `PricingModal.tsx` および `AccountPricingSection.tsx` の互換性調整
 - [x] 動作確認・微調整
+
+## Phase 4: ナビゲーションのフォーカス修正
+- [x] `HeaderClient.tsx` で `usePathname` をを使用した動的なハイライトの実装
+- [x] スマホ用メニューのハイライト対応
+- [x] 動作確認
+
+## Phase 5: プレミアムAI機能セクションの実装
+- [x] `PremiumFeatures.tsx` コンポーネントの作成
+- [x] `ProCtaSection.tsx` への統合
+- [x] `PricingModal.tsx` への統合
+- [x] 動作確認

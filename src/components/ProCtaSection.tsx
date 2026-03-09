@@ -5,6 +5,7 @@ import Link from 'next/link';
 import GuestProPurchase from './GuestProPurchase';
 import PricingTable from './PricingTable';
 import PricingModal from './PricingModal';
+import PremiumFeatures from './PremiumFeatures';
 
 type ProCtaSectionProps = {
   isLoggedIn: boolean;
@@ -70,6 +71,8 @@ export default function ProCtaSection({ isLoggedIn }: ProCtaSectionProps) {
                 </div>
               )}
             />
+
+            <PremiumFeatures />
           </div>
         </div>
       </div>

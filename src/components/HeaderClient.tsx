@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { trackAnalyticsEvent } from '@/lib/analytics/events';
 import PremiumUsageBadge from './PremiumUsageBadge';
 
@@ -12,12 +13,37 @@ type HeaderClientProps = {
 
 export default function HeaderClient({ isLoggedIn, isPro = false }: HeaderClientProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const pathname = usePathname();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
   const closeMenu = () => setIsMenuOpen(false);
+
+  // リンクがアクティブかどうかを判定する関数
+  const isActive = (path: string) => {
+    if (path === '/') return pathname === '/';
+    return pathname?.startsWith(path);
+  };
+
+  const linkClass = (path: string) => {
+    const active = isActive(path);
+    const base = "text-sm transition-colors relative";
+    if (active) {
+      return `${base} font-bold text-primary after:content-[''] after:absolute after:bottom-[-8px] after:left-0 after:w-full after:h-1 after:bg-primary after:rounded-full`;
+    }
+    return `${base} font-semibold text-slate-500 dark:text-slate-400 hover:text-primary`;
+  };
+
+  const mobileLinkClass = (path: string) => {
+    const active = isActive(path);
+    const base = "block px-4 py-2 rounded-lg font-medium transition-colors duration-200";
+    if (active) {
+      return `${base} text-primary bg-blue-50 dark:bg-blue-900/20`;
+    }
+    return `${base} text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-gray-50 dark:hover:bg-slate-800`;
+  };
 
   const ProBadge = (
     <span
@@ -47,22 +73,13 @@ export default function HeaderClient({ isLoggedIn, isPro = false }: HeaderClient
 
           {/* PC用ナビゲーション */}
           <nav className="hidden md:flex items-center gap-10">
-            <Link
-              href="/"
-              className="text-sm font-bold text-primary relative after:content-[''] after:absolute after:bottom-[-8px] after:left-0 after:w-full after:h-1 after:bg-primary after:rounded-full"
-            >
+            <Link href="/" className={linkClass("/")}>
               イージーカット
             </Link>
-            <Link
-              href="/tone"
-              className="text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-primary transition-colors"
-            >
+            <Link href="/tone" className={linkClass("/tone")}>
               イージートーン
             </Link>
-            <Link
-              href="/trim"
-              className="text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-primary transition-colors"
-            >
+            <Link href="/trim" className={linkClass("/trim")}>
               イージートリミング
             </Link>
           </nav>
@@ -134,21 +151,21 @@ export default function HeaderClient({ isLoggedIn, isPro = false }: HeaderClient
           <nav className="pt-4 pb-2 space-y-1">
             <Link
               href="/"
-              className="block px-4 py-2 rounded-lg text-gray-700 hover:text-blue-600 hover:bg-gray-50 font-medium transition-colors duration-200"
+              className={mobileLinkClass("/")}
               onClick={closeMenu}
             >
               イージーカット
             </Link>
             <Link
               href="/tone"
-              className="block px-4 py-2 rounded-lg text-gray-700 hover:text-blue-600 hover:bg-gray-50 font-medium transition-colors duration-200"
+              className={mobileLinkClass("/tone")}
               onClick={closeMenu}
             >
               イージートーン
             </Link>
             <Link
               href="/trim"
-              className="block px-4 py-2 rounded-lg text-gray-700 hover:text-blue-600 hover:bg-gray-50 font-medium transition-colors duration-200"
+              className={mobileLinkClass("/trim")}
               onClick={closeMenu}
             >
               イージートリミング
@@ -160,7 +177,7 @@ export default function HeaderClient({ isLoggedIn, isPro = false }: HeaderClient
               <>
                 <Link
                   href="/?buyPro=1#pro"
-                  className="block px-4 py-2 rounded-lg font-semibold text-white bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600"
+                  className="block px-4 py-2 rounded-lg font-semibold text-white bg-pro-orange hover:bg-orange-600"
                   onClick={() => {
                     trackAnalyticsEvent('pro_purchase_click', { source: 'header_mobile' });
                     closeMenu();

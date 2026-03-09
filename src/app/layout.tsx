@@ -81,7 +81,7 @@ export default function RootLayout({
       <body className={`${inter.className} bg-gray-50`}>
         <Header />
 
-        <main className="pt-20 min-h-screen">
+        <main className="min-h-screen">
           {children}
         </main>
 

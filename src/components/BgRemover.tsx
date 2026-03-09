@@ -2199,7 +2199,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
             <div className="mt-5 space-y-3">
               <button
                 type="button"
-                className="w-full inline-flex items-center justify-center px-4 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 transition-colors shadow-sm"
+                className="w-full inline-flex items-center justify-center px-4 py-3 rounded-xl font-semibold text-white bg-pro-orange hover:bg-orange-600 transition-colors shadow-sm"
                 onClick={() => {
                   console.info('[pro_original_chosen]', { count: oversizedPromptItems.length });
                   setOversizedPromptItems([]);
@@ -2772,7 +2772,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                         </div>
 
                         <div className="flex items-center space-x-2 mt-1">
-                          <p className={`text-[13px] sm:text-sm font-black flex items-center gap-1.5 ${input.status === 'error' ? 'text-red-600' :
+                          <div className={`text-[13px] sm:text-sm font-black flex items-center gap-1.5 ${input.status === 'error' ? 'text-red-600' :
                             input.status === 'completed' ? 'text-emerald-600' :
                               input.status === 'processing' || input.status === 'uploading' ? 'text-sky-600' :
                                 'text-green-600'
@@ -2823,7 +2823,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                                 エラー
                               </span>
                             )}
-                          </p>
+                          </div>
                         </div>
                         {input.errorMessage && (
                           <p className="text-xs text-red-600 mt-1 break-words bg-red-50 p-2 rounded border border-red-200">
@@ -3076,6 +3076,49 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
         </div>
       )}
 
+      {/* Pro アップセルバナー（結果表示後、CTAの前） */}
+      {hasCompletedResults && !isPro && (
+        <div className="w-[90%] mx-auto relative overflow-hidden rounded-2xl border border-orange-200/60 bg-gradient-to-br from-orange-50/80 via-white/60 to-amber-50/70 backdrop-blur-xl shadow-lg shadow-orange-100/40 group">
+          {/* 背景の装飾 - 右奥の光 */}
+          <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-[var(--color-pro-orange)]/10 blur-2xl pointer-events-none" />
+
+          <div className="flex flex-col sm:flex-row items-center gap-4 p-4 sm:p-5">
+            {/* 左: アイコン + テキスト */}
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="min-w-0">
+                <p className="text-sm font-black text-gray-900 leading-tight">Proならもっときれいに<br />仕上がります</p>
+                <p className="text-[11px] text-gray-500 mt-0.5 font-medium">月額780円で<br />高精度＋プレミアムAIが使えます</p>
+              </div>
+            </div>
+
+            {/* 中央: 特徴チップ（md以上で表示） */}
+            <div className="hidden md:flex flex-col items-center gap-2 flex-shrink-0">
+              {[
+                { icon: 'auto_awesome', label: '高精度透過' },
+                { icon: 'hd', label: '4K高画質化' },
+                { icon: 'high_quality', label: '元画質維持' },
+              ].map(({ icon, label }) => (
+                <span key={label} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-orange-100/80 border border-orange-200 text-[11px] font-semibold text-orange-800">
+                  <span className="material-symbols-outlined text-[13px] text-[var(--color-pro-orange)]">{icon}</span>
+                  {label}
+                </span>
+              ))}
+            </div>
+
+            {/* 右: ボタン */}
+            <button
+              type="button"
+              onClick={() => goToProPurchase('result_upsell_top')}
+              className="flex-1 relative overflow-hidden px-5 py-5 rounded-xl bg-pro-orange font-bold text-sm text-white shadow-md shadow-orange-300/40 hover:shadow-orange-400/50 hover:scale-[1.03] active:scale-[0.97] transition-all duration-200"
+            >
+              {/* shimmerアニメーション */}
+              <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out pointer-events-none" />
+              Proを購入する
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 背景除去・一括ダウンロードボタン */}
       <div ref={ctaRef} className="flex flex-wrap items-center justify-center gap-4">
         {inputs.length > 0 && inputs.some(i => i.status === 'ready' || i.status === 'error') && !busy && (
@@ -3119,44 +3162,6 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
 
         {hasCompletedResults && (
           <>
-            {!isPro && (
-              <div className="rounded-xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50/80 p-4 text-left shadow-sm">
-                <p className="text-sm font-bold text-amber-900">
-                  Proならもっときれいに仕上がります
-                </p>
-                <p className="text-xs text-amber-700 mt-1 font-medium">月額780円で高精度＋プレミアムAIが使えます</p>
-                <div className="mt-3 space-y-2.5">
-                  <div className="flex items-start gap-2.5">
-                    <span className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-bold">1</span>
-                    <div>
-                      <p className="text-xs font-semibold text-gray-900">高精度透過</p>
-                      <p className="text-[11px] text-gray-600 mt-0.5">髪の毛やフチまできれいに切り抜き</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-2.5">
-                    <span className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-bold">2</span>
-                    <div>
-                      <p className="text-xs font-semibold text-gray-900">高画質化（拡大）</p>
-                      <p className="text-[11px] text-gray-600 mt-0.5">最大4K（3840px）まで拡大してさらに綺麗に</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-2.5">
-                    <span className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-bold">3</span>
-                    <div>
-                      <p className="text-xs font-semibold text-gray-900">元画質を維持</p>
-                      <p className="text-[11px] text-gray-600 mt-0.5">写真を圧縮せずそのまま処理</p>
-                    </div>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => goToProPurchase('result_upsell_top')}
-                  className="mt-3 w-full inline-flex items-center justify-center px-5 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 transition-colors shadow-sm"
-                >
-                  Proを購入する
-                </button>
-              </div>
-            )}
             {inputs.filter(input => input.status === 'completed').length > 1 && (
               <>
                 {isPro && !batchEnhanceState.inProgress && (
@@ -3279,92 +3284,127 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
               className="fixed inset-0 bg-black/40"
               aria-hidden="true"
             />
-            <div className="relative w-full max-w-sm bg-white rounded-2xl shadow-xl border border-gray-200 p-6 z-10">
+            <div className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-gray-100 dark:border-slate-800 p-8 z-10 overflow-hidden">
+
               {busy ? (
-                <>
-                  <h2 id="processing-modal-title" className="text-lg font-bold text-gray-900 mb-4">
-                    処理中
+                <div className="flex flex-col items-center">
+                  <h2 id="processing-modal-title" className="text-xl font-bold text-gray-900 dark:text-white mb-2 text-center">
+                    画像を処理しています
                   </h2>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-8 text-center">
+                    AIが最適な結果を生成中です。少々お待ちください。
+                  </p>
+
                   {(() => {
-                    const uploadingCount = inputs.filter(i => i.status === 'uploading').length;
-                    const processingCount = inputs.filter(i => i.status === 'processing').length;
-                    return (uploadingCount > 0 || processingCount > 0) ? (
-                      <div className="flex flex-wrap gap-x-4 gap-y-1 mb-3 text-sm text-gray-700">
-                        {uploadingCount > 0 && <span>アップロード中: {uploadingCount}枚</span>}
-                        {processingCount > 0 && <span>AI背景除去中: {processingCount}枚</span>}
-                      </div>
-                    ) : null;
+                    // ファイル個別のステータスから中間進捗を推定
+                    const totalFiles = inputs.filter(i => i.status !== 'ready').length || 1;
+                    const completedWeight = inputs.filter(i => i.status === 'completed' || i.status === 'error').length * 100;
+                    const uploadingWeight = inputs.filter(i => i.status === 'uploading').length * 30;
+                    const processingWeight = inputs.filter(i => i.status === 'processing').length * 60;
+                    const estimatedProgress = Math.min(99, Math.round((completedWeight + uploadingWeight + processingWeight) / totalFiles));
+                    const displayProgress = Math.max(progress, estimatedProgress);
+
+                    return (
+                      <>
+                        <div className="relative w-24 h-24 mb-8">
+                          {/* カスタムスピナーアニメーション */}
+                          <div className="absolute inset-0 border-4 border-slate-100 dark:border-slate-800 rounded-full" />
+                          <div className="absolute inset-0 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="text-lg font-black text-primary">{displayProgress}%</span>
+                          </div>
+                        </div>
+
+                        <div className="w-full space-y-3 mb-6">
+                          <div className="flex justify-between text-xs font-medium text-slate-500 dark:text-slate-400">
+                            <span>進捗状況</span>
+                            <span>{processedCount} / {inputs.filter(i => i.status !== 'ready').length || 1} 枚完了</span>
+                          </div>
+                          <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden">
+                            <div
+                              className="bg-gradient-to-r from-blue-500 to-blue-400 h-full rounded-full transition-all duration-500 ease-out shadow-[0_0_8px_rgba(59,130,246,0.4)]"
+                              style={{ width: `${displayProgress}%` }}
+                            />
+                          </div>
+                          {(() => {
+                            const uploadingCount = inputs.filter(i => i.status === 'uploading').length;
+                            const processingCount = inputs.filter(i => i.status === 'processing').length;
+                            return (uploadingCount > 0 || processingCount > 0) ? (
+                              <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-[11px] text-slate-400 leading-relaxed font-medium pt-1">
+                                {uploadingCount > 0 && <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />アップロード中: {uploadingCount}枚</span>}
+                                {processingCount > 0 && <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />AI背景処理中: {processingCount}枚</span>}
+                              </div>
+                            ) : null;
+                          })()}
+                        </div>
+                      </>
+                    );
                   })()}
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-800">
-                        {processedCount}/{inputs.filter(i => i.status === 'ready' || i.status === 'uploading' || i.status === 'processing' || i.status === 'completed' || i.status === 'error').length}枚完了
-                      </p>
-                      <p className="text-xs text-gray-600">{progress}%</p>
-                    </div>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
-                    <div
-                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
-                  <PrimaryButton
+
+                  <button
                     onClick={handleCancel}
-                    variant="secondary"
-                    className="w-full bg-red-500 hover:bg-red-600 text-white border-red-500"
+                    className="w-full py-3 px-4 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-red-500 dark:hover:text-red-400 transition-all flex items-center justify-center gap-2 group text-sm"
                   >
-                    <span className="flex items-center justify-center">
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                      処理をキャンセル
-                    </span>
-                  </PrimaryButton>
-                </>
+                    <svg className="w-4 h-4 opacity-70 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    処理をキャンセル
+                  </button>
+                </div>
               ) : batchEnhanceState.inProgress ? (
-                <>
-                  <h2 id="processing-modal-title" className="text-lg font-bold text-gray-900 mb-4">
-                    一括高画質化（拡大）中
+                <div className="flex flex-col items-center">
+                  <h2 id="processing-modal-title" className="text-xl font-bold text-gray-900 dark:text-white mb-2 text-center">
+                    一括高画質化を実行中
                   </h2>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-500 border-t-transparent flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-800">
-                        {batchEnhanceState.completed}/{batchEnhanceState.total}枚完了
-                      </p>
-                      <p className="text-xs text-purple-600">
-                        {batchEnhanceState.target ? batchEnhanceState.target.toUpperCase() : ''}
-                      </p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-8 text-center">
+                    画像の解像度を{batchEnhanceState.target?.toUpperCase()}に拡大中...
+                  </p>
+
+                  <div className="relative w-24 h-24 mb-8">
+                    <div className="absolute inset-0 border-4 border-slate-100 dark:border-slate-800 rounded-full" />
+                    <div className="absolute inset-0 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-lg font-black text-purple-600">
+                        {batchEnhanceState.total > 0 ? Math.round((batchEnhanceState.completed / batchEnhanceState.total) * 100) : 0}%
+                      </span>
                     </div>
                   </div>
-                  <div className="w-full bg-purple-100 rounded-full h-2 mb-6">
-                    <div
-                      className="bg-purple-600 h-2 rounded-full transition-all duration-300"
-                      style={{
-                        width: `${batchEnhanceState.total > 0
-                          ? Math.round((batchEnhanceState.completed / batchEnhanceState.total) * 100)
-                          : 0}%`
-                      }}
-                    />
+
+                  <div className="w-full space-y-3">
+                    <div className="flex justify-between text-xs font-medium text-slate-500 dark:text-slate-400">
+                      <span>拡大処理</span>
+                      <span>{batchEnhanceState.completed} / {batchEnhanceState.total} 枚完了</span>
+                    </div>
+                    <div className="w-full bg-purple-50 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden">
+                      <div
+                        className="bg-gradient-to-r from-purple-600 to-indigo-500 h-full rounded-full transition-all duration-500 ease-out shadow-[0_0_8px_rgba(147,51,234,0.3)]"
+                        style={{
+                          width: `${batchEnhanceState.total > 0
+                            ? Math.round((batchEnhanceState.completed / batchEnhanceState.total) * 100)
+                            : 0}%`
+                        }}
+                      />
+                    </div>
                   </div>
-                </>
+                </div>
               ) : enhancingFileId ? (
                 (() => {
                   const enhancingInput = inputs.find(i => i.id === enhancingFileId);
                   return (
-                    <>
-                      <h2 id="processing-modal-title" className="text-lg font-bold text-gray-900 mb-4">
+                    <div className="flex flex-col items-center">
+                      <h2 id="processing-modal-title" className="text-xl font-bold text-gray-900 dark:text-white mb-6 text-center">
                         高画質化（拡大）中
                       </h2>
-                      <div className="flex items-center gap-3">
-                        <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-500 border-t-transparent flex-shrink-0" />
-                        <p className="text-sm font-medium text-gray-800 truncate">
-                          {enhancingInput ? enhancingInput.name : '処理中...'}
-                        </p>
+                      <div className="w-16 h-16 bg-purple-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center mb-6 animate-pulse">
+                        <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-500 border-t-transparent" />
                       </div>
-                    </>
+                      <p className="text-sm font-bold text-gray-800 dark:text-white text-center mb-1 max-w-full truncate px-4">
+                        {enhancingInput ? enhancingInput.name : '処理中...'}
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 text-center">
+                        解像度を高めてディテールを復元しています
+                      </p>
+                    </div>
                   );
                 })()
               ) : null}
@@ -3527,12 +3567,12 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                   </div>
                 )}
                 {!isPro && (
-                  <div className="rounded-lg border border-amber-200 bg-amber-50/70 p-2.5">
+                  <div className="rounded-lg border border-amber-200 bg-amber-50/70 p-2.5 mb-2">
                     <p className="text-[11px] text-amber-700 mb-2">Proなら高画質化（拡大）、高精度モードが使えます</p>
                     <button
                       type="button"
                       onClick={() => goToProPurchase('sticky_download_upsell')}
-                      className="w-full inline-flex items-center justify-center px-3 py-2 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600"
+                      className="w-full inline-flex items-center justify-center px-3 py-2 rounded-lg text-xs font-semibold text-white bg-pro-orange hover:bg-orange-600"
                     >
                       Proで高画質化する
                     </button>
@@ -3546,6 +3586,6 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
           </div>
         )
       }
-    </div>
+    </div >
   );
 }

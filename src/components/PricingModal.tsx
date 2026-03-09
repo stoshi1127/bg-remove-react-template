@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { trackAnalyticsEvent } from '@/lib/analytics/events';
 import PricingTable from './PricingTable';
+import PremiumFeatures from './PremiumFeatures';
 
 type PricingModalProps = {
   open: boolean;
@@ -88,6 +89,10 @@ export default function PricingModal({
               : undefined
           }
         />
+
+        <div className="pt-8 border-t border-gray-100 dark:border-slate-800 mt-8">
+          <PremiumFeatures />
+        </div>
       </div>
     </div>
   );

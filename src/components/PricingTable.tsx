@@ -90,7 +90,18 @@ export default function PricingTable({
                 <span className="material-symbols-outlined text-sm sm:text-base text-pro-orange" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
                 {feature.label}
               </span>
-              <span className="font-bold text-gray-800 dark:text-white text-sm md:text-base">{feature.pro}</span>
+              <div className="flex flex-col items-end">
+                <span className="font-bold text-gray-800 dark:text-white text-sm md:text-base">{feature.pro}</span>
+                {feature.label === 'プレミアムAI' && (
+                  <a
+                    href="#premium-features"
+                    className="text-[10px] text-pro-orange hover:underline mt-0.5 opacity-80"
+                    onClick={() => { }}
+                  >
+                    プレミアムAIとは？
+                  </a>
+                )}
+              </div>
             </div>
           ))}
         </div>

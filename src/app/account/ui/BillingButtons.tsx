@@ -70,7 +70,7 @@ export default function BillingButtons({ isPro }: { isPro: boolean }) {
             type="button"
             onClick={goCheckout}
             disabled={loading !== null}
-            className="inline-flex items-center justify-center px-5 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 transition-colors disabled:opacity-60"
+            className="inline-flex items-center justify-center px-5 py-3 rounded-xl font-semibold text-white bg-pro-orange hover:bg-orange-600 transition-colors disabled:opacity-60"
           >
             {loading === 'checkout' ? '購入画面へ…' : 'Proを購入する'}
           </button>
