@@ -72,8 +72,8 @@ const UploadArea: React.FC<UploadAreaProps> = ({
       onClick={() => !disabled && fileInputRef.current?.click()}
       className={`group relative flex flex-col items-center justify-center w-full min-h-[240px] sm:min-h-[300px] border-4 border-dashed rounded-3xl transition-all cursor-pointer p-5 sm:p-8 md:p-10 overflow-hidden shadow-sm hover:shadow-xl mb-6 
         ${isDragging
-          ? 'border-primary bg-blue-50/50 dark:bg-blue-900/10'
-          : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-primary/50 dark:hover:border-primary/50'
+          ? 'border-primary bg-blue-50/50'
+          : 'border-slate-200 bg-white hover:border-primary/50'
         } 
         ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
       `}
@@ -98,7 +98,7 @@ const UploadArea: React.FC<UploadAreaProps> = ({
         </div>
 
         <div className="text-center">
-          <p className="text-lg sm:text-xl md:text-2xl font-black text-slate-900 dark:text-white">
+          <p className="text-lg sm:text-xl md:text-2xl font-black text-slate-900">
             {isDragging ? `ここに画像を${multiple ? '複数' : ''}ドロップ` : '画像をドラッグ＆ドロップ'}
           </p>
           <p className="text-sm sm:text-base text-slate-500 mt-2 font-medium">

@@ -33,16 +33,16 @@ export default function HeaderClient({ isLoggedIn, isPro = false }: HeaderClient
     if (active) {
       return `${base} font-bold text-primary after:content-[''] after:absolute after:bottom-[-8px] after:left-0 after:w-full after:h-1 after:bg-primary after:rounded-full`;
     }
-    return `${base} font-semibold text-slate-500 dark:text-slate-400 hover:text-primary`;
+    return `${base} font-semibold text-slate-500 hover:text-primary`;
   };
 
   const mobileLinkClass = (path: string) => {
     const active = isActive(path);
     const base = "block px-4 py-2 rounded-lg font-medium transition-colors duration-200";
     if (active) {
-      return `${base} text-primary bg-blue-50 dark:bg-blue-900/20`;
+      return `${base} text-primary bg-blue-50`;
     }
-    return `${base} text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-gray-50 dark:hover:bg-slate-800`;
+    return `${base} text-gray-700 hover:text-primary hover:bg-gray-50`;
   };
 
   const ProBadge = (
@@ -56,7 +56,7 @@ export default function HeaderClient({ isLoggedIn, isPro = false }: HeaderClient
   );
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+    <header className="sticky top-0 z-50 w-full bg-white/90 backdrop-blur-md border-b border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-18 lg:h-20">
           {/* ロゴ */}
@@ -96,7 +96,7 @@ export default function HeaderClient({ isLoggedIn, isPro = false }: HeaderClient
                 </Link>
                 <Link
                   href="/login"
-                  className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white px-5 xl:px-6 py-2.5 rounded-full text-sm font-extrabold transition-all whitespace-nowrap"
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-900 px-5 xl:px-6 py-2.5 rounded-full text-sm font-extrabold transition-all whitespace-nowrap"
                 >
                   ログイン
                 </Link>
@@ -111,7 +111,7 @@ export default function HeaderClient({ isLoggedIn, isPro = false }: HeaderClient
                 ) : null}
                 <Link
                   href="/account"
-                  className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white px-5 xl:px-6 py-2.5 rounded-full text-sm font-extrabold transition-all whitespace-nowrap"
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-900 px-5 xl:px-6 py-2.5 rounded-full text-sm font-extrabold transition-all whitespace-nowrap"
                 >
                   アカウント
                 </Link>

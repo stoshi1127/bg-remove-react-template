@@ -205,10 +205,10 @@ export default async function Home() {
         <div className="container mx-auto max-w-4xl text-center">
           {/* メインタイトル */}
           <div className="animate-fade-in-up mb-8 sm:mb-10 md:mb-12">
-            <h1 className="text-3xl sm:text-4xl md:text-6xl font-black tracking-tight text-slate-900 dark:text-white mb-4 sm:mb-5 md:mb-6">
+            <h1 className="text-3xl sm:text-4xl md:text-6xl font-black tracking-tight text-slate-900 mb-4 sm:mb-5 md:mb-6">
               {siteName}
             </h1>
-            <p className="text-base sm:text-lg md:text-xl text-slate-600 dark:text-slate-400 leading-relaxed max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg md:text-xl text-slate-600 leading-relaxed max-w-2xl mx-auto">
               AIで背景を自動削除・置換。アスペクト比選択や一括ZIPダウンロードにも対応した、クリエイティブを加速させるプロ仕様の切り抜きツール。
             </p>
           </div>

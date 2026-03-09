@@ -55,7 +55,7 @@ export default function ProCtaSection({ isLoggedIn }: ProCtaSectionProps) {
                           </button>
                         }
                       />
-                      <p className="text-center text-xs text-slate-500 dark:text-slate-400">
+                      <p className="text-center text-xs text-slate-500">
                         メールアドレスまたは<br />
                         Googleアカウントですぐに登録できます
                       </p>

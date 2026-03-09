@@ -4,6 +4,7 @@
 :root {
   --background: #ffffff;
   --foreground: #1a202c;
+  color-scheme: light;
   --primary: #3b82f6;
   --primary-dark: #2563eb;
   --secondary: #64748b;
@@ -35,20 +36,6 @@
   /* 追加: Tailwindで使用するカラー名マッピング */
   --color-primary: var(--color-primary);
   --color-pro-orange: var(--color-pro-orange);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0f172a;
-    --foreground: #f8fafc;
-    --surface: #1e293b;
-    --surface-light: #334155;
-    --surface-dark: #475569;
-    --border: #475569;
-    --border-light: #64748b;
-    --text-light: #94a3b8;
-    --text-muted: #64748b;
-  }
 }
 
 /* グローバルスタイル */

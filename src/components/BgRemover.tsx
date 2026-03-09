@@ -2262,14 +2262,14 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
             onClick={() => handleSelectProcessingMode('standard')}
             className={`relative p-4 sm:p-5 md:p-6 rounded-2xl border-2 text-left transition-all cursor-pointer flex items-start sm:items-center gap-3 sm:gap-5 md:gap-6 group ${selectedProcessingMode === 'standard'
               ? 'border-primary bg-primary/5 shadow-sm'
-              : 'border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-primary/30'
+              : 'border-slate-100 bg-white hover:border-primary/30'
               }`}
           >
-            <div className={`w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 ${selectedProcessingMode === 'standard' ? 'bg-white shadow-sm text-primary' : 'bg-slate-50 dark:bg-slate-800 text-slate-400'}`}>
+            <div className={`w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 ${selectedProcessingMode === 'standard' ? 'bg-white shadow-sm text-primary' : 'bg-slate-50 text-slate-400'}`}>
               <span className="material-symbols-outlined text-2xl sm:text-3xl md:text-4xl">draw</span>
             </div>
             <div className="flex-1">
-              <p className="text-base sm:text-lg font-black text-slate-900 dark:text-white">標準</p>
+              <p className="text-base sm:text-lg font-black text-slate-900">標準</p>
               <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">AIが自動で背景を切り抜きます</p>
             </div>
             {selectedProcessingMode === 'standard' && (
@@ -2284,7 +2284,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
             onClick={() => handleSelectProcessingMode('pro_high_precision')}
             className={`relative p-4 sm:p-5 md:p-6 rounded-2xl border-2 text-left transition-all cursor-pointer flex items-start sm:items-center gap-3 sm:gap-5 md:gap-6 group ${selectedProcessingMode === 'pro_high_precision'
               ? 'border-pro-orange bg-pro-orange/5 shadow-sm'
-              : 'border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-pro-orange/30'
+              : 'border-slate-100 bg-white hover:border-pro-orange/30'
               } ${!isPro ? 'opacity-90' : ''}`}
           >
             <div className={`w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 ${selectedProcessingMode === 'pro_high_precision' ? 'bg-white shadow-sm text-pro-orange' : 'bg-pro-orange/5 text-pro-orange'}`}>
@@ -2292,7 +2292,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
             </div>
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <p className="text-base sm:text-lg font-black text-slate-900 dark:text-white">高精度</p>
+                <p className="text-base sm:text-lg font-black text-slate-900">高精度</p>
                 <span className="bg-pro-orange text-white text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-widest shadow-sm">プロ</span>
               </div>
               <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">より高性能なAIで背景を切り抜きます</p>
@@ -2317,7 +2317,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
             }}
             className={`relative p-4 sm:p-5 md:p-6 rounded-2xl border-2 text-left transition-all cursor-pointer flex items-start sm:items-center gap-3 sm:gap-5 md:gap-6 group ${selectedProcessingMode === 'ai_generate'
               ? 'border-fuchsia-500 bg-fuchsia-50 shadow-sm'
-              : 'border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-fuchsia-300'
+              : 'border-slate-100 bg-white hover:border-fuchsia-300'
               } ${!isPro ? 'opacity-90' : ''}`}
           >
             <div className={`w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 ${selectedProcessingMode === 'ai_generate' ? 'bg-white shadow-sm text-fuchsia-500' : 'bg-fuchsia-50 text-fuchsia-500'}`}>
@@ -2325,7 +2325,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
             </div>
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <p className="text-base sm:text-lg font-black text-slate-900 dark:text-white">AI背景生成</p>
+                <p className="text-base sm:text-lg font-black text-slate-900">AI背景生成</p>
                 <span className="bg-pro-orange text-white text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-widest shadow-sm">プロ</span>
               </div>
               <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">好きなスタイルで新しい背景を生成</p>
@@ -2459,7 +2459,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                   }}
                   className={`flex flex-col items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-3 sm:py-4 rounded-2xl border-2 text-xs sm:text-sm font-black shadow-sm transition-all ${isActive
                     ? 'border-primary bg-primary text-white'
-                    : 'border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-primary text-slate-700 dark:text-slate-300'
+                    : 'border-slate-100 bg-white hover:border-primary text-slate-700'
                     }`}
                 >
                   <span className="material-symbols-outlined text-2xl sm:text-3xl">{iconName}</span>
@@ -2495,7 +2495,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                 setBlendEnabled(false);
                 setTimeout(() => scrollToSectionWithHeaderOffset(sectionBlendRef.current), 100);
               }}
-              className={`group relative aspect-square rounded-2xl border-2 sm:border-4 flex flex-col items-center justify-center gap-2 p-3 sm:p-4 cursor-pointer overflow-hidden shadow-sm transition-all w-full ${!selectedTemplate ? 'border-primary bg-white shadow-primary/10' : 'border-slate-200/70 bg-slate-50 dark:border-slate-700 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700/80'}`}
+              className={`group relative aspect-square rounded-2xl border-2 sm:border-4 flex flex-col items-center justify-center gap-2 p-3 sm:p-4 cursor-pointer overflow-hidden shadow-sm transition-all w-full ${!selectedTemplate ? 'border-primary bg-white shadow-primary/10' : 'border-slate-200/70 bg-slate-50 hover:bg-slate-100'}`}
             >
               <span className={`material-symbols-outlined text-3xl sm:text-4xl group-hover:scale-125 transition-transform ${!selectedTemplate ? 'text-primary' : 'text-slate-400'}`}>block</span>
               <p className={`text-[10px] sm:text-[11px] leading-none font-black uppercase tracking-tight ${!selectedTemplate ? 'text-primary' : 'text-slate-500'}`}>なし</p>
@@ -2518,7 +2518,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
               ) : (
                 <>
                   <span className="material-symbols-outlined text-3xl sm:text-4xl text-pro-orange group-hover:-translate-y-1 transition-transform">upload</span>
-                  <p className="text-[10px] sm:text-[11px] leading-none font-black uppercase tracking-tight text-slate-900 dark:text-white">アップロード</p>
+                  <p className="text-[10px] sm:text-[11px] leading-none font-black uppercase tracking-tight text-slate-900">アップロード</p>
                 </>
               )}
               {!isPro && (
@@ -2590,7 +2590,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
 
           {/* --- 自然になじませる トグルスイッチ（高度な設定） --- */}
           {(selectedProcessingMode as string) !== 'ai_generate' && (
-            <div ref={sectionBlendRef} className="bg-white dark:bg-slate-900 rounded-2xl sm:rounded-[2.5rem] border-2 border-slate-100 dark:border-slate-800 p-4 sm:p-6 md:p-8 shadow-sm mt-6 sm:mt-8 transition-all">
+            <div ref={sectionBlendRef} className="bg-white rounded-2xl sm:rounded-[2.5rem] border-2 border-slate-100 p-4 sm:p-6 md:p-8 shadow-sm mt-6 sm:mt-8 transition-all">
               <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
                 <span className="material-symbols-outlined text-2xl sm:text-3xl text-slate-400">settings</span>
                 <h3 className="text-sm font-black uppercase tracking-[0.2em] text-slate-400">高度な設定</h3>
@@ -2601,7 +2601,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                     <span className="material-symbols-outlined text-3xl sm:text-4xl">flare</span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="font-black text-lg sm:text-xl text-slate-900 dark:text-white flex flex-wrap items-center gap-2">
+                    <span className="font-black text-lg sm:text-xl text-slate-900 flex flex-wrap items-center gap-2">
                       ナチュラルブレンド
                       {!isPro && <span className="bg-pro-orange text-white text-[10px] px-2 py-0.5 rounded-full font-black uppercase shadow-sm">プロ</span>}
                     </span>
@@ -2637,7 +2637,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                     disabled={!selectedTemplate && bgMode === 'normal'}
                     className="sr-only peer"
                   />
-                  <div className="w-14 h-7 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-pro-orange"></div>
+                  <div className="w-14 h-7 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pro-orange"></div>
                 </label>
               </div>
             </div>
@@ -2653,7 +2653,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
       {/* 選択されたファイルリスト */}
       {inputs.length > 0 && (
         <div ref={sectionFilesRef} className="pt-5 sm:pt-6">
-          <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl sm:rounded-[2.5rem] border-2 border-slate-200 dark:border-slate-800 p-4 sm:p-6 md:p-8 shadow-inner">
+          <div className="bg-slate-50 rounded-2xl sm:rounded-[2.5rem] border-2 border-slate-200 p-4 sm:p-6 md:p-8 shadow-inner">
             <div className="flex items-center gap-3 sm:gap-4 mb-5 sm:mb-8">
               <span className="material-symbols-outlined text-2xl sm:text-3xl text-slate-400">folder_open</span>
               <h3 className="text-sm font-black uppercase tracking-[0.2em] text-slate-500">選択中のファイル</h3>
@@ -2674,7 +2674,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                   <li key={input.id} className={`flex flex-col gap-4 sm:gap-5 p-4 sm:p-5 transition-all duration-300 ease-in-out relative rounded-3xl border shadow-sm ${input.status === 'completed' ? 'bg-emerald-50/30 border-emerald-200' :
                     input.status === 'error' ? 'bg-red-50/30 border-red-200' :
                       input.status === 'processing' || input.status === 'uploading' ? 'bg-sky-50/30 border-sky-200' :
-                        'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+                        'bg-white border-slate-200'
                     }`}>
 
 
@@ -2761,7 +2761,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2 mb-1">
-                          <p className="text-sm sm:text-lg font-black text-slate-900 dark:text-white break-words">{input.name}</p>
+                          <p className="text-sm sm:text-lg font-black text-slate-900 break-words">{input.name}</p>
                           {/* 処理時間表示 */}
                           {processingTime && (
                             <span className="text-xs text-emerald-700 font-medium bg-emerald-100 px-2 py-1 rounded-full whitespace-nowrap sm:ml-2 self-start">
@@ -3290,14 +3290,14 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
               className="fixed inset-0 bg-black/40"
               aria-hidden="true"
             />
-            <div className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-gray-100 dark:border-slate-800 p-8 z-10 overflow-hidden">
+            <div className="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl border border-gray-100 p-8 z-10 overflow-hidden">
 
               {busy ? (
                 <div className="flex flex-col items-center">
-                  <h2 id="processing-modal-title" className="text-xl font-bold text-gray-900 dark:text-white mb-2 text-center">
+                  <h2 id="processing-modal-title" className="text-xl font-bold text-gray-900 mb-2 text-center">
                     画像を処理しています
                   </h2>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-8 text-center">
+                  <p className="text-sm text-slate-500 mb-8 text-center">
                     AIが最適な結果を生成中です。少々お待ちください。
                   </p>
 
@@ -3314,7 +3314,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                       <>
                         <div className="relative w-24 h-24 mb-8">
                           {/* カスタムスピナーアニメーション */}
-                          <div className="absolute inset-0 border-4 border-slate-100 dark:border-slate-800 rounded-full" />
+                          <div className="absolute inset-0 border-4 border-slate-100 rounded-full" />
                           <div className="absolute inset-0 border-4 border-primary border-t-transparent rounded-full animate-spin" />
                           <div className="absolute inset-0 flex items-center justify-center">
                             <span className="text-lg font-black text-primary">{displayProgress}%</span>
@@ -3322,11 +3322,11 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                         </div>
 
                         <div className="w-full space-y-3 mb-6">
-                          <div className="flex justify-between text-xs font-medium text-slate-500 dark:text-slate-400">
+                          <div className="flex justify-between text-xs font-medium text-slate-500">
                             <span>進捗状況</span>
                             <span>{processedCount} / {inputs.filter(i => i.status !== 'ready').length || 1} 枚完了</span>
                           </div>
-                          <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden">
+                          <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
                             <div
                               className="bg-gradient-to-r from-blue-500 to-blue-400 h-full rounded-full transition-all duration-500 ease-out shadow-[0_0_8px_rgba(59,130,246,0.4)]"
                               style={{ width: `${displayProgress}%` }}
@@ -3349,7 +3349,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
 
                   <button
                     onClick={handleCancel}
-                    className="w-full py-3 px-4 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-red-500 dark:hover:text-red-400 transition-all flex items-center justify-center gap-2 group text-sm"
+                    className="w-full py-3 px-4 rounded-xl border border-slate-200 text-slate-500 font-bold hover:bg-slate-50 hover:text-red-500 transition-all flex items-center justify-center gap-2 group text-sm"
                   >
                     <svg className="w-4 h-4 opacity-70 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -3359,15 +3359,15 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                 </div>
               ) : batchEnhanceState.inProgress ? (
                 <div className="flex flex-col items-center">
-                  <h2 id="processing-modal-title" className="text-xl font-bold text-gray-900 dark:text-white mb-2 text-center">
+                  <h2 id="processing-modal-title" className="text-xl font-bold text-gray-900 mb-2 text-center">
                     一括高画質化を実行中
                   </h2>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-8 text-center">
+                  <p className="text-sm text-slate-500 mb-8 text-center">
                     画像の解像度を{batchEnhanceState.target?.toUpperCase()}に拡大中...
                   </p>
 
                   <div className="relative w-24 h-24 mb-8">
-                    <div className="absolute inset-0 border-4 border-slate-100 dark:border-slate-800 rounded-full" />
+                    <div className="absolute inset-0 border-4 border-slate-100 rounded-full" />
                     <div className="absolute inset-0 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
                     <div className="absolute inset-0 flex items-center justify-center">
                       <span className="text-lg font-black text-purple-600">
@@ -3377,11 +3377,11 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                   </div>
 
                   <div className="w-full space-y-3">
-                    <div className="flex justify-between text-xs font-medium text-slate-500 dark:text-slate-400">
+                    <div className="flex justify-between text-xs font-medium text-slate-500">
                       <span>拡大処理</span>
                       <span>{batchEnhanceState.completed} / {batchEnhanceState.total} 枚完了</span>
                     </div>
-                    <div className="w-full bg-purple-50 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden">
+                    <div className="w-full bg-purple-50 rounded-full h-2.5 overflow-hidden">
                       <div
                         className="bg-gradient-to-r from-purple-600 to-indigo-500 h-full rounded-full transition-all duration-500 ease-out shadow-[0_0_8px_rgba(147,51,234,0.3)]"
                         style={{
@@ -3398,16 +3398,16 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                   const enhancingInput = inputs.find(i => i.id === enhancingFileId);
                   return (
                     <div className="flex flex-col items-center">
-                      <h2 id="processing-modal-title" className="text-xl font-bold text-gray-900 dark:text-white mb-6 text-center">
+                      <h2 id="processing-modal-title" className="text-xl font-bold text-gray-900 mb-6 text-center">
                         高画質化（拡大）中
                       </h2>
-                      <div className="w-16 h-16 bg-purple-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center mb-6 animate-pulse">
+                      <div className="w-16 h-16 bg-purple-50 rounded-2xl flex items-center justify-center mb-6 animate-pulse">
                         <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-500 border-t-transparent" />
                       </div>
-                      <p className="text-sm font-bold text-gray-800 dark:text-white text-center mb-1 max-w-full truncate px-4">
+                      <p className="text-sm font-bold text-gray-800 text-center mb-1 max-w-full truncate px-4">
                         {enhancingInput ? enhancingInput.name : '処理中...'}
                       </p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 text-center">
+                      <p className="text-xs text-slate-500 text-center">
                         解像度を高めてディテールを復元しています
                       </p>
                     </div>
