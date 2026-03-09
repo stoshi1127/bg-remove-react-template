@@ -92,7 +92,7 @@ export default function HeaderClient({ isLoggedIn, isPro = false }: HeaderClient
                   onClick={() => trackAnalyticsEvent('pro_purchase_click', { source: 'header' })}
                   className="bg-pro-orange hover:bg-orange-600 text-white px-6 py-2.5 rounded-full text-sm font-extrabold transition-all shadow-md shadow-orange-200"
                 >
-                  Pro版を購入
+                  Proを購入する
                 </Link>
                 <Link
                   href="/login"
@@ -183,7 +183,7 @@ export default function HeaderClient({ isLoggedIn, isPro = false }: HeaderClient
                     closeMenu();
                   }}
                 >
-                  Proを購入
+                  Proを購入する
                 </Link>
                 <Link
                   href="/login"
@@ -216,4 +216,3 @@ export default function HeaderClient({ isLoggedIn, isPro = false }: HeaderClient
     </header>
   );
 }
-

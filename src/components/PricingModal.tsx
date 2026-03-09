@@ -78,7 +78,7 @@ export default function PricingModal({
                     }}
                     className="w-full py-4 bg-pro-orange text-white rounded-xl font-bold shadow-lg shadow-orange-500/30 hover:bg-orange-600 transition-all transform active:scale-95 text-base"
                   >
-                    Proプランを購入する
+                    Proを購入する
                   </button>
                   <p className="text-center text-xs text-slate-500 dark:text-slate-400 mt-3">
                     メールアドレスまたは<br />

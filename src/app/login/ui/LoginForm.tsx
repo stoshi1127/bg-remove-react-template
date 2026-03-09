@@ -114,7 +114,7 @@ export default function LoginForm({ error, callbackUrl }: { error?: string, call
       <p className="text-xs text-gray-500 leading-relaxed">
         ※ マジックリンクは会員（Pro購入者）登録済みのメールアドレスにのみ届きます。未登録の方は上の「Googleでログイン」をご利用いただくか、{' '}
         <Link href="/?buyPro=1#pro" className="text-blue-700 hover:underline font-medium">
-          Proを購入
+          Proを購入する
         </Link>
         {' '}してください。
       </p>
@@ -127,4 +127,3 @@ export default function LoginForm({ error, callbackUrl }: { error?: string, call
     </form>
   );
 }
-

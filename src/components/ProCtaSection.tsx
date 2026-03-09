@@ -51,7 +51,7 @@ export default function ProCtaSection({ isLoggedIn }: ProCtaSectionProps) {
                             onClick={() => setGuestPurchaseOpen(true)}
                             className="w-full py-3 md:py-4 bg-pro-orange text-white rounded-xl font-bold shadow-lg shadow-orange-500/30 hover:bg-orange-600 transition-all transform active:scale-95 text-sm md:text-base"
                           >
-                            Proプランを購入する
+                            Proを購入する
                           </button>
                         }
                       />
