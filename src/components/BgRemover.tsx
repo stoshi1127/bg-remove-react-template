@@ -232,6 +232,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
     isPro ? 'pro_high_precision' : 'standard'
   );
   const [enhancingFileId, setEnhancingFileId] = useState<string | null>(null);
+  const [enhanceProgress, setEnhanceProgress] = useState<number>(0);
   const [batchEnhanceState, setBatchEnhanceState] = useState<{
     inProgress: boolean;
     target: EnhanceTarget | null;
@@ -253,6 +254,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
   const sectionFilesRef = useRef<HTMLDivElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
   const [isCtaVisible, setIsCtaVisible] = useState<boolean>(true);
+  const enhanceProgressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // 並行処理制限の設定（ユーザーには見せず、完全自動）
   const [maxConcurrentProcesses, setMaxConcurrentProcesses] = useState<number>(5); // デフォルト5並行
@@ -2036,7 +2038,19 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
     }
 
     setEnhancingFileId(input.id);
+    setEnhanceProgress(0);
     setMsg(null);
+
+    if (enhanceProgressTimerRef.current) {
+      clearInterval(enhanceProgressTimerRef.current);
+    }
+    enhanceProgressTimerRef.current = setInterval(() => {
+      setEnhanceProgress((prev) => {
+        if (prev >= 92) return prev;
+        const next = prev + (prev < 45 ? 9 : prev < 75 ? 5 : 2);
+        return Math.min(next, 92);
+      });
+    }, 220);
 
     try {
       trackAnalyticsEvent('enhance_target_selected', { target });
@@ -2045,6 +2059,11 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
         throw new Error('くっきり処理する画像が見つかりません。');
       }
       const enhancedDataUrl = await runEnhance(sourceDataUrl, target);
+      if (enhanceProgressTimerRef.current) {
+        clearInterval(enhanceProgressTimerRef.current);
+        enhanceProgressTimerRef.current = null;
+      }
+      setEnhanceProgress(100);
       updateInputStatus(input.id, 'completed', undefined, enhancedDataUrl);
       const standardUrl = await createStandardOutputFromDataUrl(enhancedDataUrl).catch(() => enhancedDataUrl);
       setInputs(prev => prev.map(item => item.id === input.id ? {
@@ -2053,10 +2072,16 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
         standardOutputUrl: standardUrl,
         wasEnhanced: true,
       } : item));
+      await new Promise((resolve) => setTimeout(resolve, 220));
     } catch (error) {
       const message = error instanceof Error ? error.message : 'くっきり処理に失敗しました。';
       setMsg(message);
     } finally {
+      if (enhanceProgressTimerRef.current) {
+        clearInterval(enhanceProgressTimerRef.current);
+        enhanceProgressTimerRef.current = null;
+      }
+      setEnhanceProgress(0);
       setEnhancingFileId(null);
     }
   };
@@ -3401,9 +3426,27 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                       <h2 id="processing-modal-title" className="text-xl font-bold text-gray-900 mb-6 text-center">
                         高画質化（拡大）中
                       </h2>
-                      <div className="w-16 h-16 bg-purple-50 rounded-2xl flex items-center justify-center mb-6 animate-pulse">
-                        <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-500 border-t-transparent" />
+                      <div className="relative w-24 h-24 mb-8">
+                        <div className="absolute inset-0 border-4 border-slate-100 rounded-full" />
+                        <div className="absolute inset-0 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="text-lg font-black text-purple-600">{enhanceProgress}%</span>
+                        </div>
                       </div>
+
+                      <div className="w-full space-y-3 mb-6">
+                        <div className="flex justify-between text-xs font-medium text-slate-500">
+                          <span>高画質化</span>
+                          <span>{enhanceProgress}%</span>
+                        </div>
+                        <div className="w-full bg-purple-50 rounded-full h-2.5 overflow-hidden">
+                          <div
+                            className="bg-gradient-to-r from-purple-600 to-indigo-500 h-full rounded-full transition-all duration-500 ease-out shadow-[0_0_8px_rgba(147,51,234,0.3)]"
+                            style={{ width: `${enhanceProgress}%` }}
+                          />
+                        </div>
+                      </div>
+
                       <p className="text-sm font-bold text-gray-800 text-center mb-1 max-w-full truncate px-4">
                         {enhancingInput ? enhancingInput.name : '処理中...'}
                       </p>
