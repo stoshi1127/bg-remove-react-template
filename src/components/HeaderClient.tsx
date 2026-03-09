@@ -29,7 +29,7 @@ export default function HeaderClient({ isLoggedIn, isPro = false }: HeaderClient
 
   const linkClass = (path: string) => {
     const active = isActive(path);
-    const base = "text-sm transition-colors relative";
+    const base = "text-sm transition-colors relative whitespace-nowrap";
     if (active) {
       return `${base} font-bold text-primary after:content-[''] after:absolute after:bottom-[-8px] after:left-0 after:w-full after:h-1 after:bg-primary after:rounded-full`;
     }
@@ -58,21 +58,21 @@ export default function HeaderClient({ isLoggedIn, isPro = false }: HeaderClient
   return (
     <header className="sticky top-0 z-50 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between h-16 sm:h-18 lg:h-20">
           {/* ロゴ */}
-          <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+          <Link href="/" className="flex items-center gap-2.5 sm:gap-3 hover:opacity-80 transition-opacity min-w-0">
             <div className="text-primary">
-              <svg className="w-10 h-10" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+              <svg className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
                 <path d="M24 4C25.7818 14.2173 33.7827 22.2182 44 24C33.7827 25.7818 25.7818 33.7827 24 44C22.2182 33.7827 14.2173 25.7818 4 24C14.2173 22.2182 22.2182 14.2173 24 4Z" fill="currentColor"></path>
               </svg>
             </div>
-            <span className="text-2xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400">
+            <span className="text-xl sm:text-2xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400 whitespace-nowrap">
               QuickTools
             </span>
           </Link>
 
           {/* PC用ナビゲーション */}
-          <nav className="hidden md:flex items-center gap-10">
+          <nav className="hidden lg:flex items-center gap-6 xl:gap-10">
             <Link href="/" className={linkClass("/")}>
               イージーカット
             </Link>
@@ -84,19 +84,19 @@ export default function HeaderClient({ isLoggedIn, isPro = false }: HeaderClient
             </Link>
           </nav>
 
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden lg:flex items-center gap-3 xl:gap-4">
             {!isLoggedIn ? (
               <>
                 <Link
                   href="/?buyPro=1#pro"
                   onClick={() => trackAnalyticsEvent('pro_purchase_click', { source: 'header' })}
-                  className="bg-pro-orange hover:bg-orange-600 text-white px-6 py-2.5 rounded-full text-sm font-extrabold transition-all shadow-md shadow-orange-200"
+                  className="bg-pro-orange hover:bg-orange-600 text-white px-5 xl:px-6 py-2.5 rounded-full text-sm font-extrabold transition-all shadow-md shadow-orange-200 whitespace-nowrap"
                 >
                   Proを購入する
                 </Link>
                 <Link
                   href="/login"
-                  className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white px-6 py-2.5 rounded-full text-sm font-extrabold transition-all"
+                  className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white px-5 xl:px-6 py-2.5 rounded-full text-sm font-extrabold transition-all whitespace-nowrap"
                 >
                   ログイン
                 </Link>
@@ -111,7 +111,7 @@ export default function HeaderClient({ isLoggedIn, isPro = false }: HeaderClient
                 ) : null}
                 <Link
                   href="/account"
-                  className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white px-6 py-2.5 rounded-full text-sm font-extrabold transition-all"
+                  className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white px-5 xl:px-6 py-2.5 rounded-full text-sm font-extrabold transition-all whitespace-nowrap"
                 >
                   アカウント
                 </Link>
@@ -122,7 +122,7 @@ export default function HeaderClient({ isLoggedIn, isPro = false }: HeaderClient
 
 
           {/* スマホ用ハンバーガーメニューボタン */}
-          <div className="md:hidden">
+          <div className="lg:hidden">
             <button
               onClick={toggleMenu}
               className="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
@@ -146,7 +146,7 @@ export default function HeaderClient({ isLoggedIn, isPro = false }: HeaderClient
 
         {/* スマホ用ドロップダウンメニュー */}
         <div
-          className={`md:hidden overflow-hidden transition-all duration-200 ease-out ${isMenuOpen ? 'max-h-80 opacity-100' : 'max-h-0 opacity-0'}`}
+          className={`lg:hidden overflow-hidden transition-all duration-200 ease-out ${isMenuOpen ? 'max-h-80 opacity-100' : 'max-h-0 opacity-0'}`}
         >
           <nav className="pt-4 pb-2 space-y-1">
             <Link

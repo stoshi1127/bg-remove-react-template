@@ -1,0 +1,1 @@
+Next.js 15 App Router project for QuickTools image utilities, centered on the EasyCut background remover. Stack: React 19, TypeScript, Tailwind CSS v4, NextAuth, Prisma, Stripe, Vercel Blob, Jest. Main app code is under src/app and shared UI in src/components. The homepage renders the BgRemover component and additional marketing sections. API routes live under src/app/api.

@@ -201,21 +201,21 @@ export default async function Home() {
       />
 
       {/* ヒーローセクション */}
-      <section className="bg-white py-16 px-4">
+      <section className="bg-white py-10 sm:py-14 md:py-16 px-4">
         <div className="container mx-auto max-w-4xl text-center">
           {/* メインタイトル */}
-          <div className="animate-fade-in-up mb-12">
-            <h1 className="text-5xl md:text-6xl font-black tracking-tight text-slate-900 dark:text-white mb-6">
+          <div className="animate-fade-in-up mb-8 sm:mb-10 md:mb-12">
+            <h1 className="text-3xl sm:text-4xl md:text-6xl font-black tracking-tight text-slate-900 dark:text-white mb-4 sm:mb-5 md:mb-6">
               {siteName}
             </h1>
-            <p className="text-xl text-slate-600 dark:text-slate-400 leading-relaxed max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg md:text-xl text-slate-600 dark:text-slate-400 leading-relaxed max-w-2xl mx-auto">
               AIで背景を自動削除・置換。アスペクト比選択や一括ZIPダウンロードにも対応した、クリエイティブを加速させるプロ仕様の切り抜きツール。
             </p>
           </div>
 
           {/* アップロードエリア - メイン */}
-          <div className="animate-fade-in-up mb-12" style={{ animationDelay: '0.1s' }}>
-            <div className="bg-white border-2 border-blue-200 rounded-2xl py-3 shadow-lg">
+          <div className="animate-fade-in-up mb-8 sm:mb-10 md:mb-12" style={{ animationDelay: '0.1s' }}>
+            <div className="bg-white border-2 border-blue-200 rounded-xl sm:rounded-2xl py-2 sm:py-3 shadow-lg">
               <BgRemoverMulti isPro={isPro} adUserPlan={adUserPlan} />
             </div>
           </div>
@@ -230,15 +230,15 @@ export default async function Home() {
       {/* メインコンテンツ */}
       <main className="bg-white">
         {/* 使い方ガイド */}
-        <section className="bg-white py-20 px-4">
+        <section className="bg-white py-14 sm:py-16 md:py-20 px-4">
           <div className="container mx-auto max-w-6xl">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">AI背景透過の使い方ガイド</h2>
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <div className="text-center mb-10 sm:mb-12 md:mb-16">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">AI背景透過の使い方ガイド</h2>
+              <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
                 イージーカットを使って画像の背景を無料で透過する基本的な手順を分かりやすく説明します。
               </p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 md:gap-8">
               <div className="animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
                 <GuideCard
                   title="1. 画像をアップロード"
@@ -294,14 +294,14 @@ export default async function Home() {
         </section>
 
         {/* 機能紹介セクション */}
-        <section className="py-16 px-4 bg-gray-50">
+        <section className="py-12 sm:py-14 md:py-16 px-4 bg-gray-50">
           <div className="container mx-auto max-w-5xl">
-            <div className="text-center mb-12">
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">AI背景透過に便利な追加機能</h3>
+            <div className="text-center mb-8 sm:mb-10 md:mb-12">
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">AI背景透過に便利な追加機能</h3>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="bg-white p-6 rounded-xl shadow-soft hover-lift">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 md:gap-8">
+              <div className="bg-white p-5 sm:p-6 rounded-xl shadow-soft hover-lift">
                 <div className="flex items-start">
                   <div className="bg-amber-100 p-3 rounded-xl mr-4">
                     <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="HEIC変換アイコン">
@@ -317,7 +317,7 @@ export default async function Home() {
                 </div>
               </div>
 
-              <div className="bg-white p-6 rounded-xl shadow-soft hover-lift">
+              <div className="bg-white p-5 sm:p-6 rounded-xl shadow-soft hover-lift">
                 <div className="flex items-start">
                   <div className="bg-teal-100 p-3 rounded-xl mr-4">
                     <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="一括処理アイコン">
@@ -333,7 +333,7 @@ export default async function Home() {
                 </div>
               </div>
 
-              <div className="bg-white p-6 rounded-xl shadow-soft hover-lift">
+              <div className="bg-white p-5 sm:p-6 rounded-xl shadow-soft hover-lift">
                 <div className="flex items-start">
                   <div className="bg-rose-100 p-3 rounded-xl mr-4">
                     <svg className="w-6 h-6 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="背景カスタマイズアイコン">
@@ -349,7 +349,7 @@ export default async function Home() {
                 </div>
               </div>
 
-              <div className="bg-white p-6 rounded-xl shadow-soft hover-lift">
+              <div className="bg-white p-5 sm:p-6 rounded-xl shadow-soft hover-lift">
                 <div className="flex items-start">
                   <div className="bg-cyan-100 p-3 rounded-xl mr-4">
                     <svg className="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="アスペクト比設定アイコン">
@@ -366,7 +366,7 @@ export default async function Home() {
                 </div>
               </div>
 
-              <div className="bg-white p-6 rounded-xl shadow-soft hover-lift border-2 border-amber-100/50 relative overflow-hidden">
+              <div className="bg-white p-5 sm:p-6 rounded-xl shadow-soft hover-lift border-2 border-amber-100/50 relative overflow-hidden">
                 <div className="absolute top-0 right-0 bg-gradient-to-l from-amber-100/50 to-transparent w-32 h-32 transform rotate-45 translate-x-16 -translate-y-16"></div>
                 <div className="flex items-start relative z-10">
                   <div className="bg-indigo-100 p-3 rounded-xl mr-4 flex-shrink-0 flex items-center justify-center">
@@ -386,7 +386,7 @@ export default async function Home() {
                 </div>
               </div>
 
-              <div className="bg-white p-6 rounded-xl shadow-soft hover-lift border-2 border-amber-100/50 relative overflow-hidden">
+              <div className="bg-white p-5 sm:p-6 rounded-xl shadow-soft hover-lift border-2 border-amber-100/50 relative overflow-hidden">
                 <div className="absolute top-0 right-0 bg-gradient-to-l from-amber-100/50 to-transparent w-32 h-32 transform rotate-45 translate-x-16 -translate-y-16"></div>
                 <div className="flex items-start relative z-10">
                   <div className="bg-amber-100 p-3 rounded-xl mr-4 flex-shrink-0 flex items-center justify-center">
@@ -410,11 +410,11 @@ export default async function Home() {
         </section>
 
         {/* トリミング機能への誘導セクション */}
-        <section className="py-16 px-4">
+        <section className="py-12 sm:py-14 md:py-16 px-4">
           <div className="container mx-auto max-w-3xl text-center">
-            <div className="bg-blue-50 border border-blue-100 p-8 rounded-2xl">
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">背景透過＋画像トリミングで完璧な仕上がり</h3>
-              <p className="text-gray-700 mb-6">
+            <div className="bg-blue-50 border border-blue-100 p-5 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl">
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">背景透過＋画像トリミングで完璧な仕上がり</h3>
+              <p className="text-sm sm:text-base text-gray-700 mb-5 sm:mb-6">
                 背景透過だけでなく、画像のトリミングも簡単に行えます。<br />
                 SNSやECサイトに最適なサイズに調整しましょう。
               </p>

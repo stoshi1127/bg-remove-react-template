@@ -1,0 +1,1 @@
+Development commands: `npm run dev` to start Next.js locally, `npm run build` for production build, `npm run start` to serve build, `npm run lint` for linting, `npm test` for Jest tests, `npm run test:watch` for watch mode, `npm run db:generate` for Prisma client generation, `npm run db:migrate` for local Prisma migrations, `npm run db:studio` for Prisma Studio.

@@ -2177,7 +2177,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
 
   /* ------------ UI --------------- */
   return (
-    <div className="w-full max-w-3xl mx-auto p-6 space-y-6 bg-white rounded-xl">
+    <div className="w-full max-w-3xl mx-auto px-3 py-4 sm:p-6 space-y-5 sm:space-y-6 bg-white rounded-lg sm:rounded-xl">
       {oversizedPromptItems.length > 0 && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
           <div className="absolute inset-0 bg-black/40" onClick={() => setOversizedPromptItems([])} aria-hidden="true" />
@@ -2249,32 +2249,32 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
       />
 
       {/* 処理モード選択 */}
-      <div ref={sectionModeRef} className="space-y-4">
-        <h2 className="text-2xl font-black flex items-center gap-3">
-          <span className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+      <div ref={sectionModeRef} className="space-y-3 sm:space-y-4">
+        <h2 className="text-xl sm:text-2xl font-black flex items-center gap-3">
+          <span className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-primary/10 flex items-center justify-center">
             <span className="material-symbols-outlined text-primary">auto_fix_high</span>
           </span>
           切り抜きモード設定
         </h2>
-        <div className="grid grid-cols-1 gap-4">
+        <div className="grid grid-cols-1 gap-3 sm:gap-4">
           <button
             type="button"
             onClick={() => handleSelectProcessingMode('standard')}
-            className={`relative p-6 rounded-2xl border-2 text-left transition-all cursor-pointer flex items-center gap-6 group ${selectedProcessingMode === 'standard'
+            className={`relative p-4 sm:p-5 md:p-6 rounded-2xl border-2 text-left transition-all cursor-pointer flex items-start sm:items-center gap-3 sm:gap-5 md:gap-6 group ${selectedProcessingMode === 'standard'
               ? 'border-primary bg-primary/5 shadow-sm'
               : 'border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-primary/30'
               }`}
           >
-            <div className={`w-16 h-16 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 ${selectedProcessingMode === 'standard' ? 'bg-white shadow-sm text-primary' : 'bg-slate-50 dark:bg-slate-800 text-slate-400'}`}>
-              <span className="material-symbols-outlined text-4xl">draw</span>
+            <div className={`w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 ${selectedProcessingMode === 'standard' ? 'bg-white shadow-sm text-primary' : 'bg-slate-50 dark:bg-slate-800 text-slate-400'}`}>
+              <span className="material-symbols-outlined text-2xl sm:text-3xl md:text-4xl">draw</span>
             </div>
             <div className="flex-1">
-              <p className="text-lg font-black text-slate-900 dark:text-white">標準</p>
-              <p className="text-sm text-slate-500 font-medium mt-1">AIが自動で背景を切り抜きます</p>
+              <p className="text-base sm:text-lg font-black text-slate-900 dark:text-white">標準</p>
+              <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">AIが自動で背景を切り抜きます</p>
             </div>
             {selectedProcessingMode === 'standard' && (
-              <div className="w-8 h-8 rounded-full border-4 border-primary bg-white flex items-center justify-center shadow-sm">
-                <div className="w-3 h-3 rounded-full bg-primary"></div>
+              <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full border-[3px] sm:border-4 border-primary bg-white flex items-center justify-center shadow-sm">
+                <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-primary"></div>
               </div>
             )}
           </button>
@@ -2282,24 +2282,24 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
           <button
             type="button"
             onClick={() => handleSelectProcessingMode('pro_high_precision')}
-            className={`relative p-6 rounded-2xl border-2 text-left transition-all cursor-pointer flex items-center gap-6 group ${selectedProcessingMode === 'pro_high_precision'
+            className={`relative p-4 sm:p-5 md:p-6 rounded-2xl border-2 text-left transition-all cursor-pointer flex items-start sm:items-center gap-3 sm:gap-5 md:gap-6 group ${selectedProcessingMode === 'pro_high_precision'
               ? 'border-pro-orange bg-pro-orange/5 shadow-sm'
               : 'border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-pro-orange/30'
               } ${!isPro ? 'opacity-90' : ''}`}
           >
-            <div className={`w-16 h-16 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 ${selectedProcessingMode === 'pro_high_precision' ? 'bg-white shadow-sm text-pro-orange' : 'bg-pro-orange/5 text-pro-orange'}`}>
-              <span className="material-symbols-outlined text-4xl">high_quality</span>
+            <div className={`w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 ${selectedProcessingMode === 'pro_high_precision' ? 'bg-white shadow-sm text-pro-orange' : 'bg-pro-orange/5 text-pro-orange'}`}>
+              <span className="material-symbols-outlined text-2xl sm:text-3xl md:text-4xl">high_quality</span>
             </div>
             <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <p className="text-lg font-black text-slate-900 dark:text-white">高精度</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-base sm:text-lg font-black text-slate-900 dark:text-white">高精度</p>
                 <span className="bg-pro-orange text-white text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-widest shadow-sm">プロ</span>
               </div>
-              <p className="text-sm text-slate-500 font-medium mt-1">より高性能なAIで背景を切り抜きます</p>
+              <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">より高性能なAIで背景を切り抜きます</p>
             </div>
             {selectedProcessingMode === 'pro_high_precision' && (
-              <div className="w-8 h-8 rounded-full border-4 border-pro-orange bg-white flex items-center justify-center shadow-sm">
-                <div className="w-3 h-3 rounded-full bg-pro-orange"></div>
+              <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full border-[3px] sm:border-4 border-pro-orange bg-white flex items-center justify-center shadow-sm">
+                <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-pro-orange"></div>
               </div>
             )}
           </button>
@@ -2315,24 +2315,24 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
               handleSelectProcessingMode('ai_generate');
               setBgMode('ai_generate');
             }}
-            className={`relative p-6 rounded-2xl border-2 text-left transition-all cursor-pointer flex items-center gap-6 group ${selectedProcessingMode === 'ai_generate'
+            className={`relative p-4 sm:p-5 md:p-6 rounded-2xl border-2 text-left transition-all cursor-pointer flex items-start sm:items-center gap-3 sm:gap-5 md:gap-6 group ${selectedProcessingMode === 'ai_generate'
               ? 'border-fuchsia-500 bg-fuchsia-50 shadow-sm'
               : 'border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-fuchsia-300'
               } ${!isPro ? 'opacity-90' : ''}`}
           >
-            <div className={`w-16 h-16 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 ${selectedProcessingMode === 'ai_generate' ? 'bg-white shadow-sm text-fuchsia-500' : 'bg-fuchsia-50 text-fuchsia-500'}`}>
-              <span className="material-symbols-outlined text-4xl">magic_button</span>
+            <div className={`w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 ${selectedProcessingMode === 'ai_generate' ? 'bg-white shadow-sm text-fuchsia-500' : 'bg-fuchsia-50 text-fuchsia-500'}`}>
+              <span className="material-symbols-outlined text-2xl sm:text-3xl md:text-4xl">magic_button</span>
             </div>
             <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <p className="text-lg font-black text-slate-900 dark:text-white">AI背景生成</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-base sm:text-lg font-black text-slate-900 dark:text-white">AI背景生成</p>
                 <span className="bg-pro-orange text-white text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-widest shadow-sm">プロ</span>
               </div>
-              <p className="text-sm text-slate-500 font-medium mt-1">好きなスタイルで新しい背景を生成</p>
+              <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">好きなスタイルで新しい背景を生成</p>
             </div>
             {selectedProcessingMode === 'ai_generate' && (
-              <div className="w-8 h-8 rounded-full border-4 border-fuchsia-500 bg-white flex items-center justify-center shadow-sm">
-                <div className="w-3 h-3 rounded-full bg-fuchsia-500"></div>
+              <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full border-[3px] sm:border-4 border-fuchsia-500 bg-white flex items-center justify-center shadow-sm">
+                <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-fuchsia-500"></div>
               </div>
             )}
           </button>
@@ -2422,14 +2422,14 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
 
       {/* アスペクト比選択エリア */}
       {inputs.length > 0 && (
-        <div ref={sectionSizeRef} className="space-y-4 pt-6">
-          <h2 className="text-2xl font-black mb-6 flex items-center gap-3">
-            <span className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+        <div ref={sectionSizeRef} className="space-y-3 sm:space-y-4 pt-5 sm:pt-6">
+          <h2 className="text-xl sm:text-2xl font-black mb-4 sm:mb-6 flex items-center gap-3">
+            <span className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-primary/10 flex items-center justify-center">
               <span className="material-symbols-outlined text-primary">aspect_ratio</span>
             </span>
             出力サイズ設定
           </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 sm:gap-3">
             {aspectRatios.map(ratio => {
               const isActive = selectedRatio === ratio.key;
               const iconMap: Record<string, string> = {
@@ -2457,12 +2457,12 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                     setSelectedRatio(ratio.key);
                     setTimeout(() => scrollToSectionWithHeaderOffset(sectionBgRef.current), 100);
                   }}
-                  className={`flex flex-col items-center justify-center gap-2 px-4 py-4 rounded-2xl border-2 text-sm font-black shadow-sm transition-all ${isActive
+                  className={`flex flex-col items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-3 sm:py-4 rounded-2xl border-2 text-xs sm:text-sm font-black shadow-sm transition-all ${isActive
                     ? 'border-primary bg-primary text-white'
                     : 'border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-primary text-slate-700 dark:text-slate-300'
                     }`}
                 >
-                  <span className="material-symbols-outlined text-3xl">{iconName}</span>
+                  <span className="material-symbols-outlined text-2xl sm:text-3xl">{iconName}</span>
                   {displayLabel}
                 </button>
               );
@@ -2473,10 +2473,10 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
 
       {/* 背景テンプレート選択エリア */}
       {inputs.length > 0 && selectedProcessingMode !== 'ai_generate' && (
-        <div ref={sectionBgRef} className="space-y-6 pt-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-black flex items-center gap-3">
-              <span className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+        <div ref={sectionBgRef} className="space-y-5 sm:space-y-6 pt-7 sm:pt-8">
+          <div className="flex items-center justify-between mb-4 sm:mb-5">
+            <h2 className="text-xl sm:text-2xl font-black flex items-center gap-3">
+              <span className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
                 <span className="material-symbols-outlined text-primary">wallpaper</span>
               </span>
               背景カスタマイズ
@@ -2484,7 +2484,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
           </div>
 
           {/* --- カラー・テンプレ（無料） --- */}
-          <div className="grid grid-cols-4 sm:grid-cols-6 gap-4">
+          <div className="grid grid-cols-3 min-[380px]:grid-cols-4 min-[640px]:grid-cols-6 gap-3 sm:gap-4 content-start">
             {/* 「背景なし」オプション */}
             <div
               onClick={() => {
@@ -2495,10 +2495,10 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                 setBlendEnabled(false);
                 setTimeout(() => scrollToSectionWithHeaderOffset(sectionBlendRef.current), 100);
               }}
-              className={`group relative aspect-square rounded-2xl border-4 flex items-center justify-center cursor-pointer overflow-hidden shadow-sm transition-all w-full ${!selectedTemplate ? 'border-primary bg-white shadow-primary/10' : 'border-transparent bg-slate-100 dark:bg-slate-800 hover:bg-slate-200'}`}
+              className={`group relative aspect-square rounded-2xl border-2 sm:border-4 flex flex-col items-center justify-center gap-2 p-3 sm:p-4 cursor-pointer overflow-hidden shadow-sm transition-all w-full ${!selectedTemplate ? 'border-primary bg-white shadow-primary/10' : 'border-slate-200/70 bg-slate-50 dark:border-slate-700 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700/80'}`}
             >
-              <span className={`material-symbols-outlined text-4xl group-hover:scale-125 transition-transform ${!selectedTemplate ? 'text-primary' : 'text-slate-400'}`}>block</span>
-              <p className={`absolute bottom-2 text-[10px] font-black uppercase tracking-tighter ${!selectedTemplate ? 'text-primary' : 'text-slate-500'}`}>なし</p>
+              <span className={`material-symbols-outlined text-3xl sm:text-4xl group-hover:scale-125 transition-transform ${!selectedTemplate ? 'text-primary' : 'text-slate-400'}`}>block</span>
+              <p className={`text-[10px] sm:text-[11px] leading-none font-black uppercase tracking-tight ${!selectedTemplate ? 'text-primary' : 'text-slate-500'}`}>なし</p>
             </div>
 
             {/* --- 画像を背景にする（Pro） --- */}
@@ -2511,14 +2511,14 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                 }
                 customBgInputRef.current?.click();
               }}
-              className={`group relative aspect-square rounded-2xl border-4 flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-all w-full ${customBgImage && selectedTemplate === customBgImage ? 'border-pro-orange bg-white shadow-sm shadow-orange-100' : 'border-transparent bg-pro-orange/5 hover:border-pro-orange/30'}`}
+              className={`group relative aspect-square rounded-2xl border-2 sm:border-4 flex flex-col items-center justify-center gap-2 p-3 sm:p-4 cursor-pointer overflow-hidden transition-all w-full ${customBgImage && selectedTemplate === customBgImage ? 'border-pro-orange bg-white shadow-sm shadow-orange-100' : 'border-orange-100 bg-pro-orange/5 hover:border-pro-orange/30'}`}
             >
               {customBgImage ? (
                 <img src={customBgImage} alt="アップロード画像" className="absolute inset-0 w-full h-full object-cover" />
               ) : (
                 <>
-                  <span className="material-symbols-outlined text-4xl text-pro-orange group-hover:-translate-y-1 transition-transform">upload</span>
-                  <p className="mt-1 text-[10px] font-black uppercase tracking-tighter text-slate-900 dark:text-white">アップロード</p>
+                  <span className="material-symbols-outlined text-3xl sm:text-4xl text-pro-orange group-hover:-translate-y-1 transition-transform">upload</span>
+                  <p className="text-[10px] sm:text-[11px] leading-none font-black uppercase tracking-tight text-slate-900 dark:text-white">アップロード</p>
                 </>
               )}
               {!isPro && (
@@ -2542,7 +2542,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                 setAiBgPreset(null); setAiBgPrompt('');
                 setTimeout(() => scrollToSectionWithHeaderOffset(sectionBlendRef.current), 100);
               }}
-              className={`group relative aspect-square rounded-2xl border-4 flex items-center justify-center cursor-pointer overflow-hidden transition-all w-full ${selectedTemplate === customColor ? 'border-primary ring-offset-2 ring-primary shadow-sm' : 'border-transparent hover:border-slate-300'}`}
+              className={`group relative aspect-square rounded-2xl border-2 sm:border-4 flex flex-col items-center justify-center gap-2 p-3 sm:p-4 cursor-pointer overflow-hidden transition-all w-full ${selectedTemplate === customColor ? 'border-primary ring-offset-2 ring-primary shadow-sm' : 'border-slate-200/70 bg-white hover:border-slate-300'}`}
               style={{ backgroundColor: customColor || '#f8fafc' }}
             >
               <input
@@ -2560,10 +2560,10 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                 id="color-picker"
                 title="色を選択"
               />
-              <span className={`material-symbols-outlined text-4xl pointer-events-none relative z-10 group-hover:rotate-90 transition-transform ${selectedTemplate === customColor ? 'text-white drop-shadow-md' : 'text-primary'}`}>
+              <span className={`material-symbols-outlined text-3xl sm:text-4xl pointer-events-none relative z-10 group-hover:rotate-90 transition-transform ${selectedTemplate === customColor ? 'text-white drop-shadow-md' : 'text-primary'}`}>
                 {selectedTemplate === customColor ? 'check' : 'palette'}
               </span>
-              <p className={`absolute bottom-2 z-10 text-[10px] font-black uppercase tracking-tighter pointer-events-none ${selectedTemplate === customColor ? 'text-white drop-shadow-md' : 'text-slate-700'}`}>カスタム</p>
+              <p className={`z-10 text-[10px] sm:text-[11px] leading-none font-black uppercase tracking-tight pointer-events-none ${selectedTemplate === customColor ? 'text-white drop-shadow-md' : 'text-slate-700'}`}>カスタム</p>
             </div>
 
             {/* テンプレート画像 */}
@@ -2577,7 +2577,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                   setAiBgPreset(null); setAiBgPrompt('');
                   setTimeout(() => scrollToSectionWithHeaderOffset(sectionBlendRef.current), 100);
                 }}
-                className={`relative aspect-square rounded-2xl overflow-hidden cursor-pointer transition-transform w-full bg-white border-2 hover:scale-105 ${selectedTemplate === template.src ? 'border-primary shadow-lg shadow-primary/20 scale-105 z-10 ring-4 ring-primary/20' : 'border-slate-100'}`}
+                className={`relative aspect-square rounded-2xl overflow-hidden cursor-pointer transition-transform w-full bg-white border-2 hover:scale-105 ${selectedTemplate === template.src ? 'border-primary shadow-lg shadow-primary/20 scale-105 z-10 ring-2 sm:ring-4 ring-primary/20' : 'border-slate-100'}`}
               >
                 {template.src.startsWith('#') ? (
                   <div style={{ backgroundColor: template.src }} className="w-full h-full"></div>
@@ -2590,18 +2590,18 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
 
           {/* --- 自然になじませる トグルスイッチ（高度な設定） --- */}
           {(selectedProcessingMode as string) !== 'ai_generate' && (
-            <div ref={sectionBlendRef} className="bg-white dark:bg-slate-900 rounded-[2.5rem] border-2 border-slate-100 dark:border-slate-800 p-8 shadow-sm mt-8 transition-all">
-              <div className="flex items-center gap-4 mb-6">
-                <span className="material-symbols-outlined text-3xl text-slate-400">settings</span>
+            <div ref={sectionBlendRef} className="bg-white dark:bg-slate-900 rounded-2xl sm:rounded-[2.5rem] border-2 border-slate-100 dark:border-slate-800 p-4 sm:p-6 md:p-8 shadow-sm mt-6 sm:mt-8 transition-all">
+              <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+                <span className="material-symbols-outlined text-2xl sm:text-3xl text-slate-400">settings</span>
                 <h3 className="text-sm font-black uppercase tracking-[0.2em] text-slate-400">高度な設定</h3>
               </div>
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
-                  <div className="w-16 h-16 rounded-2xl bg-pro-orange/5 flex items-center justify-center text-pro-orange shrink-0">
-                    <span className="material-symbols-outlined text-4xl">flare</span>
+              <div className="flex flex-col min-[520px]:flex-row min-[520px]:items-center justify-between gap-5">
+                <div className="flex flex-col min-[520px]:flex-row min-[520px]:items-center gap-4 sm:gap-6">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-pro-orange/5 flex items-center justify-center text-pro-orange shrink-0">
+                    <span className="material-symbols-outlined text-3xl sm:text-4xl">flare</span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="font-black text-xl text-slate-900 dark:text-white flex items-center gap-2">
+                    <span className="font-black text-lg sm:text-xl text-slate-900 dark:text-white flex flex-wrap items-center gap-2">
                       ナチュラルブレンド
                       {!isPro && <span className="bg-pro-orange text-white text-[10px] px-2 py-0.5 rounded-full font-black uppercase shadow-sm">プロ</span>}
                     </span>
@@ -2621,7 +2621,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                   </div>
                 </div>
 
-                <label className={`relative inline-flex items-center ml-2 sm:ml-0 scale-125 shrink-0 ${selectedTemplate && bgMode === 'normal' ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}>
+                <label className={`relative inline-flex items-center scale-110 sm:scale-125 shrink-0 self-start min-[520px]:self-center ${selectedTemplate && bgMode === 'normal' ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}>
                   <input
                     type="checkbox"
                     checked={blendEnabled}
@@ -2652,9 +2652,9 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
 
       {/* 選択されたファイルリスト */}
       {inputs.length > 0 && (
-        <div ref={sectionFilesRef} className="pt-6">
-          <div className="bg-slate-50 dark:bg-slate-900/50 rounded-[2.5rem] border-2 border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-inner">
-            <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
+        <div ref={sectionFilesRef} className="pt-5 sm:pt-6">
+          <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl sm:rounded-[2.5rem] border-2 border-slate-200 dark:border-slate-800 p-4 sm:p-6 md:p-8 shadow-inner">
+            <div className="flex items-center gap-3 sm:gap-4 mb-5 sm:mb-8">
               <span className="material-symbols-outlined text-2xl sm:text-3xl text-slate-400">folder_open</span>
               <h3 className="text-sm font-black uppercase tracking-[0.2em] text-slate-500">選択中のファイル</h3>
             </div>
@@ -2678,7 +2678,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                     }`}>
 
 
-                    <div className="flex items-center gap-4 sm:gap-5 w-full">
+                    <div className="flex items-start gap-3 sm:gap-5 w-full">
                       <div
                         className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden flex items-center justify-center relative bg-slate-100 border border-slate-100"
                         style={input.outputUrl && input.status === 'completed' ? {
@@ -2760,11 +2760,11 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-1">
-                          <p className="text-base sm:text-lg font-black text-slate-900 dark:text-white truncate">{input.name}</p>
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2 mb-1">
+                          <p className="text-sm sm:text-lg font-black text-slate-900 dark:text-white break-words">{input.name}</p>
                           {/* 処理時間表示 */}
                           {processingTime && (
-                            <span className="text-xs text-emerald-700 font-medium bg-emerald-100 px-2 py-1 rounded-full whitespace-nowrap ml-2">
+                            <span className="text-xs text-emerald-700 font-medium bg-emerald-100 px-2 py-1 rounded-full whitespace-nowrap sm:ml-2 self-start">
                               {processingTime}秒
                             </span>
                           )}
@@ -2922,7 +2922,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                                     {input.outputWidth && input.outputHeight && (
                                       <p className="text-xs text-gray-500">現在のサイズ: {input.outputWidth}×{input.outputHeight}px</p>
                                     )}
-                                    <div className="inline-flex rounded-lg border border-purple-200 overflow-hidden">
+                                    <div className="flex w-full sm:w-auto rounded-lg border border-purple-200 overflow-hidden">
                                       {(['1k', '2k', '4k'] as EnhanceTarget[]).map((target) => {
                                         const targetPx = toEnhanceLongSide(target);
                                         const alreadyLargeEnough = (input.outputLongSide ?? 0) >= targetPx;
@@ -2948,7 +2948,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                                             }}
                                             disabled={batchEnhanceState.inProgress || alreadyLargeEnough}
                                             title={titleText}
-                                            className={`px-3 py-2 text-sm font-medium border-r last:border-r-0 border-purple-200 transition-colors ${isSelected
+                                            className={`flex-1 sm:flex-none px-3 py-2 text-sm font-medium border-r last:border-r-0 border-purple-200 transition-colors ${isSelected
                                               ? 'bg-purple-600 text-white'
                                               : alreadyLargeEnough
                                                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
@@ -2971,7 +2971,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                                             <span className="mx-1.5 text-purple-400">→</span>
                                             <span className="font-bold text-purple-700">{after.width}×{after.height}</span>
                                           </p>
-                                          <div className="flex items-center gap-2">
+                                          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                                             <button
                                               type="button"
                                               onClick={() => {
@@ -3120,20 +3120,26 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
       )}
 
       {/* 背景除去・一括ダウンロードボタン */}
-      <div ref={ctaRef} className="flex flex-wrap items-center justify-center gap-4">
+      <div ref={ctaRef} className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
         {inputs.length > 0 && inputs.some(i => i.status === 'ready' || i.status === 'error') && !busy && (
           <PrimaryButton
             onClick={() => {
               void handleRemove();
             }}
             disabled={busy || inputs.filter(i => i.status === 'ready').length === 0}
+            className="w-full sm:w-auto"
           >
             {busy ? (
               <span className="flex items-center">
                 <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-white border-opacity-60 mr-2"></div>
                 処理中...
               </span>
-            ) : `選択した画像（${inputs.filter(i => i.status === 'ready').length}枚）の${selectedProcessingMode === 'ai_generate' || selectedTemplate ? '背景を合成する' : '背景を透過する'}`}
+            ) : (
+              <>
+                <span className="sm:hidden">{selectedProcessingMode === 'ai_generate' || selectedTemplate ? '背景を合成する' : '背景を透過する'}</span>
+                <span className="hidden sm:inline">{`選択した画像（${inputs.filter(i => i.status === 'ready').length}枚）の${selectedProcessingMode === 'ai_generate' || selectedTemplate ? '背景を合成する' : '背景を透過する'}`}</span>
+              </>
+            )}
           </PrimaryButton>
         )}
 
@@ -3165,9 +3171,9 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
             {inputs.filter(input => input.status === 'completed').length > 1 && (
               <>
                 {isPro && !batchEnhanceState.inProgress && (
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 w-full">
                     <span className="text-xs text-gray-600 font-medium">一括高画質化（拡大）:</span>
-                    <div className="inline-flex rounded-lg border border-purple-200 overflow-hidden">
+                    <div className="flex w-full sm:w-auto rounded-lg border border-purple-200 overflow-hidden">
                       {(['1k', '2k', '4k'] as EnhanceTarget[]).map((target) => {
                         const targetPx = toEnhanceLongSide(target);
                         const eligibleCount = inputs.filter(
@@ -3181,7 +3187,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                             onClick={() => setPendingBatchTarget(isSelected ? null : target)}
                             disabled={busy || eligibleCount === 0}
                             title={eligibleCount === 0 ? `全画像が既に${target.toUpperCase()}以上です` : `${eligibleCount}枚を${target.toUpperCase()}に高画質化（拡大）`}
-                            className={`px-3 py-2 text-sm font-semibold border-r last:border-r-0 border-purple-200 transition-colors ${isSelected
+                            className={`flex-1 sm:flex-none px-3 py-2 text-sm font-semibold border-r last:border-r-0 border-purple-200 transition-colors ${isSelected
                               ? 'bg-purple-600 text-white'
                               : eligibleCount === 0
                                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
@@ -3203,7 +3209,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                           <p className="text-xs text-gray-500">
                             {eligible.length}枚が対象（長辺 {targetPx}px へ拡大）
                           </p>
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                             <button
                               type="button"
                               onClick={() => { void handleBatchEnhance(pendingBatchTarget); }}
@@ -3438,10 +3444,10 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
         !isCtaVisible && inputs.length > 0 && !busy && (
           inputs.some(i => i.status === 'ready') || hasCompletedResults
         ) && (
-          <div className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-[100] flex flex-col items-end gap-2 sm:gap-3 pointer-events-none">
+          <div className="fixed left-3 right-3 bottom-3 sm:left-auto sm:right-8 sm:bottom-8 z-[100] flex flex-col items-stretch sm:items-end gap-2 sm:gap-3 pointer-events-none">
             {inputs.some(i => i.status === 'ready') && (
               <>
-                <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2 mb-1 pointer-events-auto">
+                <div className="flex flex-wrap items-center justify-start sm:justify-end gap-1.5 sm:gap-2 mb-1 pointer-events-auto">
                   <button
                     type="button"
                     onClick={() => scrollToSectionWithHeaderOffset(sectionModeRef.current)}
@@ -3485,10 +3491,14 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                   <button
                     onClick={() => void handleRemove()}
                     disabled={inputs.filter(i => i.status === 'ready').length === 0}
-                    className="pointer-events-auto flex items-center justify-center bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-4 sm:px-10 sm:py-5 rounded-2xl shadow-xl transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed group w-full sm:w-auto"
+                    className="pointer-events-auto flex flex-col sm:flex-row items-center justify-center bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-5 py-3.5 sm:px-10 sm:py-5 rounded-2xl shadow-xl transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed group w-full sm:w-auto"
                   >
+                    <span className="sm:hidden text-[11px] font-medium text-blue-100 mb-0.5">
+                      {inputs.filter(i => i.status === 'ready').length}枚を選択中
+                    </span>
                     <span className="text-base sm:text-xl font-black">
-                      選択した画像（{inputs.filter(i => i.status === 'ready').length}枚）の{selectedProcessingMode === 'ai_generate' || selectedTemplate ? '背景を合成する' : '背景を透過する'}
+                      <span className="sm:hidden">{selectedProcessingMode === 'ai_generate' || selectedTemplate ? '背景を合成する' : '背景を透過する'}</span>
+                      <span className="hidden sm:inline">選択した画像（{inputs.filter(i => i.status === 'ready').length}枚）の{selectedProcessingMode === 'ai_generate' || selectedTemplate ? '背景を合成する' : '背景を透過する'}</span>
                     </span>
                   </button>
                 )}

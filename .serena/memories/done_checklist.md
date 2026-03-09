@@ -1,0 +1,1 @@
+After changes, prefer running `npm run lint` and targeted tests when available. For UI work, also verify responsive behavior on mobile and desktop for the affected page, especially homepage tool flow and any sticky/fixed overlays.
