@@ -2273,98 +2273,124 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
         disabled={busy}
       />
 
-      {/* 処理モード選択 */}
-      <div ref={sectionModeRef} className="space-y-3 sm:space-y-4">
-        <h2 className="text-xl sm:text-2xl font-black flex items-center gap-3">
-          <span className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-            <span className="material-symbols-outlined text-primary">auto_fix_high</span>
-          </span>
-          切り抜きモード設定
-        </h2>
-        <div className="grid grid-cols-1 gap-3 sm:gap-4">
-          <button
-            type="button"
-            onClick={() => handleSelectProcessingMode('standard')}
-            className={`relative p-4 sm:p-5 md:p-6 rounded-2xl border-2 text-left transition-all cursor-pointer flex items-start sm:items-center gap-3 sm:gap-5 md:gap-6 group ${selectedProcessingMode === 'standard'
-              ? 'border-primary bg-primary/5 shadow-sm'
-              : 'border-slate-100 bg-white hover:border-primary/30'
-              }`}
-          >
-            <div className={`w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 ${selectedProcessingMode === 'standard' ? 'bg-white shadow-sm text-primary' : 'bg-slate-50 text-slate-400'}`}>
-              <span className="material-symbols-outlined text-2xl sm:text-3xl md:text-4xl">draw</span>
-            </div>
-            <div className="flex-1">
-              <p className="text-base sm:text-lg font-black text-slate-900">標準</p>
-              <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">AIが自動で背景を切り抜きます</p>
-            </div>
-            {selectedProcessingMode === 'standard' && (
-              <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full border-[3px] sm:border-4 border-primary bg-white flex items-center justify-center shadow-sm">
-                <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-primary"></div>
-              </div>
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleSelectProcessingMode('pro_high_precision')}
-            className={`relative p-4 sm:p-5 md:p-6 rounded-2xl border-2 text-left transition-all cursor-pointer flex items-start sm:items-center gap-3 sm:gap-5 md:gap-6 group ${selectedProcessingMode === 'pro_high_precision'
-              ? 'border-pro-orange bg-pro-orange/5 shadow-sm'
-              : 'border-slate-100 bg-white hover:border-pro-orange/30'
-              } ${!isPro ? 'opacity-90' : ''}`}
-          >
-            <div className={`w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 ${selectedProcessingMode === 'pro_high_precision' ? 'bg-white shadow-sm text-pro-orange' : 'bg-pro-orange/5 text-pro-orange'}`}>
-              <span className="material-symbols-outlined text-2xl sm:text-3xl md:text-4xl">high_quality</span>
-            </div>
-            <div className="flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="text-base sm:text-lg font-black text-slate-900">高精度</p>
-                <span className="bg-pro-orange text-white text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-widest shadow-sm">プロ</span>
-              </div>
-              <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">より高性能なAIで背景を切り抜きます</p>
-            </div>
-            {selectedProcessingMode === 'pro_high_precision' && (
-              <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full border-[3px] sm:border-4 border-pro-orange bg-white flex items-center justify-center shadow-sm">
-                <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-pro-orange"></div>
-              </div>
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              if (!isPro) {
-                goToProPurchase('ai_bg_mode');
-                trackAnalyticsEvent('pro_purchase_click_from_ai_bg', { feature: 'bg_generate_mode' });
-                return;
-              }
-              handleSelectProcessingMode('ai_generate');
-              setBgMode('ai_generate');
-            }}
-            className={`relative p-4 sm:p-5 md:p-6 rounded-2xl border-2 text-left transition-all cursor-pointer flex items-start sm:items-center gap-3 sm:gap-5 md:gap-6 group ${selectedProcessingMode === 'ai_generate'
-              ? 'border-fuchsia-500 bg-fuchsia-50 shadow-sm'
-              : 'border-slate-100 bg-white hover:border-fuchsia-300'
-              } ${!isPro ? 'opacity-90' : ''}`}
-          >
-            <div className={`w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 ${selectedProcessingMode === 'ai_generate' ? 'bg-white shadow-sm text-fuchsia-500' : 'bg-fuchsia-50 text-fuchsia-500'}`}>
-              <span className="material-symbols-outlined text-2xl sm:text-3xl md:text-4xl">magic_button</span>
-            </div>
-            <div className="flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="text-base sm:text-lg font-black text-slate-900">AI背景生成</p>
-                <span className="bg-pro-orange text-white text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-widest shadow-sm">プロ</span>
-              </div>
-              <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">好きなスタイルで新しい背景を生成</p>
-            </div>
-            {selectedProcessingMode === 'ai_generate' && (
-              <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full border-[3px] sm:border-4 border-fuchsia-500 bg-white flex items-center justify-center shadow-sm">
-                <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-fuchsia-500"></div>
-              </div>
-            )}
-          </button>
+      {inputs.length === 0 && (
+        <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 sm:p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="material-symbols-outlined text-primary text-[18px]">bolt</span>
+            <p className="text-sm font-bold text-slate-900">アップロード後に選べる機能</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-sm">
+              <span className="material-symbols-outlined text-[15px] text-primary">draw</span>
+              標準切り抜き
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-700 shadow-sm">
+              <span className="material-symbols-outlined text-[15px] text-pro-orange">high_quality</span>
+              高精度モード
+              <span className="rounded-full bg-pro-orange px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-white">Pro</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-fuchsia-200 bg-fuchsia-50 px-3 py-1.5 text-xs font-semibold text-fuchsia-700 shadow-sm">
+              <span className="material-symbols-outlined text-[15px] text-fuchsia-500">magic_button</span>
+              AI背景生成
+              <span className="rounded-full bg-pro-orange px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-white">Pro</span>
+            </span>
+          </div>
         </div>
+      )}
 
-        {/* --- AIで背景を作る（詳細設定エリア） --- */}
-        {inputs.length > 0 && selectedProcessingMode === 'ai_generate' && (
+      {/* 処理モード選択 */}
+      {inputs.length > 0 && (
+        <div ref={sectionModeRef} className="space-y-3 sm:space-y-4">
+          <h2 className="text-xl sm:text-2xl font-black flex items-center gap-3">
+            <span className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <span className="material-symbols-outlined text-primary">auto_fix_high</span>
+            </span>
+            切り抜きモード設定
+          </h2>
+          <div className="grid grid-cols-1 gap-3 sm:gap-4">
+            <button
+              type="button"
+              onClick={() => handleSelectProcessingMode('standard')}
+              className={`relative p-4 sm:p-5 md:p-6 rounded-2xl border-2 text-left transition-all cursor-pointer flex items-start sm:items-center gap-3 sm:gap-5 md:gap-6 group ${selectedProcessingMode === 'standard'
+                ? 'border-primary bg-primary/5 shadow-sm'
+                : 'border-slate-100 bg-white hover:border-primary/30'
+                }`}
+            >
+              <div className={`w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 ${selectedProcessingMode === 'standard' ? 'bg-white shadow-sm text-primary' : 'bg-slate-50 text-slate-400'}`}>
+                <span className="material-symbols-outlined text-2xl sm:text-3xl md:text-4xl">draw</span>
+              </div>
+              <div className="flex-1">
+                <p className="text-base sm:text-lg font-black text-slate-900">標準</p>
+                <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">AIが自動で背景を切り抜きます</p>
+              </div>
+              {selectedProcessingMode === 'standard' && (
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full border-[3px] sm:border-4 border-primary bg-white flex items-center justify-center shadow-sm">
+                  <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-primary"></div>
+                </div>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleSelectProcessingMode('pro_high_precision')}
+              className={`relative p-4 sm:p-5 md:p-6 rounded-2xl border-2 text-left transition-all cursor-pointer flex items-start sm:items-center gap-3 sm:gap-5 md:gap-6 group ${selectedProcessingMode === 'pro_high_precision'
+                ? 'border-pro-orange bg-pro-orange/5 shadow-sm'
+                : 'border-slate-100 bg-white hover:border-pro-orange/30'
+                } ${!isPro ? 'opacity-90' : ''}`}
+            >
+              <div className={`w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 ${selectedProcessingMode === 'pro_high_precision' ? 'bg-white shadow-sm text-pro-orange' : 'bg-pro-orange/5 text-pro-orange'}`}>
+                <span className="material-symbols-outlined text-2xl sm:text-3xl md:text-4xl">high_quality</span>
+              </div>
+              <div className="flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-base sm:text-lg font-black text-slate-900">高精度</p>
+                  <span className="bg-pro-orange text-white text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-widest shadow-sm">プロ</span>
+                </div>
+                <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">より高性能なAIで背景を切り抜きます</p>
+              </div>
+              {selectedProcessingMode === 'pro_high_precision' && (
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full border-[3px] sm:border-4 border-pro-orange bg-white flex items-center justify-center shadow-sm">
+                  <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-pro-orange"></div>
+                </div>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (!isPro) {
+                  goToProPurchase('ai_bg_mode');
+                  trackAnalyticsEvent('pro_purchase_click_from_ai_bg', { feature: 'bg_generate_mode' });
+                  return;
+                }
+                handleSelectProcessingMode('ai_generate');
+                setBgMode('ai_generate');
+              }}
+              className={`relative p-4 sm:p-5 md:p-6 rounded-2xl border-2 text-left transition-all cursor-pointer flex items-start sm:items-center gap-3 sm:gap-5 md:gap-6 group ${selectedProcessingMode === 'ai_generate'
+                ? 'border-fuchsia-500 bg-fuchsia-50 shadow-sm'
+                : 'border-slate-100 bg-white hover:border-fuchsia-300'
+                } ${!isPro ? 'opacity-90' : ''}`}
+            >
+              <div className={`w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 ${selectedProcessingMode === 'ai_generate' ? 'bg-white shadow-sm text-fuchsia-500' : 'bg-fuchsia-50 text-fuchsia-500'}`}>
+                <span className="material-symbols-outlined text-2xl sm:text-3xl md:text-4xl">magic_button</span>
+              </div>
+              <div className="flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-base sm:text-lg font-black text-slate-900">AI背景生成</p>
+                  <span className="bg-pro-orange text-white text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-widest shadow-sm">プロ</span>
+                </div>
+                <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">好きなスタイルで新しい背景を生成</p>
+              </div>
+              {selectedProcessingMode === 'ai_generate' && (
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full border-[3px] sm:border-4 border-fuchsia-500 bg-white flex items-center justify-center shadow-sm">
+                  <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-fuchsia-500"></div>
+                </div>
+              )}
+            </button>
+          </div>
+
+          {/* --- AIで背景を作る（詳細設定エリア） --- */}
+          {selectedProcessingMode === 'ai_generate' && (
           <div className="mt-4 p-4 rounded-xl border border-fuchsia-200 bg-fuchsia-50/50">
             <div className="flex items-center justify-between mb-3">
               <h4 className="text-sm font-semibold text-gray-800">
@@ -2428,8 +2454,9 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
               </p>
             )}
           </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       {/* ファイル数制限の案内 */}
       <div className="flex items-center justify-center">
