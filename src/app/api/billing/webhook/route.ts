@@ -66,6 +66,29 @@ function getBooleanValue(rec: Record<string, unknown>, ...keys: string[]): boole
   return null;
 }
 
+function derivePeriodRangeFromItems(subscription: Stripe.Subscription): {
+  currentPeriodStart: Date | null;
+  currentPeriodEnd: Date | null;
+} {
+  const itemStarts = subscription.items.data
+    .map((item) => dateFromUnixTs((item as unknown as { current_period_start?: number }).current_period_start))
+    .filter((value): value is Date => value instanceof Date);
+  const itemEnds = subscription.items.data
+    .map((item) => dateFromUnixTs((item as unknown as { current_period_end?: number }).current_period_end))
+    .filter((value): value is Date => value instanceof Date);
+
+  const currentPeriodStart =
+    itemStarts.length > 0
+      ? new Date(Math.max(...itemStarts.map((value) => value.getTime())))
+      : null;
+  const currentPeriodEnd =
+    itemEnds.length > 0
+      ? new Date(Math.min(...itemEnds.map((value) => value.getTime())))
+      : null;
+
+  return { currentPeriodStart, currentPeriodEnd };
+}
+
 async function upsertSubscriptionFromStripe(args: {
   tx: Prisma.TransactionClient;
   userId: string;
@@ -76,6 +99,16 @@ async function upsertSubscriptionFromStripe(args: {
   const subscriptionRec = args.subscription as unknown as Record<string, unknown>;
   const firstItem = args.subscription.items.data[0];
   const price = firstItem?.price ?? null;
+  const itemPeriods = derivePeriodRangeFromItems(args.subscription);
+  const currentPeriodStart =
+    dateFromUnixTs(getFiniteNumber(subscriptionRec, 'current_period_start', 'currentPeriodStart')) ??
+    itemPeriods.currentPeriodStart;
+  const currentPeriodEnd =
+    dateFromUnixTs(getFiniteNumber(subscriptionRec, 'current_period_end', 'currentPeriodEnd')) ??
+    itemPeriods.currentPeriodEnd;
+  const canceledAt = dateFromUnixTs(getFiniteNumber(subscriptionRec, 'canceled_at', 'canceledAt'));
+  const endedAt = dateFromUnixTs(getFiniteNumber(subscriptionRec, 'ended_at', 'endedAt'));
+  const trialEnd = dateFromUnixTs(getFiniteNumber(subscriptionRec, 'trial_end', 'trialEnd'));
   const latestInvoice =
     typeof args.subscription.latest_invoice === 'string'
       ? { id: args.subscription.latest_invoice, status: null }
@@ -90,15 +123,13 @@ async function upsertSubscriptionFromStripe(args: {
       stripeProductId: price?.product ? asStripeId(price.product) : null,
       stripePriceId: price?.id ?? null,
       status: args.subscription.status,
-      currentPeriodStart:
-        dateFromUnixTs(getFiniteNumber(subscriptionRec, 'current_period_start', 'currentPeriodStart')) ?? undefined,
-      currentPeriodEnd:
-        dateFromUnixTs(getFiniteNumber(subscriptionRec, 'current_period_end', 'currentPeriodEnd')) ?? undefined,
+      currentPeriodStart: currentPeriodStart ?? null,
+      currentPeriodEnd: currentPeriodEnd ?? null,
       cancelAtPeriodEnd:
         getBooleanValue(subscriptionRec, 'cancel_at_period_end', 'cancelAtPeriodEnd') ?? false,
-      canceledAt: dateFromUnixTs(getFiniteNumber(subscriptionRec, 'canceled_at', 'canceledAt')) ?? undefined,
-      endedAt: dateFromUnixTs(getFiniteNumber(subscriptionRec, 'ended_at', 'endedAt')) ?? undefined,
-      trialEnd: dateFromUnixTs(getFiniteNumber(subscriptionRec, 'trial_end', 'trialEnd')) ?? undefined,
+      canceledAt: canceledAt ?? null,
+      endedAt: endedAt ?? null,
+      trialEnd: trialEnd ?? null,
       latestInvoiceId: latestInvoice?.id ?? null,
       latestInvoiceStatus: latestInvoice?.status ?? null,
       stripeMode: args.stripeMode,
@@ -109,15 +140,13 @@ async function upsertSubscriptionFromStripe(args: {
       stripeProductId: price?.product ? asStripeId(price.product) : null,
       stripePriceId: price?.id ?? null,
       status: args.subscription.status,
-      currentPeriodStart:
-        dateFromUnixTs(getFiniteNumber(subscriptionRec, 'current_period_start', 'currentPeriodStart')) ?? undefined,
-      currentPeriodEnd:
-        dateFromUnixTs(getFiniteNumber(subscriptionRec, 'current_period_end', 'currentPeriodEnd')) ?? undefined,
+      currentPeriodStart: currentPeriodStart ?? null,
+      currentPeriodEnd: currentPeriodEnd ?? null,
       cancelAtPeriodEnd:
         getBooleanValue(subscriptionRec, 'cancel_at_period_end', 'cancelAtPeriodEnd') ?? false,
-      canceledAt: dateFromUnixTs(getFiniteNumber(subscriptionRec, 'canceled_at', 'canceledAt')) ?? undefined,
-      endedAt: dateFromUnixTs(getFiniteNumber(subscriptionRec, 'ended_at', 'endedAt')) ?? undefined,
-      trialEnd: dateFromUnixTs(getFiniteNumber(subscriptionRec, 'trial_end', 'trialEnd')) ?? undefined,
+      canceledAt: canceledAt ?? null,
+      endedAt: endedAt ?? null,
+      trialEnd: trialEnd ?? null,
       latestInvoiceId: latestInvoice?.id ?? null,
       latestInvoiceStatus: latestInvoice?.status ?? null,
       stripeMode: args.stripeMode,
