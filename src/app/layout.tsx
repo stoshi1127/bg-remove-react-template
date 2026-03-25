@@ -1,28 +1,31 @@
 // "use client";
 import './globals.css';
 import { Inter } from 'next/font/google';
+import type { Metadata } from 'next';
 import Script from 'next/script';
 import Link from 'next/link';
 import Header from '../components/Header';
+import BrandIcon from '../components/BrandIcon';
 
 const inter = Inter({ subsets: ['latin'] });
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bg.quicktools.jp';
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'イージーカット | 無料AI背景透過・画像編集ツール',
   description: '複数画像の一括背景透過、HEIC変換、画像トリミングが無料で使える日本語AIツール。iPhone画像対応、高精度AI処理、商用利用OK。背景除去・画像編集・写真加工ならイージーカット',
   keywords: '背景透過,背景除去,画像編集,HEIC変換,トリミング,AI,無料,iPhone,写真加工,画像処理,背景削除,透明化',
+  metadataBase: new URL(siteUrl),
   verification: {
     google: '-SgV6VIRvfRUUP3Qp7ejZw4HCjo8hRLeis0upVAPsSU',
   },
   robots: 'index,follow',
-  language: 'ja',
   icons: {
     icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
       { url: '/favicon.ico' },
-      { url: '/icon.png', type: 'image/png', sizes: '32x32' },
     ],
     apple: [
-      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+      { url: '/apple-icon', sizes: '180x180', type: 'image/png' },
     ],
   },
   // OGPメタデータは各ページで個別に設定
@@ -59,7 +62,7 @@ export default function RootLayout({
             "@type": "Organization",
             "name": "QuickTools",
             "url": "https://bg.quicktools.jp",
-            "logo": "https://bg.quicktools.jp/icon.png",
+            "logo": "https://bg.quicktools.jp/icon.svg",
             "description": "無料AI画像編集ツール。背景透過・HEIC変換・画像トリミングがすべて無料でご利用いただけます。",
             "sameAs": [],
             "contactPoint": {
@@ -90,11 +93,7 @@ export default function RootLayout({
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
               <div className="md:col-span-2">
                 <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                    </svg>
-                  </div>
+                  <BrandIcon size={32} className="shadow-[0_10px_24px_rgba(14,165,233,0.3)]" roundedClassName="rounded-xl" />
                   <span className="text-xl font-bold text-white">
                     QuickTools
                   </span>

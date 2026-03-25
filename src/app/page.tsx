@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import BgRemoverMulti from '../components/BgRemover';
+import BrandIcon from '../components/BrandIcon';
 import GuideCard from '../components/GuideCard';
 import ProCtaSection from '../components/ProCtaSection';
 import TrackedLink from '../components/TrackedLink';
@@ -123,11 +124,10 @@ export async function generateMetadata(): Promise<Metadata> {
       type: 'website',
       images: [
         {
-          url: '/ogp.png?v=202501',
+          url: '/opengraph-image',
           width: 1200,
           height: 630,
           alt: '無料の背景透過サイト イージーカット',
-          type: 'image/png',
         },
       ],
     },
@@ -137,7 +137,7 @@ export async function generateMetadata(): Promise<Metadata> {
       description: '無料の背景透過サイトとして、画像透過、背景削除、一括処理、HEIC対応をブラウザだけで利用できます。',
       images: [
         {
-          url: '/ogp.png?v=202501',
+          url: '/twitter-image',
           alt: '無料の背景透過サイト イージーカット',
         },
       ],
@@ -188,7 +188,7 @@ export default async function Home() {
       '商用利用対応',
       '高画質なProオプション',
     ],
-    screenshot: 'https://bg.quicktools.jp/ogp.png',
+    screenshot: 'https://bg.quicktools.jp/opengraph-image',
     creator: {
       '@type': 'Organization',
       name: 'QuickTools',
@@ -238,9 +238,12 @@ export default async function Home() {
             <h1 className="text-3xl sm:text-4xl md:text-6xl font-black tracking-tight text-slate-900 mb-3 sm:mb-4">
               背景透過を素早く簡単に
             </h1>
-            <p className="text-lg sm:text-xl md:text-2xl font-bold text-blue-600 mb-4 sm:mb-5">
-              {siteName}
-            </p>
+            <div className="mb-4 sm:mb-5 flex items-center justify-center gap-3">
+              <BrandIcon size={38} className="shadow-[0_14px_36px_rgba(37,99,235,0.22)]" />
+              <p className="text-lg sm:text-xl md:text-2xl font-bold text-blue-600">
+                {siteName}
+              </p>
+            </div>
             <p className="text-base sm:text-lg md:text-xl text-slate-600 leading-relaxed max-w-3xl mx-auto">
               写真や画像の背景透過・背景削除をブラウザだけで手早く完結。無料で使えて、JPG・PNG・HEIC対応、
               複数画像の一括処理、背景合成、ZIPダウンロードにも対応しています。

@@ -38,14 +38,14 @@ export async function generateMetadata(): Promise<Metadata> {
       url: pageUrl,
       siteName: 'QuickTools',
       images: [
-        { url: '/ogp.png?v=202501', width: 1200, height: 630, alt: 'イージートーンの紹介画像' },
+        { url: '/opengraph-image', width: 1200, height: 630, alt: 'イージートーンの紹介画像' },
       ],
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
-      images: ['/ogp.png?v=202501'],
+      images: ['/twitter-image'],
     },
   };
 }

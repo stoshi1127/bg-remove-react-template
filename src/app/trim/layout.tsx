@@ -32,7 +32,7 @@ export async function generateMetadata(): Promise<Metadata> {
       siteName: 'QuickTools',
       locale: 'ja_JP',
       images: [
-        { url: '/ogp.png?v=202501', width: 1200, height: 630, alt: `${siteName}の紹介画像` },
+        { url: '/opengraph-image', width: 1200, height: 630, alt: `${siteName}の紹介画像` },
       ],
       type: 'website',
     },
@@ -40,7 +40,7 @@ export async function generateMetadata(): Promise<Metadata> {
       card: 'summary_large_image',
       title,
       description,
-      images: ['/ogp.png?v=202501'],
+      images: ['/twitter-image'],
     },
   };
 }
