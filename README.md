@@ -61,9 +61,11 @@ pnpm install
 - **必須（背景透過）**: `REPLICATE_API_TOKEN`
 - **必須（会員ログイン）**: `POSTGRES_PRISMA_URL`, `POSTGRES_URL_NON_POOLING`, `RESEND_API_KEY`, `EMAIL_FROM`
 - **必須（Pro課金 / Stripe）**: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID_PRO_TEST`（本番は `STRIPE_PRICE_ID_PRO_LIVE`）
-- **必須（認証 / NextAuth）**: `AUTH_SECRET`（NextAuthのセッションやCSRFトークン暗号化用）
+- **必須（認証 / NextAuth）**: `AUTH_SECRET`（推奨。NextAuthのセッション暗号化と課金メール暗号化で共通利用）
+- **任意（互換）**: `NEXTAUTH_SECRET`（`AUTH_SECRET` 未設定時の後方互換用）
 - **任意（Google連携）**: `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`（Googleログインを利用する場合）
 - **必須（Pro直送アップロード）**: `BLOB_READ_WRITE_TOKEN`
+- **推奨（本番URL固定）**: `NEXT_PUBLIC_SITE_URL`（例: `https://bg.quicktools.jp`）
 - **任意**: `BILLING_ENABLED`（課金導線の一括OFF。ロールバック用）, `STRIPE_MODE`（未指定時は `STRIPE_SECRET_KEY` のprefixから推定）
 - **任意（アップロード制御）**:
   - `UPLOAD_DIRECT_ENABLED` / `NEXT_PUBLIC_UPLOAD_DIRECT_ENABLED`（Proの直送経路ON/OFF）
@@ -257,6 +259,7 @@ stripe listen --forward-to http://localhost:3000/api/billing/webhook
 #### テスト→本番移行の注意（モード混在防止）
 
 - **Price IDはモードごとに別**です（`STRIPE_PRICE_ID_PRO_TEST` / `STRIPE_PRICE_ID_PRO_LIVE`）。
+- 本番の `STRIPE_PRICE_ID_PRO_LIVE` は **月額¥780のPrice** を設定してください。
 - `STRIPE_MODE` は任意です。未設定の場合は `STRIPE_SECRET_KEY` の `sk_test_` / `sk_live_` から推定します。
 - 既存ユーザーに紐づく `StripeCustomer/StripeSubscription` には `stripeMode` を保存しており、モード不一致（testのCustomerをliveで参照等）はAPI側で拒否します。
 

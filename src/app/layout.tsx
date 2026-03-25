@@ -125,11 +125,17 @@ export default function RootLayout({
                   <Link href="/#pro" className="block text-gray-300 hover:text-white transition-colors duration-200">
                     料金・プラン
                   </Link>
-                  <Link href="/blog" className="block text-gray-300 hover:text-white transition-colors duration-200">
-                    ブログ
+                  <Link href="/terms" className="block text-gray-300 hover:text-white transition-colors duration-200">
+                    利用規約
+                  </Link>
+                  <Link href="/legal/tokushoho" className="block text-gray-300 hover:text-white transition-colors duration-200">
+                    特定商取引法に基づく表記
                   </Link>
                   <Link href="/privacy-policy" className="block text-gray-300 hover:text-white transition-colors duration-200">
                     プライバシーポリシー
+                  </Link>
+                  <Link href="/login" className="block text-gray-300 hover:text-white transition-colors duration-200">
+                    ログイン
                   </Link>
                 </div>
               </div>

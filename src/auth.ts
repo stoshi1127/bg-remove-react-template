@@ -73,21 +73,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     ],
     callbacks: {
         async signIn({ user, account }) {
-            // For OAuth providers like Google, "user" contains the basic info (email, name)
-            // But if the user is not in the DB yet, we want to reject them.
+            // Googleログインは未登録ユーザーも許可し、PrismaAdapter経由で新規作成する。
             if (account?.provider === 'google') {
                 if (!user.email) return false;
-
-                // Check if user exists in the database
-                const existingUser = await prisma.user.findUnique({
-                    where: { email: user.email },
-                });
-
-                if (!existingUser) {
-                    console.log(`Access Denied (Google Login): Unregistered email: ${user.email}`);
-                    // Return false to display an AccessDenied error (redirects to /login?error=AccessDenied)
-                    return false;
-                }
             }
             // Allow all other sign in attempts (Resend handles restrictions in sendVerificationRequest)
             return true;
@@ -113,5 +101,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         strategy: 'database',
         maxAge: 30 * 24 * 60 * 60, // 30 days
     },
-    secret: process.env.NEXTAUTH_SECRET || 'fallback_secret_for_dev_mode_only',
+    // Prefer AUTH_SECRET across the app (also used by billing email encryption),
+    // keep NEXTAUTH_SECRET as backward-compatible fallback.
+    secret:
+        process.env.AUTH_SECRET ||
+        process.env.NEXTAUTH_SECRET ||
+        (process.env.NODE_ENV !== 'production' ? 'fallback_secret_for_dev_mode_only' : undefined),
 });
