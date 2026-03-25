@@ -32,6 +32,10 @@ export default async function AccountPage() {
 
   const showPaymentWarning =
     subscription?.status === 'past_due' || subscription?.status === 'unpaid';
+  const showCancelAtPeriodEnd =
+    subscription?.cancelAtPeriodEnd === true &&
+    subscription?.status !== 'canceled' &&
+    subscription?.status !== 'incomplete_expired';
 
   return (
     <div className="container mx-auto px-4 py-12 max-w-2xl">
@@ -69,6 +73,15 @@ export default async function AccountPage() {
             <div className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-xl p-4">
               お支払いに問題がある可能性があります（ステータス: {subscription.status}）。
               current period end まではProを維持しますが、早めに「Proを管理する」からお支払い方法をご確認ください。
+            </div>
+          )}
+
+          {showCancelAtPeriodEnd && (
+            <div className="text-sm text-blue-800 bg-blue-50 border border-blue-200 rounded-xl p-4">
+              Proは解約予約中です。
+              {subscription?.currentPeriodEnd
+                ? ` 現在の利用期間終了までは引き続き利用でき、終了予定日は ${subscription.currentPeriodEnd.toLocaleString('ja-JP')} です。`
+                : ' 現在の利用期間終了までは引き続き利用できます。終了予定日の反映に少し時間がかかる場合があります。'}
             </div>
           )}
 

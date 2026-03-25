@@ -30,6 +30,7 @@ export default function GuestProPurchase({
   const [message, setMessage] = useState<string | null>(null);
   const searchParams = useSearchParams();
   const autoOpenedRef = useRef(false);
+  const cancelNoticeShownRef = useRef(false);
 
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : internalOpen;
@@ -45,6 +46,15 @@ export default function GuestProPurchase({
       autoOpenedRef.current = true;
       setOpen(true);
     }
+  }, [searchParams, setOpen]);
+
+  useEffect(() => {
+    if (cancelNoticeShownRef.current) return;
+    if (searchParams.get('billing') !== 'cancel') return;
+
+    cancelNoticeShownRef.current = true;
+    setMessage('購入手続きをキャンセルしました。必要なときに、もう一度お試しください。');
+    setOpen(true);
   }, [searchParams, setOpen]);
 
   const extractError = (v: unknown): string | null => {
