@@ -7,6 +7,8 @@ import PricingTable from './PricingTable';
 import PricingModal from './PricingModal';
 import PremiumFeatures from './PremiumFeatures';
 
+const proHighlights = ['EC商品画像', '大量処理', '高画質出力', '広告なし'];
+
 type ProCtaSectionProps = {
   isLoggedIn: boolean;
   isPro?: boolean;
@@ -26,13 +28,26 @@ export default function ProCtaSection({ isLoggedIn, isPro = false }: ProCtaSecti
       <div id="pro" className="mb-12 scroll-mt-28">
         <div className="bg-gradient-to-br from-white via-amber-50/30 to-orange-50/50 rounded-2xl border border-amber-100 shadow-sm p-6 md:p-8 lg:p-10 max-w-5xl mx-auto">
           <div className="text-center mb-10 md:mb-12">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4 tracking-tight">
-              高画質・無制限のProプラン
-            </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto text-sm md:text-base leading-relaxed">
-              もっと綺麗に、もっと自由に。より高品質な画像加工を求める方へ。<br className="hidden md:block" />
-              Proなら、広告なし・高精度の背景透過・AI背景合成・最大25MBの出力が可能です。
+            <p className="text-xs md:text-sm font-semibold tracking-[0.2em] text-amber-700 uppercase mb-3">
+              無料で足りない場面を補う業務向けプラン
             </p>
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4 tracking-tight">
+              EC商品画像や大量処理に向くProプラン
+            </h2>
+            <p className="text-gray-600 max-w-3xl mx-auto text-sm md:text-base leading-relaxed">
+              無料でも背景透過と一括保存はすぐ使えます。毎日の業務で大量処理したい、より高画質で出力したい、
+              広告なしで作業したい場合は Pro が向いています。
+            </p>
+            <div className="flex flex-wrap justify-center gap-2 mt-5">
+              {proHighlights.map((highlight) => (
+                <span
+                  key={highlight}
+                  className="inline-flex items-center rounded-full border border-amber-200 bg-white/80 px-3 py-1 text-xs md:text-sm font-semibold text-amber-800"
+                >
+                  {highlight}
+                </span>
+              ))}
+            </div>
           </div>
 
           <div className="w-full">

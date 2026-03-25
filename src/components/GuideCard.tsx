@@ -16,20 +16,20 @@ const GuideCard: React.FC<GuideCardProps> = ({
   children, 
   footer 
 }) => (
-  <div className={`bg-white p-6 rounded-xl shadow-soft border border-gray-100 hover:shadow-medium transition-shadow duration-200 ${className}`}>
-    <div className="flex items-start mb-4">
+  <div className={`h-full bg-white p-6 rounded-xl shadow-soft border border-gray-100 hover:shadow-medium transition-shadow duration-200 ${className}`}>
+    <div className="flex h-full items-start">
       <div className="mr-4 flex-shrink-0">
         {icon}
       </div>
-      <div className="flex-1">
+      <div className="flex min-h-full flex-1 flex-col">
         <h3 className="text-xl font-semibold text-gray-900 mb-3">
           {title}
         </h3>
-        <div className="text-gray-600 leading-relaxed mb-4">
+        <div className="text-gray-600 leading-relaxed mb-4 flex-1">
           {children}
         </div>
         {footer && (
-          <div className="pt-3 border-t border-gray-100">
+          <div className="mt-auto pt-3 border-t border-gray-100">
             <div className="text-sm">
               {footer}
             </div>

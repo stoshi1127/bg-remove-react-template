@@ -3,33 +3,52 @@
  * https://bg.quicktools.jp/tone
  */
 
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
+
 import EasyToneApp from '../../components/tone/EasyToneApp';
 
-export const metadata: Metadata = {
-  title: 'イージートーン - かんたん色調整（色調補正） | QuickTools',
-  description: '3ステップで写真の色味を整えます。複数の写真を一括処理できる無料のオンライン画像編集ツール。商品写真、SNS投稿、ブログ記事に最適。色調整（色調補正）に対応。',
-  keywords: [
-    '画像処理', 'フィルター', 'トーン調整', '写真編集', '画像フィルター', '色調整', '色調補正', '色味',
-    '一括処理', '商品写真', 'SNS', 'ブログ', '無料', 'オンライン',
-    'QuickTools', 'イージートーン', '画像編集', '写真加工'
-  ],
-  openGraph: {
-    title: 'イージートーン - かんたん色調整（色調補正） | QuickTools',
-    description: '3ステップで写真の色味を整えます。複数の写真を一括処理できる無料のオンライン画像編集ツール。',
-    type: 'website',
-    locale: 'ja_JP',
-    url: 'https://bg.quicktools.jp/tone',
-    siteName: 'QuickTools',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    site: '@QuickTools',
-    creator: '@QuickTools',
-    title: 'イージートーン - かんたん色調整（色調補正） | QuickTools',
-    description: '3ステップで写真の色味を整えます。複数の写真を一括処理できる無料のオンライン画像編集ツール。',
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bg.quicktools.jp';
+  const pageUrl = `${siteUrl}/tone`;
+  const title = '無料で写真の色味を調整できるオンラインツール | イージートーン';
+  const description = '写真の色味をブラウザで無料調整できるオンラインツールです。商品写真やSNS画像の明るさ・色味をまとめて補正でき、インストール不要で複数画像の一括処理にも対応しています。';
+
+  return {
+    title,
+    description,
+    metadataBase: new URL(siteUrl),
+    alternates: { canonical: '/tone' },
+    keywords: [
+      '写真 色味 調整',
+      '色調補正',
+      'トーン調整',
+      '無料',
+      'オンライン',
+      'ブラウザ',
+      '商品写真',
+      'SNS画像',
+      '画像編集',
+      'イージートーン',
+    ],
+    openGraph: {
+      title,
+      description,
+      type: 'website',
+      locale: 'ja_JP',
+      url: pageUrl,
+      siteName: 'QuickTools',
+      images: [
+        { url: '/ogp.png?v=202501', width: 1200, height: 630, alt: 'イージートーンの紹介画像' },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: ['/ogp.png?v=202501'],
+    },
+  };
+}
 
 export default function TonePage() {
   return <EasyToneApp />;

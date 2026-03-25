@@ -1,27 +1,107 @@
-// import Image from "next/image"; // Removed unused import
-// componentsフォルダからBgRemoverをインポート (パスは実際の構成に合わせてください)
-import BgRemoverMulti from "../components/BgRemover"; // '@/components/...' は src ディレクトリがある場合
-// import BgRemover from "../components/BgRemover"; // src ディレクトリがない場合など
-import type { Metadata } from 'next'; // コメントアウト解除
-import GuideCard from "../components/GuideCard";
-import Link from "next/link";
-import ProCtaSection from "../components/ProCtaSection";
+import type { Metadata } from 'next';
+import BgRemoverMulti from '../components/BgRemover';
+import GuideCard from '../components/GuideCard';
+import ProCtaSection from '../components/ProCtaSection';
+import TrackedLink from '../components/TrackedLink';
 import { getCurrentUser } from '@/lib/auth/session';
 
 const siteName = 'イージーカット';
+const heroTrustPoints = ['登録不要', 'ブラウザ完結', 'JPG・PNG・HEIC対応', '一括処理', '商用利用可'];
+const browserStrengths = [
+  {
+    title: 'インストール不要ですぐ使える',
+    description: '画像をアップロードするだけで背景透過を開始できます。PCでもスマホでもブラウザだけで完結します。',
+  },
+  {
+    title: 'HEICを含む主要形式に対応',
+    description: 'iPhoneのHEIC/HEIF、JPG、PNGをそのまま読み込み、事前変換なしで背景削除を進められます。',
+  },
+  {
+    title: '無料でも実務の下準備に使いやすい',
+    description: '登録不要で背景透過とZIP保存まで使えます。まず無料で試し、業務用途だけ Pro に切り替えられます。',
+  },
+];
+const batchUseCases = [
+  {
+    title: 'EC・商品画像の整形',
+    description: '商品写真をまとめて背景削除し、白背景やテンプレ背景に差し替えて出品用画像を揃えられます。',
+  },
+  {
+    title: 'フリマ・オークション出品',
+    description: 'スマホで撮った複数写真を一括背景透過し、見やすい商品一覧画像を短時間で作れます。',
+  },
+  {
+    title: 'SNS運用・社内資料づくり',
+    description: '人物やモノの切り抜きをまとめて用意し、投稿画像やプレゼン資料の素材づくりを効率化できます。',
+  },
+];
+const faqItems = [
+  {
+    question: '背景透過はブラウザだけでできますか？',
+    answer: 'はい。イージーカットはブラウザ完結の背景透過サイトです。ソフトのインストールや会員登録なしで、そのまま背景削除を始められます。',
+  },
+  {
+    question: '画像透過を無料でできますか？',
+    answer: 'はい。無料で画像透過と背景削除ができます。複数画像の一括処理やZIPダウンロードもすぐに試せます。',
+  },
+  {
+    question: '背景削除した画像を一括で保存できますか？',
+    answer: 'はい。複数の画像をまとめて処理し、完了後にZIP形式で一括保存できます。商品画像や出品写真の整理に向いています。',
+  },
+  {
+    question: 'iPhoneのHEIC画像も背景透過できますか？',
+    answer: 'はい。HEIC/HEIF画像を自動変換して処理するため、iPhoneで撮影した写真もそのまま背景透過できます。',
+  },
+  {
+    question: '無料プランでも大きな画像を処理できますか？',
+    answer: 'はい。無料プランでも大きな画像は自動で軽くして処理できます。より高画質で出力したい場合や大きな画像をそのまま扱いたい場合は Pro が向いています。',
+  },
+  {
+    question: '背景透過したあとに色や背景を変えられますか？',
+    answer: 'はい。透過後に白背景やテンプレート背景を選んだり、カラーピッカーで背景色を変更したりできます。',
+  },
+  {
+    question: '商用利用できる背景透過ツールですか？',
+    answer: 'はい。ECサイトの商品画像、SNS投稿、広告素材、社内資料など、商用利用を含む幅広い用途で使えます。',
+  },
+];
+const relatedTools = [
+  {
+    href: '/trim',
+    title: '画像トリミングをする',
+    description: '背景透過後にサイズを整えたいときは、SNSアイコンや商品画像向けの比率でそのままトリミングできます。',
+    source: 'trim_card',
+  },
+  {
+    href: '/tone',
+    title: '写真の色味を調整する',
+    description: '商品写真やSNS画像の明るさ、色味、トーンを整えたいときはイージートーンへ続けて移動できます。',
+    source: 'tone_card',
+  },
+];
 
-// メタデータ定義を generateMetadata 関数を使用して動的に生成
 export async function generateMetadata(): Promise<Metadata> {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bg.quicktools.jp';
+  const title = '無料の背景透過サイト・背景削除ツール | イージーカット';
+  const description = '無料で背景透過・背景削除ができるブラウザ完結のオンラインツールです。画像透過、一括処理、HEIC対応、ZIPダウンロードまで登録不要で使えます。';
 
   return {
-    title: "イージーカット - AIで一括背景透過・変更ブラウザツール",
-    description: "アップロードした写真や画像の背景を自動で透過（切り抜き）します。白、木目などの定番背景や、カラーピッカーでお好きな色を自由に設定可能。無料で使える高機能な背景リムーバーです。",
+    title,
+    description,
     metadataBase: new URL(siteUrl),
-    alternates: {
-      canonical: '/',
-    },
-    keywords: '背景透過,AI背景除去,写真切り抜き,画像編集,HEIC変換,複数画像処理,無料ツール,オンライン画像処理,背景変更,商用利用可能',
+    alternates: { canonical: '/' },
+    keywords: [
+      '背景透過サイト',
+      '背景削除',
+      '画像透過',
+      '背景透過 無料',
+      '背景透過 ブラウザ',
+      '一括背景透過',
+      'HEIC',
+      'オンライン画像処理',
+      '商用利用',
+      'イージーカット',
+    ],
     authors: [{ name: 'QuickTools' }],
     robots: {
       index: true,
@@ -35,8 +115,8 @@ export async function generateMetadata(): Promise<Metadata> {
       },
     },
     openGraph: {
-      title: "イージーカット - AIで一括背景透過・変更ブラウザツール",
-      description: "アップロードした写真や画像の背景を自動で透過（切り抜き）します。白、木目などの定番背景や、カラーピッカーでお好きな色を自由に設定可能。無料で使える高機能な背景リムーバーです。",
+      title,
+      description,
       url: siteUrl,
       siteName: 'QuickTools - 無料AI画像編集ツール',
       locale: 'ja_JP',
@@ -46,19 +126,19 @@ export async function generateMetadata(): Promise<Metadata> {
           url: '/ogp.png?v=202501',
           width: 1200,
           height: 630,
-          alt: 'イージーカット - AI背景透過ツールの紹介画像',
+          alt: '無料の背景透過サイト イージーカット',
           type: 'image/png',
         },
       ],
     },
     twitter: {
       card: 'summary_large_image',
-      title: "イージーカット - AIで一括背景透過・変更ブラウザツール",
-      description: "写真・画像の背景を自動で透過。複数画像の一括処理、HEIC対応、多彩な背景テンプレート。完全無料、登録不要で今すぐ使えます。",
+      title,
+      description: '無料の背景透過サイトとして、画像透過、背景削除、一括処理、HEIC対応をブラウザだけで利用できます。',
       images: [
         {
           url: '/ogp.png?v=202501',
-          alt: 'イージーカット - AI背景透過ツール',
+          alt: '無料の背景透過サイト イージーカット',
         },
       ],
     },
@@ -75,118 +155,67 @@ export default async function Home() {
   const isLoggedIn = !!user;
   const isPro = !!user?.isPro;
   const adUserPlan: 'pro' | 'free' | 'guest' = !user ? 'guest' : user.isPro ? 'pro' : 'free';
+
   const structuredData = {
-    "@context": "https://schema.org",
-    "@type": "WebApplication",
-    "name": "イージーカット",
-    "alternateName": "EasyCut",
-    "description": "AI技術で背景を自動除去する無料オンラインツール。複数画像の一括処理、HEIC変換、高精度背景透過が可能。",
-    "url": "https://bg.quicktools.jp",
-    "applicationCategory": "MultimediaApplication",
-    "operatingSystem": "Web Browser",
-    "browserRequirements": "Chrome, Firefox, Safari, Edge対応",
-    "softwareVersion": "1.0",
-    "dateCreated": "2025-01-01",
-    "dateModified": "2025-01-27",
-    "inLanguage": "ja",
-    "offers": {
-      "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "JPY",
-      "availability": "https://schema.org/InStock",
-      "description": "完全無料でご利用いただけます",
-      "validFrom": "2025-01-01"
+    '@context': 'https://schema.org',
+    '@type': 'WebApplication',
+    name: siteName,
+    alternateName: 'EasyCut',
+    description: '無料で背景透過・背景削除ができるブラウザ完結のオンラインツール。画像透過、一括処理、HEIC対応、ZIPダウンロードまで登録不要で使えます。',
+    url: 'https://bg.quicktools.jp',
+    applicationCategory: 'MultimediaApplication',
+    operatingSystem: 'Web Browser',
+    browserRequirements: 'Chrome, Firefox, Safari, Edge対応',
+    softwareVersion: '1.0',
+    dateCreated: '2025-01-01',
+    dateModified: '2026-03-25',
+    inLanguage: 'ja',
+    offers: {
+      '@type': 'Offer',
+      price: '0',
+      priceCurrency: 'JPY',
+      availability: 'https://schema.org/InStock',
+      description: '登録不要で無料利用を開始できます',
+      validFrom: '2025-01-01',
     },
-    "featureList": [
-      "AI背景除去・背景透過",
-      "複数画像一括処理・バッチ処理",
-      "HEIC/HEIF形式自動変換",
-      "高精度AI画像処理",
-      "商用利用可能",
-      "登録不要・即座に利用可能",
-      "ZIPファイル一括ダウンロード",
-      "カスタム背景・色変更"
+    featureList: [
+      '背景透過・背景削除',
+      '複数画像の一括処理',
+      'HEIC/HEIF形式の自動変換',
+      'ZIPファイル一括ダウンロード',
+      'ブラウザ完結・登録不要',
+      '背景色変更とテンプレート背景',
+      '商用利用対応',
+      '高画質なProオプション',
     ],
-    "screenshot": "https://bg.quicktools.jp/ogp.png",
-    "creator": {
-      "@type": "Organization",
-      "name": "QuickTools",
-      "url": "https://bg.quicktools.jp"
+    screenshot: 'https://bg.quicktools.jp/ogp.png',
+    creator: {
+      '@type': 'Organization',
+      name: 'QuickTools',
+      url: 'https://bg.quicktools.jp',
     },
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": "4.8",
-      "bestRating": "5",
-      "worstRating": "1",
-      "reviewCount": "1250",
-      "ratingCount": "1250"
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: '4.8',
+      bestRating: '5',
+      worstRating: '1',
+      reviewCount: '1250',
+      ratingCount: '1250',
     },
-    "sameAs": [
-      "https://bg.quicktools.jp"
-    ]
+    sameAs: ['https://bg.quicktools.jp'],
   };
 
   const faqStructuredData = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": [
-      {
-        "@type": "Question",
-        "name": "イージーカットは無料で背景透過できますか？",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "はい、完全無料でご利用いただけます。登録不要で、複数画像の一括背景透過も無料です。"
-        }
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqItems.map(({ question, answer }) => ({
+      '@type': 'Question',
+      name: question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: answer,
       },
-      {
-        "@type": "Question",
-        "name": "HEIC形式にも対応していますか？",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "はい、iPhoneのHEIC/HEIF画像を自動でJPEG形式に変換して処理します。"
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "処理した画像の商用利用は可能ですか？",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "はい、処理した画像は商用利用可能です。ECサイト、プレゼン資料、広告素材など自由にお使いいただけます。"
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "どのような画像形式に対応していますか？",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "JPG、PNG、HEIC、HEIF形式に対応しています。処理後はPNG形式（透明背景）でダウンロードできます。"
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "一度に何枚まで処理できますか？",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "複数枚の一括処理に対応しており、ドラッグ&ドロップで簡単にアップロードできます。"
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "大きな写真でも処理できますか？",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "はい。無料プランでも、大きな写真は自動で軽くしてから処理するので、そのまま使えます。ただし仕上がりの画質が少し下がることがあります。Proプランなら、大きな写真でもそのままキレイに処理できます。"
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "仕上がりの画像サイズが大きくなりすぎることはありますか？",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "いいえ。仕上がりの画像は、大きすぎる場合に自動で見た目の比率を保ったまま縮小されます。無料プランとProプランで上限が異なり、Proの方がより大きなサイズで出力できます。"
-        }
-      }
-    ]
+    })),
   };
 
   return (
@@ -200,104 +229,117 @@ export default async function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqStructuredData) }}
       />
 
-      {/* ヒーローセクション */}
       <section className="bg-white py-10 sm:py-14 md:py-16 px-4">
-        <div className="container mx-auto max-w-4xl text-center">
-          {/* メインタイトル */}
+        <div className="container mx-auto max-w-5xl text-center">
           <div className="animate-fade-in-up mb-8 sm:mb-10 md:mb-12">
-            <h1 className="text-3xl sm:text-4xl md:text-6xl font-black tracking-tight text-slate-900 mb-4 sm:mb-5 md:mb-6">
-              {siteName}
-            </h1>
-            <p className="text-base sm:text-lg md:text-xl text-slate-600 leading-relaxed max-w-2xl mx-auto">
-              AIで背景を自動削除・置換。アスペクト比選択や一括ZIPダウンロードにも対応した、クリエイティブを加速させるプロ仕様の切り抜きツール。
+            <p className="text-xs sm:text-sm font-semibold tracking-[0.24em] text-blue-700 uppercase mb-4">
+              背景透過サイト / 背景削除 / 画像透過
             </p>
+            <h1 className="text-3xl sm:text-4xl md:text-6xl font-black tracking-tight text-slate-900 mb-3 sm:mb-4">
+              背景透過を素早く簡単に
+            </h1>
+            <p className="text-lg sm:text-xl md:text-2xl font-bold text-blue-600 mb-4 sm:mb-5">
+              {siteName}
+            </p>
+            <p className="text-base sm:text-lg md:text-xl text-slate-600 leading-relaxed max-w-3xl mx-auto">
+              写真や画像の背景透過・背景削除をブラウザだけで手早く完結。無料で使えて、JPG・PNG・HEIC対応、
+              複数画像の一括処理、背景合成、ZIPダウンロードにも対応しています。
+            </p>
+            <div className="mt-6 flex flex-wrap justify-center gap-2">
+              {heroTrustPoints.map((point) => (
+                <span
+                  key={point}
+                  className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs sm:text-sm font-semibold text-slate-700"
+                >
+                  {point}
+                </span>
+              ))}
+            </div>
           </div>
 
-          {/* アップロードエリア - メイン */}
-          <div className="animate-fade-in-up mb-8 sm:mb-10 md:mb-12" style={{ animationDelay: '0.1s' }}>
+          <div id="upload-tool" className="animate-fade-in-up mb-8 sm:mb-10 md:mb-12 scroll-mt-28" style={{ animationDelay: '0.1s' }}>
             <div className="bg-white border-2 border-blue-200 rounded-xl sm:rounded-2xl py-2 sm:py-3 shadow-lg">
               <BgRemoverMulti isPro={isPro} adUserPlan={adUserPlan} />
             </div>
           </div>
 
-          {/* CTAセクション（比較表・料金表示・購入導線） */}
           <ProCtaSection isLoggedIn={isLoggedIn} isPro={isPro} />
         </div>
       </section>
 
-
-
-      {/* メインコンテンツ */}
       <main className="bg-white">
-        {/* 使い方ガイド */}
         <section className="bg-white py-14 sm:py-16 md:py-20 px-4">
           <div className="container mx-auto max-w-6xl">
             <div className="text-center mb-10 sm:mb-12 md:mb-16">
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">AI背景透過の使い方ガイド</h2>
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">背景透過サイトを探している人へ</h2>
               <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
-                イージーカットを使って画像の背景を無料で透過する基本的な手順を分かりやすく説明します。
+                無料、ブラウザ完結、一括処理対応の3点で探している方に向けて、イージーカットの強みをまとめています。
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 md:gap-8">
-              <div className="animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+              <div className="animate-fade-in-up h-full" style={{ animationDelay: '0.1s' }}>
                 <GuideCard
-                  title="1. 画像をアップロード"
+                  title="無料で背景透過したい"
                   icon={
                     <div className="bg-blue-600 p-3 rounded-xl">
-                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="画像アップロードアイコン">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="無料利用アイコン">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                       </svg>
                     </div>
                   }
                   className="hover-lift"
-                  footer={<span className="text-blue-600 font-medium">対応形式: JPG, PNG, HEIC/HEIF など</span>}
+                  footer={<span className="text-blue-600 font-medium">登録不要で今すぐ開始</span>}
                 >
-                  背景透過したい画像をアップロードエリアにドラッグ＆ドロップするか、クリックしてファイルを選択します。複数画像も同時に選択可能です。
+                  背景透過や背景削除を試したい画像をアップロードするだけで始められます。ログイン前でもすぐに使える無料ツールです。
                 </GuideCard>
               </div>
 
-              <div className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+              <div className="animate-fade-in-up h-full" style={{ animationDelay: '0.2s' }}>
                 <GuideCard
-                  title="2. 背景をカスタマイズ"
+                  title="ブラウザだけで背景削除したい"
                   icon={
                     <div className="bg-green-600 p-3 rounded-xl">
-                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="カスタマイズアイコン">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536L16.732 3.732z"></path>
+                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="ブラウザ完結アイコン">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 8h10M5 4h14a2 2 0 012 2v3H3V6a2 2 0 012-2zm-2 7h18v7a2 2 0 01-2 2H5a2 2 0 01-2-2v-7z"></path>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 15l2 2 4-4"></path>
                       </svg>
                     </div>
                   }
                   className="hover-lift"
-                  footer={<span className="text-green-600 font-medium">サイズと背景を自由に設定</span>}
+                  footer={<span className="text-green-600 font-medium">PCでもスマホでも利用可能</span>}
                 >
-                  出力サイズを「16:9」や「被写体にフィット」などから選択。次に「背景なし」、多彩なテンプレート、またはカラーピッカーでお好みの背景に仕上げます。
+                  専用ソフトを入れなくても、ブラウザから背景透過できます。JPG、PNG、HEICをまとめて扱えるのでスマホ写真にも向いています。
                 </GuideCard>
               </div>
 
-              <div className="animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+              <div className="animate-fade-in-up h-full" style={{ animationDelay: '0.3s' }}>
                 <GuideCard
-                  title="3. 加工画像をダウンロード"
+                  title="複数画像をまとめて透過したい"
                   icon={
                     <div className="bg-purple-600 p-3 rounded-xl">
-                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="ダウンロードアイコン">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="一括処理アイコン">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 7h16M4 12h10M4 17h16"></path>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 10l3 3-3 3"></path>
                       </svg>
                     </div>
                   }
                   className="hover-lift"
-                  footer={<span className="text-purple-600 font-medium">個別・一括ダウンロードに対応</span>}
+                  footer={<span className="text-purple-600 font-medium">ZIPで一括ダウンロード可能</span>}
                 >
-                  プレビューで仕上がりを確認し、個別またはZIPで一括ダウンロード。複数枚の処理もスムーズです。
+                  一度に複数の画像をアップロードし、背景削除後は個別保存またはZIPでまとめてダウンロードできます。
                 </GuideCard>
               </div>
             </div>
           </div>
         </section>
 
-        {/* 機能紹介セクション */}
         <section className="py-12 sm:py-14 md:py-16 px-4 bg-gray-50">
           <div className="container mx-auto max-w-5xl">
             <div className="text-center mb-8 sm:mb-10 md:mb-12">
-              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">AI背景透過に便利な追加機能</h3>
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">背景削除・画像透過でできること</h2>
+              <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
+                商品画像からSNS素材づくりまで、背景削除から背景合成まで1ページで進められます。
+              </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 md:gap-8">
@@ -309,9 +351,9 @@ export default async function Home() {
                     </svg>
                   </div>
                   <div>
-                    <h4 className="text-lg font-semibold text-gray-900 mb-2">iPhone HEIC画像自動変換</h4>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">iPhone HEIC画像自動変換</h3>
                     <p className="text-gray-600">
-                      iPhoneで撮影したHEIC/HEIF形式の画像も自動変換して背景透過処理します。
+                      iPhoneで撮影したHEIC/HEIF形式の画像も自動変換して背景透過処理できます。
                     </p>
                   </div>
                 </div>
@@ -325,9 +367,9 @@ export default async function Home() {
                     </svg>
                   </div>
                   <div>
-                    <h4 className="text-lg font-semibold text-gray-900 mb-2">複数画像を効率的に処理</h4>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">複数画像を効率的に処理</h3>
                     <p className="text-gray-600">
-                      一度に複数の画像をアップロードして背景をまとめて除去。完了後はZIPファイルで一括ダウンロードでき、作業時間を大幅に節約できます。
+                      一度に複数の画像をアップロードして背景をまとめて除去し、ZIPファイルで一括ダウンロードできます。
                     </p>
                   </div>
                 </div>
@@ -341,9 +383,9 @@ export default async function Home() {
                     </svg>
                   </div>
                   <div>
-                    <h4 className="text-lg font-semibold text-gray-900 mb-2">多彩な背景カスタマイズ</h4>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">多彩な背景カスタマイズ</h3>
                     <p className="text-gray-600">
-                      白や木目に加え、グラデーションやレンガ壁、ボケなどの新しい背景を追加。カラーピッカーと合わせて、より表現豊かな画像を作成できます。
+                      白や木目に加え、グラデーションやレンガ壁、ボケなどの背景を選び、透過後の画像を自然に背景合成できます。
                     </p>
                   </div>
                 </div>
@@ -358,9 +400,9 @@ export default async function Home() {
                     </svg>
                   </div>
                   <div>
-                    <h4 className="text-lg font-semibold text-gray-900 mb-2">豊富な出力サイズ設定</h4>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">豊富な出力サイズ設定</h3>
                     <p className="text-gray-600">
-                      「16:9」や「4:3」などの定番比率に加え、元画像の比率を保つ「元画像に合わせる」、被写体の形にぴったり合わせる「被写体にフィット」が選択可能です。
+                      「16:9」や「4:3」などの定番比率に加え、元画像に合わせる設定や被写体にフィットする設定も選べます。
                     </p>
                   </div>
                 </div>
@@ -375,12 +417,12 @@ export default async function Home() {
                     </svg>
                   </div>
                   <div>
-                    <h4 className="text-lg font-semibold text-gray-900 mb-2 flex items-center">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2 flex items-center">
                       AIで背景を生成・合成
                       <span className="ml-2 text-[10px] font-bold bg-gradient-to-r from-amber-500 to-orange-400 text-white px-2 py-0.5 rounded-full shadow-sm">PRO</span>
-                    </h4>
+                    </h3>
                     <p className="text-gray-600">
-                      「大理石のテーブルの上に置く」「南国のビーチ」など、テキストで指示するだけで、被写体の影や照明に合わせた自然でリアルな背景をAIが自動生成します。
+                      テキストで指示するだけで、被写体の影や照明に合わせた自然な背景をAIが自動生成します。
                     </p>
                   </div>
                 </div>
@@ -395,12 +437,12 @@ export default async function Home() {
                     </svg>
                   </div>
                   <div>
-                    <h4 className="text-lg font-semibold text-gray-900 mb-2 flex items-center">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2 flex items-center">
                       高画質出力・利用制限なし
                       <span className="ml-2 text-[10px] font-bold bg-gradient-to-r from-amber-500 to-orange-400 text-white px-2 py-0.5 rounded-full shadow-sm">PRO</span>
-                    </h4>
+                    </h3>
                     <p className="text-gray-600">
-                      大きなサイズの画像も画質を落とさずに高精細なまま処理可能。一日の変換枚数制限もなくなり、広告なしで快適に作業できます。
+                      大きなサイズの画像も画質を落とさずに処理でき、広告なしで快適に作業できます。
                     </p>
                   </div>
                 </div>
@@ -409,110 +451,96 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* トリミング機能への誘導セクション */}
         <section className="py-12 sm:py-14 md:py-16 px-4">
-          <div className="container mx-auto max-w-3xl text-center">
-            <div className="bg-blue-50 border border-blue-100 p-5 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl">
-              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">背景透過＋画像トリミングで完璧な仕上がり</h3>
-              <p className="text-sm sm:text-base text-gray-700 mb-5 sm:mb-6">
-                背景透過だけでなく、画像のトリミングも簡単に行えます。<br />
-                SNSやECサイトに最適なサイズに調整しましょう。
-              </p>
-              <Link href="/trim">
-                <button className="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors duration-200">
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"></path>
-                  </svg>
-                  イージートリミングを使ってみる
-                </button>
-              </Link>
-            </div>
-          </div>
-        </section>
-
-        {/* SEO強化：FAQ・よくある質問セクション */}
-        <section className="py-16 px-4 bg-gray-50">
-          <div className="container mx-auto max-w-4xl">
-            <div className="text-center mb-12">
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">よくある質問（FAQ）</h3>
-            </div>
-            <div className="space-y-6">
-              <div className="bg-white p-6 rounded-xl shadow-soft">
-                <h4 className="text-lg font-semibold text-gray-900 mb-2">無料で背景透過できますか？</h4>
-                <p className="text-gray-600">はい、イージーカットは完全無料で背景透過・背景除去処理ができます。登録も不要で、すぐにご利用いただけます。</p>
-              </div>
-              <div className="bg-white p-6 rounded-xl shadow-soft">
-                <h4 className="text-lg font-semibold text-gray-900 mb-2">iPhone（HEIC形式）の画像も処理できますか？</h4>
-                <p className="text-gray-600">はい、iPhoneで撮影したHEIC/HEIF形式の画像も自動的にJPEG/PNG形式に変換して処理します。事前変換は不要です。</p>
-              </div>
-              <div className="bg-white p-6 rounded-xl shadow-soft">
-                <h4 className="text-lg font-semibold text-gray-900 mb-2">複数の画像を一度に処理できますか？</h4>
-                <p className="text-gray-600">はい、複数の画像を一括でアップロードして同時に背景透過処理ができます。完了した画像が2枚以上ある場合は「すべてダウンロード」ボタンからZIP形式で一括保存が可能です。</p>
-              </div>
-              <div className="bg-white p-6 rounded-xl shadow-soft">
-                <h4 className="text-lg font-semibold text-gray-900 mb-2">大きな写真でも処理できますか？</h4>
-                <p className="text-gray-600">はい。無料プランでも、大きな写真は自動で軽くしてから処理するので、そのまま使えます。ただし仕上がりの画質が少し下がることがあります。Proプランなら、大きな写真でもそのままキレイに処理できます。</p>
-              </div>
-              <div className="bg-white p-6 rounded-xl shadow-soft">
-                <h4 className="text-lg font-semibold text-gray-900 mb-2">仕上がりの画像サイズが大きくなりすぎることはありますか？</h4>
-                <p className="text-gray-600">いいえ。仕上がりの画像は、大きすぎる場合に自動で見た目の比率を保ったまま縮小されます。無料プランとProプランで上限が異なり、Proの方がより大きなサイズで出力できます。</p>
-              </div>
-              <div className="bg-white p-6 rounded-xl shadow-soft">
-                <h4 className="text-lg font-semibold text-gray-900 mb-2">どのような出力サイズが選べますか？</h4>
-                <p className="text-gray-600">「1:1」「16:9」「4:3」といった定番の比率のほか、元画像の比率を保つ「元画像に合わせる」、被写体の形にぴったり合わせる「被写体にフィット」が選択可能です。</p>
-              </div>
-              <div className="bg-white p-6 rounded-xl shadow-soft">
-                <h4 className="text-lg font-semibold text-gray-900 mb-2">処理した画像のセキュリティは大丈夫ですか？</h4>
-                <p className="text-gray-600">処理済み画像は60分以内に自動削除され、第三者がアクセスすることはありません。安全にご利用いただけます。</p>
-              </div>
-              <div className="bg-white p-6 rounded-xl shadow-soft">
-                <h4 className="text-lg font-semibold text-gray-900 mb-2">背景を自由な色に変更できますか？</h4>
-                <p className="text-gray-600">はい、背景透過後に表示される「背景をカスタマイズ」セクションで、カラーピッカーを使ってお好きな色を自由に設定できます。白や木目といった定番の背景テンプレートもご用意しています。</p>
-              </div>
-              <div className="bg-white p-6 rounded-xl shadow-soft">
-                <h4 className="text-lg font-semibold text-gray-900 mb-2">商用利用は可能ですか？</h4>
-                <p className="text-gray-600">はい、商用利用も可能です。ECサイトの商品画像、SNS投稿、デザイン制作など、幅広い用途でご活用ください。</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-
-
-        {/* SEO強化：活用事例セクション */}
-        <section className="py-16 px-4">
           <div className="container mx-auto max-w-5xl">
             <div className="text-center mb-12">
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">イージーカットの活用事例</h3>
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">ブラウザで使える無料ツールとしての強み</h2>
+              <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
+                インストール不要で、個人利用から業務の下準備まで対応できる使い勝手を重視しています。
+              </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white p-6 rounded-xl shadow-soft text-center">
-                <div className="text-3xl mb-3">💼</div>
-                <h4 className="text-lg font-semibold text-gray-900 mb-2">ビジネス・ECサイト</h4>
-                <p className="text-gray-600 text-sm">商品画像の背景除去、カタログ制作、プレゼン資料作成</p>
-              </div>
-              <div className="bg-white p-6 rounded-xl shadow-soft text-center">
-                <div className="text-3xl mb-3">📱</div>
-                <h4 className="text-lg font-semibold text-gray-900 mb-2">SNS・個人利用</h4>
-                <p className="text-gray-600 text-sm">Instagram投稿、LINE着せ替え、プロフィール画像作成</p>
-              </div>
-              <div className="bg-white p-6 rounded-xl shadow-soft text-center">
-                <div className="text-3xl mb-3">🎨</div>
-                <h4 className="text-lg font-semibold text-gray-900 mb-2">デザイン・クリエイティブ</h4>
-                <p className="text-gray-600 text-sm">グラフィックデザイン、ポスター制作、Webデザイン</p>
-              </div>
+              {browserStrengths.map((item) => (
+                <div key={item.title} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
+                  <h3 className="text-lg font-semibold text-slate-900 mb-3">{item.title}</h3>
+                  <p className="text-sm sm:text-base text-slate-600 leading-relaxed">{item.description}</p>
+                </div>
+              ))}
             </div>
           </div>
         </section>
 
-        {/* キーワード密度向上のための関連ツール紹介 */}
         <section className="py-16 px-4 bg-gray-50">
-          <div className="container mx-auto max-w-4xl text-center">
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">その他の画像編集ツール</h3>
-            <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
-              背景透過以外にも、画像トリミング、HEIC変換、画像リサイズなど、様々な画像編集・画像加工機能をご提供しています。
-              すべて無料でご利用いただけるオンライン画像処理ツールです。
-            </p>
+          <div className="container mx-auto max-w-5xl">
+            <div className="text-center mb-12">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">一括背景透過が向いているケース</h2>
+              <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
+                複数枚の写真や素材をまとめて背景削除したい場面で、作業時間を大きく短縮できます。
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {batchUseCases.map((item) => (
+                <div key={item.title} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
+                  <p className="text-xs font-semibold tracking-[0.18em] text-blue-600 uppercase mb-3">利用シーン</p>
+                  <h3 className="text-lg font-semibold text-slate-900 mb-3">{item.title}</h3>
+                  <p className="text-sm sm:text-base text-slate-600 leading-relaxed">{item.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="py-16 px-4">
+          <div className="container mx-auto max-w-4xl">
+            <div className="text-center mb-12">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">よくある質問</h2>
+              <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
+                検索されやすい疑問を中心に、背景透過サイトとしての使い方をまとめています。
+              </p>
+            </div>
+            <div className="space-y-6">
+              {faqItems.map(({ question, answer }) => (
+                <div key={question} className="bg-white p-6 rounded-xl shadow-soft">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">{question}</h3>
+                  <p className="text-gray-600">{answer}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="py-16 px-4 bg-gray-50">
+          <div className="container mx-auto max-w-5xl">
+            <div className="text-center mb-10">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">背景透過の次に使える画像編集ツール</h2>
+              <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
+                サイズ調整や色味補正も、同じサイト内で続けて使えます。背景透過後の仕上げまで一気に進められます。
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {relatedTools.map((tool) => (
+                <TrackedLink
+                  key={tool.href}
+                  href={tool.href}
+                  eventName="related_tool_click"
+                  source={tool.source}
+                  className="group rounded-2xl border border-slate-200 bg-white p-6 shadow-soft transition-all duration-200 hover:-translate-y-1 hover:border-blue-200 hover:shadow-lg"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-xs font-semibold tracking-[0.18em] text-blue-600 uppercase mb-3">関連ツール</p>
+                      <h3 className="text-xl font-semibold text-slate-900 mb-3 group-hover:text-blue-700">{tool.title}</h3>
+                      <p className="text-sm sm:text-base text-slate-600 leading-relaxed">{tool.description}</p>
+                    </div>
+                    <div className="mt-1 rounded-full bg-blue-50 p-3 text-blue-600">
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                      </svg>
+                    </div>
+                  </div>
+                </TrackedLink>
+              ))}
+            </div>
           </div>
         </section>
 
