@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import type { Prisma } from '@prisma/client';
+import type Stripe from 'stripe';
 import { prisma } from '@/lib/db';
 import { normalizeEmail } from '@/lib/auth/email';
 import { getStripeClient } from '@/lib/billing/stripe';
@@ -35,24 +36,106 @@ function getString(rec: Record<string, unknown>, key: string): string | null {
   return asStringId(rec[key]);
 }
 
-function getNumber(rec: Record<string, unknown>, key: string): number | null {
-  const v = rec[key];
-  return typeof v === 'number' && Number.isFinite(v) ? v : null;
-}
-
-function getBoolean(rec: Record<string, unknown>, key: string): boolean | null {
-  const v = rec[key];
-  return typeof v === 'boolean' ? v : null;
-}
-
-function dateFromStripeTs(ts: unknown): Date | null {
-  return typeof ts === 'number' && Number.isFinite(ts) ? new Date(ts * 1000) : null;
-}
-
 function getPrismaErrorCode(e: unknown): string | null {
   if (!e || typeof e !== 'object') return null;
   const rec = e as Record<string, unknown>;
   return typeof rec.code === 'string' ? rec.code : null;
+}
+
+function dateFromUnixTs(ts: number | null | undefined): Date | null {
+  return typeof ts === 'number' && Number.isFinite(ts) ? new Date(ts * 1000) : null;
+}
+
+function getFiniteNumber(rec: Record<string, unknown>, ...keys: string[]): number | null {
+  for (const key of keys) {
+    const value = rec[key];
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      return value;
+    }
+  }
+  return null;
+}
+
+function getBooleanValue(rec: Record<string, unknown>, ...keys: string[]): boolean | null {
+  for (const key of keys) {
+    const value = rec[key];
+    if (typeof value === 'boolean') {
+      return value;
+    }
+  }
+  return null;
+}
+
+async function upsertSubscriptionFromStripe(args: {
+  tx: Prisma.TransactionClient;
+  userId: string;
+  stripeMode: 'test' | 'live';
+  stripeCustomerId: string;
+  subscription: Stripe.Subscription;
+}) {
+  const subscriptionRec = args.subscription as unknown as Record<string, unknown>;
+  const firstItem = args.subscription.items.data[0];
+  const price = firstItem?.price ?? null;
+  const latestInvoice =
+    typeof args.subscription.latest_invoice === 'string'
+      ? { id: args.subscription.latest_invoice, status: null }
+      : args.subscription.latest_invoice;
+
+  const saved = await args.tx.stripeSubscription.upsert({
+    where: { userId: args.userId },
+    create: {
+      userId: args.userId,
+      stripeSubscriptionId: args.subscription.id,
+      stripeCustomerId: args.stripeCustomerId,
+      stripeProductId: price?.product ? asStripeId(price.product) : null,
+      stripePriceId: price?.id ?? null,
+      status: args.subscription.status,
+      currentPeriodStart:
+        dateFromUnixTs(getFiniteNumber(subscriptionRec, 'current_period_start', 'currentPeriodStart')) ?? undefined,
+      currentPeriodEnd:
+        dateFromUnixTs(getFiniteNumber(subscriptionRec, 'current_period_end', 'currentPeriodEnd')) ?? undefined,
+      cancelAtPeriodEnd:
+        getBooleanValue(subscriptionRec, 'cancel_at_period_end', 'cancelAtPeriodEnd') ?? false,
+      canceledAt: dateFromUnixTs(getFiniteNumber(subscriptionRec, 'canceled_at', 'canceledAt')) ?? undefined,
+      endedAt: dateFromUnixTs(getFiniteNumber(subscriptionRec, 'ended_at', 'endedAt')) ?? undefined,
+      trialEnd: dateFromUnixTs(getFiniteNumber(subscriptionRec, 'trial_end', 'trialEnd')) ?? undefined,
+      latestInvoiceId: latestInvoice?.id ?? null,
+      latestInvoiceStatus: latestInvoice?.status ?? null,
+      stripeMode: args.stripeMode,
+    },
+    update: {
+      stripeSubscriptionId: args.subscription.id,
+      stripeCustomerId: args.stripeCustomerId,
+      stripeProductId: price?.product ? asStripeId(price.product) : null,
+      stripePriceId: price?.id ?? null,
+      status: args.subscription.status,
+      currentPeriodStart:
+        dateFromUnixTs(getFiniteNumber(subscriptionRec, 'current_period_start', 'currentPeriodStart')) ?? undefined,
+      currentPeriodEnd:
+        dateFromUnixTs(getFiniteNumber(subscriptionRec, 'current_period_end', 'currentPeriodEnd')) ?? undefined,
+      cancelAtPeriodEnd:
+        getBooleanValue(subscriptionRec, 'cancel_at_period_end', 'cancelAtPeriodEnd') ?? false,
+      canceledAt: dateFromUnixTs(getFiniteNumber(subscriptionRec, 'canceled_at', 'canceledAt')) ?? undefined,
+      endedAt: dateFromUnixTs(getFiniteNumber(subscriptionRec, 'ended_at', 'endedAt')) ?? undefined,
+      trialEnd: dateFromUnixTs(getFiniteNumber(subscriptionRec, 'trial_end', 'trialEnd')) ?? undefined,
+      latestInvoiceId: latestInvoice?.id ?? null,
+      latestInvoiceStatus: latestInvoice?.status ?? null,
+      stripeMode: args.stripeMode,
+    },
+  });
+
+  const entitlement = computeEntitlementFromSubscription({
+    subscription: saved,
+    stripeMode: args.stripeMode,
+  });
+  await args.tx.user.update({
+    where: { id: args.userId },
+    data: {
+      plan: entitlement.plan,
+      isPro: entitlement.isPro,
+      proValidUntil: entitlement.proValidUntil,
+    },
+  });
 }
 
 export async function POST(req: Request) {
@@ -188,6 +271,20 @@ export async function POST(req: Request) {
           data: { plan: 'pro', isPro: true, proValidUntil: null },
         });
 
+        const subscriptionId = asStripeId(session.subscription);
+        if (subscriptionId) {
+          const stripeSubscription = await stripe.subscriptions.retrieve(subscriptionId, {
+            expand: ['latest_invoice'],
+          });
+          await upsertSubscriptionFromStripe({
+            tx,
+            userId,
+            stripeMode,
+            stripeCustomerId: customerId,
+            subscription: stripeSubscription,
+          });
+        }
+
         // Link/activate PendingCheckout (best-effort).
         if (pendingCheckoutId) {
           await itx.pendingCheckout.updateMany({
@@ -239,72 +336,15 @@ export async function POST(req: Request) {
         if (!stripeCustomer) return;
         if (stripeCustomer.stripeMode !== stripeMode) return;
 
-        // Extract price/product IDs (best-effort, supports both snake and camel).
-        const items = asRecord(subscription.items);
-        const dataArr = items && Array.isArray(items.data) ? items.data : [];
-        const firstItem = dataArr.length > 0 ? asRecord(dataArr[0]) : null;
-        const price = firstItem ? asRecord(firstItem.price) : null;
-        const stripePriceId = price ? getString(price, 'id') : null;
-        const stripeProductId = price ? asStripeId(price.product) : null;
-
-        const cancelAtPeriodEnd =
-          getBoolean(subscription, 'cancel_at_period_end') ??
-          getBoolean(subscription, 'cancelAtPeriodEnd') ??
-          false;
-        const currentPeriodStart =
-          dateFromStripeTs(getNumber(subscription, 'current_period_start')) ??
-          dateFromStripeTs(getNumber(subscription, 'currentPeriodStart'));
-        const currentPeriodEnd =
-          dateFromStripeTs(getNumber(subscription, 'current_period_end')) ??
-          dateFromStripeTs(getNumber(subscription, 'currentPeriodEnd'));
-        const canceledAt =
-          dateFromStripeTs(getNumber(subscription, 'canceled_at')) ??
-          dateFromStripeTs(getNumber(subscription, 'canceledAt'));
-        const endedAt =
-          dateFromStripeTs(getNumber(subscription, 'ended_at')) ??
-          dateFromStripeTs(getNumber(subscription, 'endedAt'));
-        const trialEnd =
-          dateFromStripeTs(getNumber(subscription, 'trial_end')) ??
-          dateFromStripeTs(getNumber(subscription, 'trialEnd'));
-
-        // Upsert subscription.
-        const saved = await tx.stripeSubscription.upsert({
-          where: { userId: stripeCustomer.userId },
-          create: {
-            userId: stripeCustomer.userId,
-            stripeSubscriptionId: subscriptionId,
-            stripeCustomerId: customerId,
-            stripeProductId,
-            stripePriceId,
-            status,
-            currentPeriodStart: currentPeriodStart ?? undefined,
-            currentPeriodEnd: currentPeriodEnd ?? undefined,
-            cancelAtPeriodEnd,
-            canceledAt: canceledAt ?? undefined,
-            endedAt: endedAt ?? undefined,
-            trialEnd: trialEnd ?? undefined,
-            stripeMode,
-          },
-          update: {
-            stripeSubscriptionId: subscriptionId,
-            stripeCustomerId: customerId,
-            stripeProductId,
-            stripePriceId,
-            status,
-            currentPeriodStart: currentPeriodStart ?? undefined,
-            currentPeriodEnd: currentPeriodEnd ?? undefined,
-            cancelAtPeriodEnd,
-            canceledAt: canceledAt ?? undefined,
-            endedAt: endedAt ?? undefined,
-            trialEnd: trialEnd ?? undefined,
-            stripeMode,
-          },
+        const stripeSubscription = await stripe.subscriptions.retrieve(subscriptionId, {
+          expand: ['latest_invoice'],
         });
-
-        const entitlement = computeEntitlementFromSubscription({ subscription: saved, stripeMode });
-        await tx.user.update({
-          where: { id: stripeCustomer.userId },
-          data: { plan: entitlement.plan, isPro: entitlement.isPro, proValidUntil: entitlement.proValidUntil },
+        await upsertSubscriptionFromStripe({
+          tx,
+          userId: stripeCustomer.userId,
+          stripeMode,
+          stripeCustomerId: customerId,
+          subscription: stripeSubscription,
         });
 
         return;
