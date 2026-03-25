@@ -9,6 +9,10 @@ import { getStripeMode } from '@/lib/billing/stripeMode';
 import { getProPriceId, isBillingEnabled } from '@/lib/billing/config';
 import { computeEntitlementFromSubscription } from '@/lib/billing/entitlement';
 import { encryptEmail } from '@/lib/billing/pendingCheckoutEmail';
+import {
+  hasBlockingStripeSubscription,
+  hasBlockingStripeSubscriptionByEmail,
+} from '@/lib/billing/subscriptionGuard';
 
 export const runtime = 'nodejs';
 
@@ -59,6 +63,8 @@ export async function POST(req: Request) {
       return res;
     }
 
+    const stripe = getStripeClient();
+
     // Additional guard: if a stale free user exists (e.g. created by older logic),
     // still prevent double charge if their subscription indicates Pro.
     if (existingUser?.id) {
@@ -72,9 +78,30 @@ export async function POST(req: Request) {
         res.headers.set('Cache-Control', 'no-store');
         return res;
       }
+
+      const stripeCustomer = await prisma.stripeCustomer.findUnique({
+        where: { userId: existingUser.id },
+        select: { stripeCustomerId: true, stripeMode: true },
+      });
+      if (stripeCustomer?.stripeMode === stripeMode) {
+        const hasManagedStripeSubscription = await hasBlockingStripeSubscription({
+          stripe,
+          customerId: stripeCustomer.stripeCustomerId,
+        });
+        if (hasManagedStripeSubscription) {
+          const res = NextResponse.json({ ok: true, kind: 'already_pro' }, { status: 200 });
+          res.headers.set('Cache-Control', 'no-store');
+          return res;
+        }
+      }
     }
 
-    const stripe = getStripeClient();
+    if (await hasBlockingStripeSubscriptionByEmail({ stripe, email })) {
+      const res = NextResponse.json({ ok: true, kind: 'already_pro' }, { status: 200 });
+      res.headers.set('Cache-Control', 'no-store');
+      return res;
+    }
+
     const siteUrl = getSiteUrl();
     const priceId = getProPriceId();
 

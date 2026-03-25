@@ -7,6 +7,7 @@ import { getStripeClient } from '@/lib/billing/stripe';
 import { getStripeMode } from '@/lib/billing/stripeMode';
 import { getProPriceId, isBillingEnabled } from '@/lib/billing/config';
 import { computeEntitlementFromSubscription } from '@/lib/billing/entitlement';
+import { hasBlockingStripeSubscription } from '@/lib/billing/subscriptionGuard';
 
 export const runtime = 'nodejs';
 
@@ -125,9 +126,21 @@ export async function POST() {
       return res;
     }
 
-    if (entitlement.isPro) {
+    const hasManagedStripeSubscription =
+      stripeCustomer
+        ? await hasBlockingStripeSubscription({
+            stripe,
+            customerId: stripeCustomer.stripeCustomerId,
+          })
+        : false;
+
+    if (entitlement.isPro || user.isPro || hasManagedStripeSubscription) {
       if (!stripeCustomer) {
-        console.info('[billing.checkout] already_pro_without_customer', { stripeMode });
+        console.info('[billing.checkout] already_pro_without_customer', {
+          stripeMode,
+          entitlementIsPro: entitlement.isPro,
+          userIsPro: user.isPro,
+        });
         const res = NextResponse.json({ ok: true, kind: 'already_pro' }, { status: 200 });
         res.headers.set('Cache-Control', 'no-store');
         return res;
@@ -189,6 +202,7 @@ export async function POST() {
 export async function GET(req: Request) {
   try {
     const stripeMode = getStripeMode();
+    const stripe = getStripeClient();
     if (!isBillingEnabled()) {
       return NextResponse.redirect(new URL('/?billing=disabled', req.url));
     }
@@ -204,18 +218,29 @@ export async function GET(req: Request) {
       orderBy: { updatedAt: 'desc' },
     });
     const entitlement = computeEntitlementFromSubscription({ subscription: existingSub, stripeMode });
-    if (entitlement.isPro) {
-      return NextResponse.redirect(new URL('/account?billing=already_pro', req.url));
-    }
-
-    const siteUrl = getSiteUrl();
-    const stripe = getStripeClient();
-    const priceId = getProPriceId();
-
     const stripeCustomer = await prisma.stripeCustomer.findUnique({
       where: { userId: session.id },
       select: { stripeCustomerId: true, stripeMode: true },
     });
+
+    if (stripeCustomer && stripeCustomer.stripeMode !== stripeMode) {
+      return NextResponse.redirect(new URL('/account?billing=mode_mismatch', req.url));
+    }
+
+    const hasManagedStripeSubscription =
+      stripeCustomer
+        ? await hasBlockingStripeSubscription({
+            stripe,
+            customerId: stripeCustomer.stripeCustomerId,
+          })
+        : false;
+
+    if (entitlement.isPro || session.isPro || hasManagedStripeSubscription) {
+      return NextResponse.redirect(new URL('/account?billing=already_pro', req.url));
+    }
+
+    const siteUrl = getSiteUrl();
+    const priceId = getProPriceId();
 
     const successUrl = `${siteUrl}/account?billing=success`;
     const cancelUrl = `${siteUrl}/?buyPro=1&billing=cancel`;

@@ -217,7 +217,11 @@ export async function POST(req: Request) {
         return;
       }
 
-      if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.deleted') {
+      if (
+        event.type === 'customer.subscription.created' ||
+        event.type === 'customer.subscription.updated' ||
+        event.type === 'customer.subscription.deleted'
+      ) {
         const subscription = asRecord(event.data.object);
         if (!subscription) return;
 
