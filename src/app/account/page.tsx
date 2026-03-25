@@ -8,7 +8,6 @@ import { isBillingEnabled } from '@/lib/billing/config';
 import LogoutButton from './ui/LogoutButton';
 import BillingButtons from './ui/BillingButtons';
 import BillingTracking from './ui/BillingTracking';
-import AccountPricingSection from './ui/AccountPricingSection';
 import AccountPremiumUsage from './ui/AccountPremiumUsage';
 
 export const metadata: Metadata = {
@@ -99,10 +98,6 @@ export default async function AccountPage() {
               <AccountPremiumUsage isPro={user.isPro} />
             </div>
           )}
-
-            <div className="mt-4">
-              <AccountPricingSection isPro={user.isPro} />
-            </div>
 
           {billingEnabled ? (
             <BillingButtons isPro={user.isPro} />
