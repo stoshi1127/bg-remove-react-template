@@ -124,7 +124,7 @@ export async function generateMetadata(): Promise<Metadata> {
       type: 'website',
       images: [
         {
-          url: '/opengraph-image',
+          url: '/ogp-main.jpg',
           width: 1200,
           height: 630,
           alt: '無料の背景透過サイト イージーカット',
@@ -137,7 +137,7 @@ export async function generateMetadata(): Promise<Metadata> {
       description: '無料の背景透過サイトとして、画像透過、背景削除、一括処理、HEIC対応をブラウザだけで利用できます。',
       images: [
         {
-          url: '/twitter-image',
+          url: '/ogp-main.jpg',
           alt: '無料の背景透過サイト イージーカット',
         },
       ],
@@ -188,7 +188,7 @@ export default async function Home() {
       '商用利用対応',
       '高画質なProオプション',
     ],
-    screenshot: 'https://bg.quicktools.jp/opengraph-image',
+    screenshot: 'https://bg.quicktools.jp/ogp-main.jpg',
     creator: {
       '@type': 'Organization',
       name: 'QuickTools',
