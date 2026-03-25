@@ -239,7 +239,7 @@ export default async function Home() {
               背景透過を素早く簡単に
             </h1>
             <div className="mb-4 sm:mb-5 flex items-center justify-center gap-3">
-              <BrandIcon size={38} className="shadow-[0_14px_36px_rgba(37,99,235,0.22)]" />
+              <BrandIcon size={38} className="" />
               <p className="text-lg sm:text-xl md:text-2xl font-bold text-blue-600">
                 {siteName}
               </p>

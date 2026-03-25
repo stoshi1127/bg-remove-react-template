@@ -90,7 +90,7 @@ export default function RootLayout({
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
               <div className="md:col-span-2">
                 <div className="flex items-center space-x-3 mb-4">
-                  <BrandIcon size={32} className="shadow-[0_10px_24px_rgba(14,165,233,0.3)]" roundedClassName="rounded-xl" />
+                  <BrandIcon size={32} className="" roundedClassName="rounded-xl" />
                   <span className="text-xl font-bold text-white">
                     QuickTools
                   </span>
