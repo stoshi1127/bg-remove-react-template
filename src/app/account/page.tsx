@@ -17,6 +17,15 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+function formatJstDate(date: Date): string {
+  return date.toLocaleDateString('ja-JP', {
+    timeZone: 'Asia/Tokyo',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+}
+
 export default async function AccountPage() {
   const user = await getCurrentUser();
   if (!user) {
@@ -60,7 +69,7 @@ export default async function AccountPage() {
               </div>
               {user.proValidUntil && (
                 <div className="text-xs text-gray-500 mt-1">
-                  Pro有効期限（暫定）: {user.proValidUntil.toLocaleString('ja-JP')}
+                  Pro有効期限（暫定）: {formatJstDate(user.proValidUntil)}
                 </div>
               )}
             </div>
@@ -80,7 +89,7 @@ export default async function AccountPage() {
             <div className="text-sm text-blue-800 bg-blue-50 border border-blue-200 rounded-xl p-4">
               Proは解約予約中です。
               {subscription?.currentPeriodEnd
-                ? ` 現在の利用期間終了までは引き続き利用でき、終了予定日は ${subscription.currentPeriodEnd.toLocaleString('ja-JP')} です。`
+                ? ` 現在の利用期間終了までは引き続き利用でき、終了予定日は ${formatJstDate(subscription.currentPeriodEnd)} です。`
                 : ' 現在の利用期間終了までは引き続き利用できます。終了予定日の反映に少し時間がかかる場合があります。'}
             </div>
           )}
