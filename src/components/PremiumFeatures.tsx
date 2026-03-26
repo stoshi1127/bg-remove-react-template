@@ -7,11 +7,6 @@ const FEATURES = [
         description: '被写体を認識し、シチュエーションに合わせた背景をAIが自動生成。違和感のない合成が可能です。',
     },
     {
-        icon: 'high_quality',
-        title: 'AI超解像度復元',
-        description: 'ぼやけた画像や低解像度の写真も、AIが細部を補完して最大25MBの超高解像度へ復元します。',
-    },
-    {
         icon: 'cleaning_services',
         title: 'AI消しゴム',
         description: '不要な映り込みをなぞるだけで、周りの風景に馴染ませながら魔法のように消去します。',
@@ -25,7 +20,7 @@ export default function PremiumFeatures() {
             <h3 className="text-xl md:text-2xl font-bold text-center mb-10 md:mb-12 text-slate-900">
                 Proプラン限定：プレミアムAI機能
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
                 {FEATURES.map((feature, index) => (
                     <div
                         key={index}

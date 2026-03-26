@@ -19,6 +19,7 @@ const FEATURES = [
   { label: '透過精度', free: '標準', pro: '高精度モデル使用可能' },
   { label: '写真の処理', free: '最大 4MB', pro: '最大 25MB (超高解像度)' },
   { label: '背景合成', free: 'テンプレート・単色', pro: 'AI生成・自然な合成' },
+  { label: '高解像度化', free: '利用不可', pro: '1K / 2K / 4K対応' },
   { label: 'プレミアムAI', free: '利用不可', pro: '月30回まで利用可能' },
 ];
 
