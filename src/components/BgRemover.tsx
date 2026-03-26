@@ -1409,15 +1409,50 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
               updateInputStatus(input.id, "processing", "背景を除去して比率を調整中...");
 
               // Phase 1: 背景除去 (透明PNG取得)
-              // 直接Blobを送信するFormData方式を使用
-              const phase1FormData = new FormData();
-              phase1FormData.append("file", blobForRequest, nameForRequest);
-              phase1FormData.append("processingMode", requestedProcessingMode);
-              const phase1Res = await fetch("/api/remove-bg", {
-                method: "POST",
-                body: phase1FormData,
-                signal: combinedSignal,
-              });
+              // Pro で 4MB超は Vercel のリクエストボディ上限を超えやすいため、Blob直アップロード→JSON（URL）で呼ぶ
+              const phase1UseBlobUrl =
+                isPro && USE_DIRECT_UPLOAD_FOR_PRO && blobForRequest.size > MAX_UPLOAD_BYTES;
+              // #region agent log
+              fetch('http://127.0.0.1:7243/ingest/d5b9b24e-cf56-4f8e-b90c-eeb7b2ed6fe0',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'aa86e7'},body:JSON.stringify({sessionId:'aa86e7',hypothesisId:'H1',location:'BgRemover.tsx:phase1-pre',message:'phase1 remove-bg before fetch',data:{phase1Path:phase1UseBlobUrl?'blob-json':'formdata',blobBytes:blobForRequest.size,blobType:blobForRequest.type,isPro,useAiApi,selectedRatio,requestedProcessingMode,nameLen:nameForRequest.length},timestamp:Date.now(),runId:'post-fix'})}).catch(()=>{});
+              // #endregion
+              let phase1Res: Response;
+              if (phase1UseBlobUrl) {
+                const uploadFile = blobForRequest instanceof File
+                  ? blobForRequest
+                  : new File([blobForRequest], nameForRequest, { type: blobForRequest.type || 'application/octet-stream' });
+                const phase1BlobResult = await uploadToBlob(uploadFile.name, uploadFile, {
+                  access: 'public',
+                  handleUploadUrl: '/api/upload/blob',
+                  clientPayload: JSON.stringify({
+                    sizeBytes: uploadFile.size,
+                    mimeType: uploadFile.type,
+                    width: imageMeta.width,
+                    height: imageMeta.height,
+                  }),
+                });
+                phase1Res = await fetch("/api/remove-bg", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    imageUrl: phase1BlobResult.url,
+                    sourceBlobUrl: phase1BlobResult.url,
+                    processingMode: requestedProcessingMode,
+                  }),
+                  signal: combinedSignal,
+                });
+              } else {
+                const phase1FormData = new FormData();
+                phase1FormData.append("file", blobForRequest, nameForRequest);
+                phase1FormData.append("processingMode", requestedProcessingMode);
+                phase1Res = await fetch("/api/remove-bg", {
+                  method: "POST",
+                  body: phase1FormData,
+                  signal: combinedSignal,
+                });
+              }
+              // #region agent log
+              fetch('http://127.0.0.1:7243/ingest/d5b9b24e-cf56-4f8e-b90c-eeb7b2ed6fe0',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'aa86e7'},body:JSON.stringify({sessionId:'aa86e7',hypothesisId:'H1',location:'BgRemover.tsx:phase1-post',message:'phase1 remove-bg after fetch',data:{status:phase1Res.status,ok:phase1Res.ok},timestamp:Date.now(),runId:'post-fix'})}).catch(()=>{});
+              // #endregion
 
               if (!phase1Res.ok) throw new Error('背景除去（フェーズ1）に失敗しました');
               const transparentBlob = await phase1Res.blob();

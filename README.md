@@ -144,7 +144,7 @@ pnpm start
   - 失敗時: `4xx/5xx` + JSON `{ error: string }`
 - **制限**:
   - Freeは4MB超を選択しても、クライアント側で自動圧縮して継続できます
-  - Proは直送アップロードにより、巨大ボディをFunctionへ送らない経路で処理します
+  - Proは直送アップロードにより、巨大ボディをFunctionへ送らない経路で処理します（プレミアムAIの「比率指定→2段階処理」のフェーズ1も、4MB超は同じくBlob URL経由で `/api/remove-bg` を呼びます。Vercel等のリクエストボディ上限による 413 を避けるため）
   - `processingMode=pro_high_precision` は **Pro会員のみ**（サーバー側で403ガード）
 
 ### `POST /api/enhance`
