@@ -58,8 +58,8 @@ const faqItems = [
     answer: 'はい。無料プランでも大きな画像は自動で軽くして処理できます。より高画質で出力したい場合や大きな画像をそのまま扱いたい場合は Pro が向いています。',
   },
   {
-    question: '背景透過したあとに色や背景を変えられますか？',
-    answer: 'はい。透過後に白背景やテンプレート背景を選んだり、カラーピッカーで背景色を変更したりできます。',
+    question: '背景透過だけでなく、色や背景を変えられますか？',
+    answer: 'はい。背景をテンプレートから選ぶか、カラーピッカーで背景色を変更したりできます。Proでは任意の画像やAIを使用した背景合成もできます。',
   },
   {
     question: '商用利用できる背景透過ツールですか？',
@@ -245,7 +245,7 @@ export default async function Home() {
               </p>
             </div>
             <p className="text-base sm:text-lg md:text-xl text-slate-600 leading-relaxed max-w-3xl mx-auto">
-              写真や画像の背景透過・背景削除をブラウザだけで手早く完結。無料で使えて、JPG・PNG・HEIC対応、
+              写真や画像の背景透過・背景削除をブラウザだけで手早く完結。<br/>無料で使えて、JPG・PNG・HEIC対応、<br/>
               複数画像の一括処理、背景合成、ZIPダウンロードにも対応しています。
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-2">
@@ -276,7 +276,7 @@ export default async function Home() {
             <div className="text-center mb-10 sm:mb-12 md:mb-16">
               <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">背景透過サイトを探している人へ</h2>
               <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
-                無料、ブラウザ完結、一括処理対応の3点で探している方に向けて、イージーカットの強みをまとめています。
+                無料、ブラウザ完結、一括処理対応の背景透過サイトを探している方に向けて、<br/>イージーカットの強みをまとめています。
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 md:gap-8">
@@ -341,7 +341,7 @@ export default async function Home() {
             <div className="text-center mb-8 sm:mb-10 md:mb-12">
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">背景削除・画像透過でできること</h2>
               <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
-                商品画像からSNS素材づくりまで、背景削除から背景合成まで1ページで進められます。
+                商品画像からSNSの素材づくりを<br/>1ページで進められます。
               </p>
             </div>
 
@@ -459,7 +459,7 @@ export default async function Home() {
             <div className="text-center mb-12">
               <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">ブラウザで使える無料ツールとしての強み</h2>
               <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
-                インストール不要で、個人利用から業務の下準備まで対応できる使い勝手を重視しています。
+                インストール不要で、個人利用から業務の下準備まで対応できる<br/>使い勝手を重視しています。
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -478,7 +478,7 @@ export default async function Home() {
             <div className="text-center mb-12">
               <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">一括背景透過が向いているケース</h2>
               <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
-                複数枚の写真や素材をまとめて背景削除したい場面で、作業時間を大きく短縮できます。
+                複数枚の写真や素材をまとめて背景削除したい場面で、<br/>作業時間を大きく短縮できます。
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -517,7 +517,7 @@ export default async function Home() {
             <div className="text-center mb-10">
               <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">背景透過の次に使える画像編集ツール</h2>
               <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
-                サイズ調整や色味補正も、同じサイト内で続けて使えます。背景透過後の仕上げまで一気に進められます。
+                サイズ調整や色味補正も、同じサイト内で続けて使えます。<br/>背景透過後の仕上げまで一気に進められます。
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
