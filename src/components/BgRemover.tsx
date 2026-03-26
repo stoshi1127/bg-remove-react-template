@@ -2950,7 +2950,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                             </div>
                           </div>
                           <div className="flex flex-col p-2 sm:p-3">
-                            <span className="text-xs font-semibold text-emerald-600 uppercase tracking-wider mb-2">処理ß後</span>
+                            <span className="text-xs font-semibold text-emerald-600 uppercase tracking-wider mb-2">処理後</span>
                             <div
                               className="aspect-square max-h-32 sm:max-h-40 rounded-lg overflow-hidden flex items-center justify-center flex-1 min-h-0"
                               style={{
