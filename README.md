@@ -230,11 +230,16 @@ Pro専用のAI背景生成・合成です。被写体を保ちながら、指定
 - **認証**: ログイン済みかつ `isPro=true` のみ許可。プレミアムAI残回数 > 0 が必要
 - **Request（application/json）**:
   - `imageUrl`: 元画像のURL（Blob等、推奨。Vercel 4.5MB制限回避のためフロントはBlobへ直接アップロード）
+  - `sourceBlobUrl`: 処理後に削除してよい元画像の一時Blob URL（任意）
   - `imageDataUrl`: 元画像（Data URL）。`imageUrl` がない場合のフォールバック
   - `mode`: `'generate'`（テキストから背景生成）または `'blend'`（参照画像になじませる）
   - `prompt`: 背景の説明テキスト（generate時に使用）
   - `refImageUrl`: 参照背景画像のURL（blend時、推奨）
+  - `sourceRefBlobUrl`: 処理後に削除してよい参照背景画像の一時Blob URL（任意）
   - `refImageDataUrl`: 参照背景画像（Data URL、blend時。小さい場合のみ。`refImageUrl` がない場合のフォールバック）
+- **一時Blobの削除**:
+  - `sourceBlobUrl` / `sourceRefBlobUrl` を渡した場合のみ、サーバーはレスポンス返却後に削除を試みます
+  - `imageUrl` / `refImageUrl` 自体は削除対象として扱わないため、外部URLや再利用用Blobを誤削除しません
 - **Response**:
   - 成功時: `200` + 画像バイナリ。ヘッダー `x-premium-remaining` で残回数を返却
   - 失敗時: `4xx/5xx` + JSON `{ error: string }`。失敗時は回数を消費しない

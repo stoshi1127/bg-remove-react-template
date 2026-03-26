@@ -1,3 +1,4 @@
+import { del } from '@vercel/blob';
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth/session';
 import { getPremiumUsage, consumePremiumUsage } from '@/lib/premiumUsage';
@@ -12,14 +13,17 @@ export const maxDuration = 90; // ポーリング最大90秒に合わせる
  *
  * Body (JSON):
  *   imageUrl: string             — 前景画像のURL（Blob等、推奨・4.5MB制限回避）
+ *   sourceBlobUrl?: string       — 処理後に削除してよい前景画像の一時Blob URL
  *   imageDataUrl?: string        — 前景画像 (data URI)、imageUrl がない場合のフォールバック
  *   mode: 'generate' | 'blend'   — 'generate'=テキストから背景生成, 'blend'=参照画像になじませる
  *   prompt?: string              — 背景の説明テキスト（generate時に使用）
  *   refImageUrl?: string         — 参照背景画像のURL（blend時、推奨）
+ *   sourceRefBlobUrl?: string    — 処理後に削除してよい参照背景画像の一時Blob URL
  *   refImageDataUrl?: string     — 参照背景画像 (data URI, blend時、小さい場合のみ)
  */
 export async function POST(req: NextRequest) {
     const replicateApiKey = process.env.REPLICATE_API_TOKEN;
+    const cleanupBlobUrls = new Set<string>();
     if (!replicateApiKey) {
         return NextResponse.json({ error: 'サーバー設定エラー' }, { status: 500 });
     }
@@ -53,13 +57,17 @@ export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
         const imageUrl = typeof body.imageUrl === 'string' ? body.imageUrl : null;
+        const sourceBlobUrl = typeof body.sourceBlobUrl === 'string' ? body.sourceBlobUrl : null;
         const imageDataUrl = typeof body.imageDataUrl === 'string' ? body.imageDataUrl : null;
         imageInput = imageUrl || imageDataUrl || '';
         prompt = body.prompt ?? '';
         mode = body.mode === 'blend' ? 'blend' : 'generate';
         const refImageUrl = typeof body.refImageUrl === 'string' ? body.refImageUrl : null;
+        const sourceRefBlobUrl = typeof body.sourceRefBlobUrl === 'string' ? body.sourceRefBlobUrl : null;
         const refImageDataUrl = typeof body.refImageDataUrl === 'string' ? body.refImageDataUrl : null;
         refImageInput = refImageUrl || refImageDataUrl || undefined;
+        if (sourceBlobUrl) cleanupBlobUrls.add(sourceBlobUrl);
+        if (sourceRefBlobUrl) cleanupBlobUrls.add(sourceRefBlobUrl);
         if (!imageInput) {
             return NextResponse.json({ error: '画像が必要です' }, { status: 400 });
         }
@@ -206,5 +214,13 @@ export async function POST(req: NextRequest) {
             { error: 'AI処理中にエラーが発生しました。もう一度お試しください。' },
             { status: 500 }
         );
+    } finally {
+        for (const blobUrl of cleanupBlobUrls) {
+            try {
+                await del(blobUrl);
+            } catch (cleanupError) {
+                console.warn('[generate-background] blob cleanup failed:', { blobUrl, cleanupError });
+            }
+        }
     }
 }

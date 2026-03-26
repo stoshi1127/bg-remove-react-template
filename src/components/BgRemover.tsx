@@ -1446,17 +1446,22 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
 
               const aiBody: {
                 imageUrl: string;
+                sourceBlobUrl?: string;
                 mode?: 'generate' | 'blend';
                 prompt?: string;
                 refImageUrl?: string;
+                sourceRefBlobUrl?: string;
                 refImageDataUrl?: string;
-              } = { imageUrl: blobResult.url };
+              } = { imageUrl: blobResult.url, sourceBlobUrl: blobResult.url };
               if (bgMode === 'ai_generate') {
                 aiBody.mode = 'generate';
                 aiBody.prompt = aiPrompt;
               } else if (blendRefImageUrl || blendRefImageDataUrl) {
                 aiBody.mode = 'blend';
-                if (blendRefImageUrl) aiBody.refImageUrl = blendRefImageUrl;
+                if (blendRefImageUrl) {
+                  aiBody.refImageUrl = blendRefImageUrl;
+                  aiBody.sourceRefBlobUrl = blendRefImageUrl;
+                }
                 else aiBody.refImageDataUrl = blendRefImageDataUrl;
               }
 
@@ -1489,17 +1494,22 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
 
             const aiBody: {
               imageUrl: string;
+              sourceBlobUrl?: string;
               mode?: 'generate' | 'blend';
               prompt?: string;
               refImageUrl?: string;
+              sourceRefBlobUrl?: string;
               refImageDataUrl?: string;
-            } = { imageUrl: blobResult.url };
+            } = { imageUrl: blobResult.url, sourceBlobUrl: blobResult.url };
             if (bgMode === 'ai_generate') {
               aiBody.mode = 'generate';
               aiBody.prompt = aiPrompt;
             } else if (blendRefImageUrl || blendRefImageDataUrl) {
               aiBody.mode = 'blend';
-              if (blendRefImageUrl) aiBody.refImageUrl = blendRefImageUrl;
+              if (blendRefImageUrl) {
+                aiBody.refImageUrl = blendRefImageUrl;
+                aiBody.sourceRefBlobUrl = blendRefImageUrl;
+              }
               else aiBody.refImageDataUrl = blendRefImageDataUrl;
             }
 
