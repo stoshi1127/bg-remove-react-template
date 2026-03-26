@@ -772,6 +772,10 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
       return;
     }
     setSelectedProcessingMode(nextMode);
+    // 仕上げを「AIで背景を作る」以外に戻したら bgMode も通常へ（さもないと bgMode が ai_generate のまま「被写体に合わせる」が無効化され続ける）
+    if (nextMode !== 'ai_generate') {
+      setBgMode('normal');
+    }
     trackAnalyticsEvent('processing_mode_selected', { mode: nextMode, isPro });
     setTimeout(() => scrollToSectionWithHeaderOffset(sectionSizeRef.current), 100);
   }, [goToProPurchase, isPro, scrollToSectionWithHeaderOffset]);
