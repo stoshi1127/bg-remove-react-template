@@ -69,9 +69,10 @@ pnpm install
 - **任意**: `BILLING_ENABLED`（課金導線の一括OFF。ロールバック用）, `STRIPE_MODE`（未指定時は `STRIPE_SECRET_KEY` のprefixから推定）
 - **任意（アップロード制御）**:
   - `UPLOAD_DIRECT_ENABLED` / `NEXT_PUBLIC_UPLOAD_DIRECT_ENABLED`（Proの直送経路ON/OFF）
-  - `PRO_MAX_UPLOAD_MB` / `NEXT_PUBLIC_PRO_MAX_UPLOAD_MB`（Proサイズ上限、既定25）
-  - `PRO_MAX_MP` / `NEXT_PUBLIC_PRO_MAX_MP`（Proメガピクセル上限、既定90）
-  - `PRO_MAX_SIDE_PX` / `NEXT_PUBLIC_PRO_MAX_SIDE_PX`（長辺上限、既定10000）
+  - `NEXT_PUBLIC_PRO_MAX_UPLOAD_MB`（Proサイズ上限MB、既定25。クライアントと `/api/upload/blob` の検証はこの値のみ参照）
+  - `NEXT_PUBLIC_PRO_MAX_MP`（Proメガピクセル上限、既定90。同上）
+  - `NEXT_PUBLIC_PRO_MAX_SIDE_PX`（長辺px上限、既定10000。同上）
+  - （後方互換のためドキュメントに残すが、**サーバーAPIは参照しない**）: `PRO_MAX_UPLOAD_MB` / `PRO_MAX_MP` / `PRO_MAX_SIDE_PX` — 以前の Preview でのみ設定されていると、クライアント既定と食い違い `/api/upload/blob` が 400 になることがあった
   - `FREE_MAX_MP` / `NEXT_PUBLIC_FREE_MAX_MP`（Freeメガピクセル上限、既定8）
   - `NEXT_PUBLIC_FREE_OUTPUT_MAX_SIDE_PX`（Free最終出力の長辺上限、既定3200）
   - `NEXT_PUBLIC_PRO_OUTPUT_MAX_SIDE_PX`（Pro最終出力の長辺上限、既定7000）
@@ -170,7 +171,7 @@ Pro向けの直送アップロード用トークンを発行します（Vercel B
 - **Runtime**: Node.js
 - **認証**: ログイン済みかつ `isPro=true` のみ許可
 - **用途**: ブラウザからオブジェクトストレージへ直接アップロードし、Function/Edgeに巨大バイナリを通さない
-- **検証**: `clientPayload` の上限値はサーバーで `PRO_MAX_UPLOAD_MB` / `PRO_MAX_MP` / `PRO_MAX_SIDE_PX` を参照し、**未設定時は `NEXT_PUBLIC_PRO_MAX_*` も同じ意味で参照**（Vercel で公開用だけ設定している場合のずれを防ぐ）。`mimeType` は `;` 以降を除いて比較する
+- **検証**: `clientPayload` の上限は **`NEXT_PUBLIC_PRO_MAX_*` のみ**（既定値もクライアントと同一）。`mimeType` は `;` 以降を除いて比較する
 
 #### curl 例
 

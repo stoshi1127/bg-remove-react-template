@@ -7,15 +7,15 @@ function numFromEnv(name: string, fallback: number): number {
   return Number.isFinite(n) && n > 0 ? n : fallback;
 }
 
-/** Vercel では `NEXT_PUBLIC_*` だけ設定されていることがある。サーバーAPIも同じ値を使う */
-function firstEnvNumber(keys: readonly string[], fallback: number): number {
-  for (const k of keys) {
-    const raw = process.env[k];
-    if (raw === undefined || raw === '') continue;
-    const n = Number(raw);
-    if (Number.isFinite(n) && n > 0) return n;
-  }
-  return fallback;
+/**
+ * Pro の上限は `BgRemover.tsx` と同一ソースにする（`NEXT_PUBLIC_*` のみ + 既定）。
+ * サーバーだけに `PRO_MAX_MP=8` 等が残っていると、クライアントは 90 既定で通過し `/api/upload/blob` だけ 400 になる。
+ */
+function numFromNextPublic(name: string, fallback: number): number {
+  const raw = process.env[name];
+  if (raw === undefined || raw === '') return fallback;
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? n : fallback;
 }
 
 /** `image/jpeg; charset=binary` 等を `image/jpeg` に */
@@ -27,10 +27,9 @@ export const EDGE_SAFE_UPLOAD_BYTES = 4 * MB;
 export const FREE_TARGET_BYTES = Math.floor(3.5 * MB);
 export const FREE_MAX_MP = numFromEnv('FREE_MAX_MP', 8);
 
-const proMaxUploadMb = firstEnvNumber(['PRO_MAX_UPLOAD_MB', 'NEXT_PUBLIC_PRO_MAX_UPLOAD_MB'], 25);
-export const PRO_MAX_UPLOAD_BYTES = proMaxUploadMb * MB;
-export const PRO_MAX_MP = firstEnvNumber(['PRO_MAX_MP', 'NEXT_PUBLIC_PRO_MAX_MP'], 90);
-export const PRO_MAX_SIDE = firstEnvNumber(['PRO_MAX_SIDE_PX', 'NEXT_PUBLIC_PRO_MAX_SIDE_PX'], 10000);
+export const PRO_MAX_UPLOAD_BYTES = numFromNextPublic('NEXT_PUBLIC_PRO_MAX_UPLOAD_MB', 25) * MB;
+export const PRO_MAX_MP = numFromNextPublic('NEXT_PUBLIC_PRO_MAX_MP', 90);
+export const PRO_MAX_SIDE = numFromNextPublic('NEXT_PUBLIC_PRO_MAX_SIDE_PX', 10000);
 
 export const UPLOAD_DIRECT_ENABLED =
   process.env.UPLOAD_DIRECT_ENABLED === undefined ||
