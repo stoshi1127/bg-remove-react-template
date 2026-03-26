@@ -27,3 +27,20 @@ export const ALLOWED_IMAGE_TYPES = new Set([
   'image/heic',
   'image/heif',
 ]);
+
+/** ブラウザが type を空にしたり非対応 MIME にしたりする場合の補正（/api/upload/blob の検証と一致させる） */
+export function normalizeClientImageMime(blob: Blob, fileName: string): string {
+  const t = blob.type?.trim();
+  if (t && ALLOWED_IMAGE_TYPES.has(t)) return t;
+  if (t === 'image/jpg' || t === 'image/pjpeg') return 'image/jpeg';
+
+  const lower = fileName.toLowerCase();
+  const dot = lower.lastIndexOf('.');
+  const ext = dot >= 0 ? lower.slice(dot) : '';
+  if (ext === '.png') return 'image/png';
+  if (ext === '.webp') return 'image/webp';
+  if (ext === '.heic') return 'image/heic';
+  if (ext === '.heif') return 'image/heif';
+  if (ext === '.jpg' || ext === '.jpeg') return 'image/jpeg';
+  return 'image/jpeg';
+}

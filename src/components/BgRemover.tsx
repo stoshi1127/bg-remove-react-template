@@ -54,6 +54,7 @@ import {
   computeUpscaledDimensions,
 } from '@/lib/image/enhance';
 import { trackAnalyticsEvent } from '@/lib/analytics/events';
+import { normalizeClientImageMime } from '@/lib/upload/limits';
 
 type AdUserPlan = 'pro' | 'free' | 'guest';
 type AdPlacement = 'after_cta' | 'bottom';
@@ -1417,9 +1418,9 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
               // #endregion
               let phase1Res: Response;
               if (phase1UseBlobUrl) {
-                const uploadFile = blobForRequest instanceof File
-                  ? blobForRequest
-                  : new File([blobForRequest], nameForRequest, { type: blobForRequest.type || 'application/octet-stream' });
+                const uploadFile = new File([blobForRequest], nameForRequest, {
+                  type: normalizeClientImageMime(blobForRequest, nameForRequest),
+                });
                 const phase1BlobResult = await uploadToBlob(uploadFile.name, uploadFile, {
                   access: 'public',
                   handleUploadUrl: '/api/upload/blob',
@@ -1512,9 +1513,9 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
             }
           } else {
             // 元の比率のままの場合は、briaのセグメンテーション（影の描画等）を活かすため1段階で処理
-            const uploadFile = blobForRequest instanceof File
-              ? blobForRequest
-              : new File([blobForRequest], nameForRequest, { type: blobForRequest.type || 'application/octet-stream' });
+            const uploadFile = new File([blobForRequest], nameForRequest, {
+              type: normalizeClientImageMime(blobForRequest, nameForRequest),
+            });
 
             const blobResult = await uploadToBlob(uploadFile.name, uploadFile, {
               access: 'public',
@@ -1557,9 +1558,9 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
           }
 
         } else if (isPro && USE_DIRECT_UPLOAD_FOR_PRO) {
-          const uploadFile = blobForRequest instanceof File
-            ? blobForRequest
-            : new File([blobForRequest], nameForRequest, { type: blobForRequest.type || 'application/octet-stream' });
+          const uploadFile = new File([blobForRequest], nameForRequest, {
+            type: normalizeClientImageMime(blobForRequest, nameForRequest),
+          });
           const blobResult = await uploadToBlob(uploadFile.name, uploadFile, {
             access: 'public',
             handleUploadUrl: '/api/upload/blob',
