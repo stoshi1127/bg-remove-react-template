@@ -130,7 +130,7 @@ pnpm start
 - 標準: `851-labs/background-remover`（固定version）
 - 高精度（Proのみ）: `fottoai/remove-bg-2`（固定versionまたは環境変数指定）
 
-- **Runtime**: Node.js（`export const runtime = 'nodejs'`）
+- **Runtime**: Node.js（`export const runtime = 'nodejs'`、`maxDuration: 90` — Replicate ポーリングと整合）
 - **Request**:
   - `multipart/form-data`（Free/既存互換）:
     - **field**: `file`（画像ファイル）

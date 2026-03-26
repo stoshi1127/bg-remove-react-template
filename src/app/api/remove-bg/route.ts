@@ -3,6 +3,8 @@ import { del } from '@vercel/blob';
 import { getCurrentUser } from '@/lib/auth/session';
 
 export const runtime = 'nodejs';
+/** Replicate ポーリング最大60秒＋余裕。未設定だとデフォルト上限で 504 になりやすい */
+export const maxDuration = 90;
 
 type JsonBody = {
   imageUrl?: string;
