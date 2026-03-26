@@ -1413,9 +1413,6 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
               // Pro で 4MB超は Vercel のリクエストボディ上限を超えやすいため、Blob直アップロード→JSON（URL）で呼ぶ
               const phase1UseBlobUrl =
                 isPro && USE_DIRECT_UPLOAD_FOR_PRO && blobForRequest.size > MAX_UPLOAD_BYTES;
-              // #region agent log
-              fetch('http://127.0.0.1:7243/ingest/d5b9b24e-cf56-4f8e-b90c-eeb7b2ed6fe0',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'aa86e7'},body:JSON.stringify({sessionId:'aa86e7',hypothesisId:'H1',location:'BgRemover.tsx:phase1-pre',message:'phase1 remove-bg before fetch',data:{phase1Path:phase1UseBlobUrl?'blob-json':'formdata',blobBytes:blobForRequest.size,blobType:blobForRequest.type,isPro,useAiApi,selectedRatio,requestedProcessingMode,nameLen:nameForRequest.length},timestamp:Date.now(),runId:'post-fix'})}).catch(()=>{});
-              // #endregion
               let phase1Res: Response;
               if (phase1UseBlobUrl) {
                 const uploadFile = new File([blobForRequest], nameForRequest, {
@@ -1451,9 +1448,6 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                   signal: combinedSignal,
                 });
               }
-              // #region agent log
-              fetch('http://127.0.0.1:7243/ingest/d5b9b24e-cf56-4f8e-b90c-eeb7b2ed6fe0',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'aa86e7'},body:JSON.stringify({sessionId:'aa86e7',hypothesisId:'H1',location:'BgRemover.tsx:phase1-post',message:'phase1 remove-bg after fetch',data:{status:phase1Res.status,ok:phase1Res.ok},timestamp:Date.now(),runId:'post-fix'})}).catch(()=>{});
-              // #endregion
 
               if (!phase1Res.ok) throw new Error('背景除去（フェーズ1）に失敗しました');
               const transparentBlob = await phase1Res.blob();

@@ -4,7 +4,6 @@ import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
 import { getCurrentUser } from '@/lib/auth/session';
 import {
   ALLOWED_IMAGE_TYPES,
-  PRO_MAX_SIDE,
   PRO_MAX_UPLOAD_BYTES,
   stripMimeParameters,
 } from '@/lib/upload/limits';
@@ -33,8 +32,9 @@ function parsePayload(raw: string | null | undefined): ClientPayload {
 }
 
 function validatePayload(payload: ClientPayload): string | null {
-  if (!isPositiveNumber(payload.sizeBytes) || payload.sizeBytes > PRO_MAX_UPLOAD_BYTES) {
-    return `Proアップロード上限を超えています（最大 ${Math.round(PRO_MAX_UPLOAD_BYTES / 1024 / 1024)}MB）。`;
+  // sizeBytes の上限はここでは比較しない（ビルド時と実行時の NEXT_PUBLIC ずれで誤 400 になる）。実際の上限は下の maximumSizeInBytes で付与する。
+  if (!isPositiveNumber(payload.sizeBytes)) {
+    return 'アップロードサイズの取得に失敗しました。';
   }
 
   const mime = payload.mimeType ? stripMimeParameters(payload.mimeType) : '';
@@ -46,11 +46,7 @@ function validatePayload(payload: ClientPayload): string | null {
     return '画像サイズの取得に失敗しました。';
   }
 
-  // MP は検証しない: NEXT_PUBLIC_* のビルド時埋め込みとサーバー実行時 env のずれで誤 400 になりやすい。MP 上限はクライアント（BgRemover）で担保する。
-
-  if (payload.width > PRO_MAX_SIDE || payload.height > PRO_MAX_SIDE) {
-    return `画像の辺が長すぎます（最大 ${PRO_MAX_SIDE}px）。`;
-  }
+  // MP・長辺は検証しない: NEXT_PUBLIC_* のビルド時とサーバー実行時のずれで誤 400 になりやすい（並列・枚数増で別ファイルだけ落ちる）。上限はクライアント（BgRemover）で担保する。
 
   return null;
 }
