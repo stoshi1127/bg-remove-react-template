@@ -2,7 +2,13 @@ import { NextResponse } from 'next/server';
 import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
 
 import { getCurrentUser } from '@/lib/auth/session';
-import { ALLOWED_IMAGE_TYPES, PRO_MAX_MP, PRO_MAX_SIDE, PRO_MAX_UPLOAD_BYTES } from '@/lib/upload/limits';
+import {
+  ALLOWED_IMAGE_TYPES,
+  PRO_MAX_MP,
+  PRO_MAX_SIDE,
+  PRO_MAX_UPLOAD_BYTES,
+  stripMimeParameters,
+} from '@/lib/upload/limits';
 
 export const runtime = 'nodejs';
 
@@ -32,7 +38,8 @@ function validatePayload(payload: ClientPayload): string | null {
     return `Proアップロード上限を超えています（最大 ${Math.round(PRO_MAX_UPLOAD_BYTES / 1024 / 1024)}MB）。`;
   }
 
-  if (!payload.mimeType || !ALLOWED_IMAGE_TYPES.has(payload.mimeType)) {
+  const mime = payload.mimeType ? stripMimeParameters(payload.mimeType) : '';
+  if (!mime || !ALLOWED_IMAGE_TYPES.has(mime)) {
     return '対応していない画像形式です。';
   }
 
@@ -88,6 +95,7 @@ export async function POST(req: Request) {
     return NextResponse.json(json);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'アップロード準備に失敗しました。';
+    console.error('[upload/blob]', message);
     return NextResponse.json({ ok: false, error: message }, { status: 400 });
   }
 }

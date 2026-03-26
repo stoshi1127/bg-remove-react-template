@@ -7,13 +7,30 @@ function numFromEnv(name: string, fallback: number): number {
   return Number.isFinite(n) && n > 0 ? n : fallback;
 }
 
+/** Vercel では `NEXT_PUBLIC_*` だけ設定されていることがある。サーバーAPIも同じ値を使う */
+function firstEnvNumber(keys: readonly string[], fallback: number): number {
+  for (const k of keys) {
+    const raw = process.env[k];
+    if (raw === undefined || raw === '') continue;
+    const n = Number(raw);
+    if (Number.isFinite(n) && n > 0) return n;
+  }
+  return fallback;
+}
+
+/** `image/jpeg; charset=binary` 等を `image/jpeg` に */
+export function stripMimeParameters(mime: string): string {
+  return mime.split(';')[0].trim();
+}
+
 export const EDGE_SAFE_UPLOAD_BYTES = 4 * MB;
 export const FREE_TARGET_BYTES = Math.floor(3.5 * MB);
 export const FREE_MAX_MP = numFromEnv('FREE_MAX_MP', 8);
 
-export const PRO_MAX_UPLOAD_BYTES = numFromEnv('PRO_MAX_UPLOAD_MB', 25) * MB;
-export const PRO_MAX_MP = numFromEnv('PRO_MAX_MP', 90);
-export const PRO_MAX_SIDE = numFromEnv('PRO_MAX_SIDE_PX', 10000);
+const proMaxUploadMb = firstEnvNumber(['PRO_MAX_UPLOAD_MB', 'NEXT_PUBLIC_PRO_MAX_UPLOAD_MB'], 25);
+export const PRO_MAX_UPLOAD_BYTES = proMaxUploadMb * MB;
+export const PRO_MAX_MP = firstEnvNumber(['PRO_MAX_MP', 'NEXT_PUBLIC_PRO_MAX_MP'], 90);
+export const PRO_MAX_SIDE = firstEnvNumber(['PRO_MAX_SIDE_PX', 'NEXT_PUBLIC_PRO_MAX_SIDE_PX'], 10000);
 
 export const UPLOAD_DIRECT_ENABLED =
   process.env.UPLOAD_DIRECT_ENABLED === undefined ||
@@ -30,7 +47,8 @@ export const ALLOWED_IMAGE_TYPES = new Set([
 
 /** ブラウザが type を空にしたり非対応 MIME にしたりする場合の補正（/api/upload/blob の検証と一致させる） */
 export function normalizeClientImageMime(blob: Blob, fileName: string): string {
-  const t = blob.type?.trim();
+  const raw = blob.type?.trim();
+  const t = raw ? stripMimeParameters(raw) : '';
   if (t && ALLOWED_IMAGE_TYPES.has(t)) return t;
   if (t === 'image/jpg' || t === 'image/pjpeg') return 'image/jpeg';
 

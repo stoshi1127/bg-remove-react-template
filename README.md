@@ -170,6 +170,7 @@ Pro向けの直送アップロード用トークンを発行します（Vercel B
 - **Runtime**: Node.js
 - **認証**: ログイン済みかつ `isPro=true` のみ許可
 - **用途**: ブラウザからオブジェクトストレージへ直接アップロードし、Function/Edgeに巨大バイナリを通さない
+- **検証**: `clientPayload` の上限値はサーバーで `PRO_MAX_UPLOAD_MB` / `PRO_MAX_MP` / `PRO_MAX_SIDE_PX` を参照し、**未設定時は `NEXT_PUBLIC_PRO_MAX_*` も同じ意味で参照**（Vercel で公開用だけ設定している場合のずれを防ぐ）。`mimeType` は `;` 以降を除いて比較する
 
 #### curl 例
 
