@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
 // heic2any は必要な時だけ動的 import します
 import Link from "next/link";
@@ -286,6 +286,16 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
   const hasCompletedResults = inputs.some(input => input.status === 'completed');
   const shouldShowResultAd = adsEnabled && !isPro && hasCompletedResults;
   const HEADER_OFFSET_PX = 88;
+
+  /** AI背景生成 or ナチュラルブレンド（なじませる＋テンプレ）—「被写体に合わせる」は未対応 */
+  const aiBlendOrGenerateActive =
+    bgMode === 'ai_generate' || (bgMode === 'normal' && blendEnabled && !!selectedTemplate);
+
+  useLayoutEffect(() => {
+    if (aiBlendOrGenerateActive && selectedRatio === 'fit-subject') {
+      setSelectedRatio('original');
+    }
+  }, [aiBlendOrGenerateActive, selectedRatio]);
 
   const scrollToSectionWithHeaderOffset = useCallback((target: HTMLDivElement | null) => {
     if (!target) return;
@@ -2522,6 +2532,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 sm:gap-3">
             {aspectRatios.map(ratio => {
+              const isFitSubjectDisabled = ratio.key === 'fit-subject' && aiBlendOrGenerateActive;
               const isActive = selectedRatio === ratio.key;
               const iconMap: Record<string, string> = {
                 '1:1': 'crop_square',
@@ -2544,14 +2555,23 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                 <button
                   key={ratio.key}
                   type="button"
+                  disabled={isFitSubjectDisabled}
+                  title={
+                    isFitSubjectDisabled
+                      ? 'AI背景生成・なじませるでは使えません。通常の背景除去では利用できます。'
+                      : undefined
+                  }
                   onClick={() => {
                     setSelectedRatio(ratio.key);
                     setTimeout(() => scrollToSectionWithHeaderOffset(sectionBgRef.current), 100);
                   }}
-                  className={`flex flex-col items-center justify-center gap-1.5 sm:gap-2 px-2 py-4 sm:py-5 rounded-2xl border-2 text-xs sm:text-sm font-black shadow-sm transition-all ${isActive
-                    ? 'border-primary bg-primary text-white'
-                    : 'border-slate-100 bg-white hover:border-primary text-slate-700'
-                    }`}
+                  className={`flex flex-col items-center justify-center gap-1.5 sm:gap-2 px-2 py-4 sm:py-5 rounded-2xl border-2 text-xs sm:text-sm font-black shadow-sm transition-all ${
+                    isFitSubjectDisabled
+                      ? 'border-slate-200 bg-slate-50 text-slate-400 cursor-not-allowed opacity-60'
+                      : isActive
+                        ? 'border-primary bg-primary text-white'
+                        : 'border-slate-100 bg-white hover:border-primary text-slate-700'
+                  }`}
                 >
                   <span className="material-symbols-outlined text-2xl sm:text-3xl">{iconName}</span>
                   {displayLabel}
@@ -2559,6 +2579,11 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
               );
             })}
           </div>
+          {aiBlendOrGenerateActive && (
+            <p className="mt-3 text-xs text-slate-500 leading-relaxed">
+              AI背景生成・なじませるでは「被写体に合わせる」は使えません。通常の背景除去（テンプレ・単色など）では従来どおり選べます。
+            </p>
+          )}
         </div>
       )}
 
