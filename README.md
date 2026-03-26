@@ -171,7 +171,7 @@ Pro向けの直送アップロード用トークンを発行します（Vercel B
 - **Runtime**: Node.js
 - **認証**: ログイン済みかつ `isPro=true` のみ許可
 - **用途**: ブラウザからオブジェクトストレージへ直接アップロードし、Function/Edgeに巨大バイナリを通さない
-- **検証**: `clientPayload` の上限は **`NEXT_PUBLIC_PRO_MAX_*` のみ**（既定値もクライアントと同一）。`mimeType` は `;` 以降を除いて比較する
+- **検証**: `sizeBytes` / 長辺（`width`/`height`）/ `mimeType`（`;` 以降を除く）。**メガピクセル（MP）上限はトークン発行では検証しない**（`NEXT_PUBLIC_*` のビルド時とサーバー実行時の差で誤 400 になるのを防ぐ。MP はクライアントでチェック済み）
 
 #### curl 例
 

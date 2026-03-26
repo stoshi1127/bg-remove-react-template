@@ -4,7 +4,6 @@ import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
 import { getCurrentUser } from '@/lib/auth/session';
 import {
   ALLOWED_IMAGE_TYPES,
-  PRO_MAX_MP,
   PRO_MAX_SIDE,
   PRO_MAX_UPLOAD_BYTES,
   stripMimeParameters,
@@ -47,10 +46,7 @@ function validatePayload(payload: ClientPayload): string | null {
     return '画像サイズの取得に失敗しました。';
   }
 
-  const mp = (payload.width * payload.height) / 1_000_000;
-  if (mp > PRO_MAX_MP) {
-    return `画像が大きすぎます（最大 ${PRO_MAX_MP}MP）。`;
-  }
+  // MP は検証しない: NEXT_PUBLIC_* のビルド時埋め込みとサーバー実行時 env のずれで誤 400 になりやすい。MP 上限はクライアント（BgRemover）で担保する。
 
   if (payload.width > PRO_MAX_SIDE || payload.height > PRO_MAX_SIDE) {
     return `画像の辺が長すぎます（最大 ${PRO_MAX_SIDE}px）。`;
