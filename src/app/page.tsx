@@ -388,7 +388,7 @@ export default async function Home() {
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">多彩な背景カスタマイズ</h3>
                     <p className="text-gray-600">
-                      白や木目に加え、グラデーションやレンガ壁、ボケなどの背景を選び、透過後の画像を自然に背景合成できます。
+                      白や木目に加え、レンガ壁、ボケなどの背景を選び、透過後の画像を自然に背景合成できます。
                     </p>
                   </div>
                 </div>

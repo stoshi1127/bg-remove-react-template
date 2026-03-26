@@ -68,7 +68,6 @@ type OversizedPromptItem = {
 // 背景テンプレートの定義
 const templates = [
   { name: "白", src: "#FFFFFF" },
-  { name: "グラデーション", src: "/templates/gradient-blue-purple.svg" },
   { name: "レンガ", src: "/templates/brick-wall.jpg" },
   { name: "ボケ", src: "/templates/bokeh-lights.jpg" },
   { name: "木目", src: "/templates/wood.jpg" },
@@ -2509,7 +2508,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                     setSelectedRatio(ratio.key);
                     setTimeout(() => scrollToSectionWithHeaderOffset(sectionBgRef.current), 100);
                   }}
-                  className={`flex flex-col items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-3 sm:py-4 rounded-2xl border-2 text-xs sm:text-sm font-black shadow-sm transition-all ${isActive
+                  className={`flex flex-col items-center justify-center gap-1.5 sm:gap-2 px-2 py-4 sm:py-5 rounded-2xl border-2 text-xs sm:text-sm font-black shadow-sm transition-all ${isActive
                     ? 'border-primary bg-primary text-white'
                     : 'border-slate-100 bg-white hover:border-primary text-slate-700'
                     }`}
