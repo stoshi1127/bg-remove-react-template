@@ -9,6 +9,7 @@ type PrimaryButtonProps = {
   variant?: "primary" | "outline" | "secondary";
   size?: "sm" | "md" | "lg";
   colorVariant?: 'blue' | 'purple';
+  title?: string;
 };
 
 const PrimaryButton: React.FC<PrimaryButtonProps> = ({
@@ -19,7 +20,8 @@ const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   className = "",
   variant = "primary",
   size,
-  colorVariant = 'blue'
+  colorVariant = 'blue',
+  title,
 }) => {
   const base =
     "w-full rounded-lg font-bold shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-100";
@@ -48,6 +50,7 @@ const PrimaryButton: React.FC<PrimaryButtonProps> = ({
       type={type}
       onClick={onClick}
       disabled={disabled}
+      title={title}
       className={`${base} ${variantClasses[variant]} ${sizeClasses} ${className}`}
     >
       {children}

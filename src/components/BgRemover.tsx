@@ -248,6 +248,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
   const [pendingBatchTarget, setPendingBatchTarget] = useState<EnhanceTarget | null>(null);
   const proOfferImpressionTrackedRef = useRef(false);
   const sectionModeRef = useRef<HTMLDivElement>(null);
+  const sectionAiPromptRef = useRef<HTMLDivElement>(null);
   const sectionSizeRef = useRef<HTMLDivElement>(null);
   const sectionBgRef = useRef<HTMLDivElement>(null);
   const sectionBlendRef = useRef<HTMLDivElement>(null);
@@ -286,6 +287,10 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
   const hasCompletedResults = inputs.some(input => input.status === 'completed');
   const shouldShowResultAd = adsEnabled && !isPro && hasCompletedResults;
   const HEADER_OFFSET_PX = 88;
+
+  /** AI背景生成でプリセットもテキストも未指定 */
+  const aiBgPromptIncomplete =
+    selectedProcessingMode === 'ai_generate' && !aiBgPreset && !aiBgPrompt.trim();
 
   /** AI背景生成 or ナチュラルブレンド（なじませる＋テンプレ）—「被写体に合わせる」は未対応 */
   const aiBlendOrGenerateActive =
@@ -777,7 +782,13 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
       setBgMode('normal');
     }
     trackAnalyticsEvent('processing_mode_selected', { mode: nextMode, isPro });
-    setTimeout(() => scrollToSectionWithHeaderOffset(sectionSizeRef.current), 100);
+    setTimeout(() => {
+      if (nextMode === 'ai_generate') {
+        scrollToSectionWithHeaderOffset(sectionAiPromptRef.current);
+      } else {
+        scrollToSectionWithHeaderOffset(sectionSizeRef.current);
+      }
+    }, 100);
   }, [goToProPurchase, isPro, scrollToSectionWithHeaderOffset]);
 
   const createStandardOutputFromDataUrl = useCallback(async (dataUrl: string) => {
@@ -2444,7 +2455,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
 
           {/* --- AIで背景を作る（詳細設定エリア） --- */}
           {selectedProcessingMode === 'ai_generate' && (
-          <div className="mt-4 p-4 rounded-xl border border-fuchsia-200 bg-fuchsia-50/50">
+          <div ref={sectionAiPromptRef} className="mt-4 p-4 rounded-xl border border-fuchsia-200 bg-fuchsia-50/50 scroll-mt-24">
             <div className="flex items-center justify-between mb-3">
               <h4 className="text-sm font-semibold text-gray-800">
                 プロンプトを設定
@@ -3244,25 +3255,37 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
       {/* 背景除去・一括ダウンロードボタン */}
       <div ref={ctaRef} className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
         {inputs.length > 0 && inputs.some(i => i.status === 'ready' || i.status === 'error') && !busy && (
-          <PrimaryButton
-            onClick={() => {
-              void handleRemove();
-            }}
-            disabled={busy || inputs.filter(i => i.status === 'ready').length === 0}
-            className="w-full sm:w-auto"
-          >
-            {busy ? (
-              <span className="flex items-center">
-                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-white border-opacity-60 mr-2"></div>
-                処理中...
-              </span>
-            ) : (
-              <>
-                <span className="sm:hidden">{selectedProcessingMode === 'ai_generate' || selectedTemplate ? '背景を合成する' : '背景を透過する'}</span>
-                <span className="hidden sm:inline">{`選択した画像（${inputs.filter(i => i.status === 'ready').length}枚）の${selectedProcessingMode === 'ai_generate' || selectedTemplate ? '背景を合成する' : '背景を透過する'}`}</span>
-              </>
+          <div className="flex w-full sm:w-auto max-w-lg flex-col items-center gap-2">
+            <PrimaryButton
+              onClick={() => {
+                void handleRemove();
+              }}
+              disabled={busy || inputs.filter(i => i.status === 'ready').length === 0 || aiBgPromptIncomplete}
+              title={
+                aiBgPromptIncomplete
+                  ? 'プリセットを選ぶか、プロンプト欄にイメージを入力してください'
+                  : undefined
+              }
+              className="w-full sm:w-auto"
+            >
+              {busy ? (
+                <span className="flex items-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-white border-opacity-60 mr-2"></div>
+                  処理中...
+                </span>
+              ) : (
+                <>
+                  <span className="sm:hidden">{selectedProcessingMode === 'ai_generate' || selectedTemplate ? '背景を合成する' : '背景を透過する'}</span>
+                  <span className="hidden sm:inline">{`選択した画像（${inputs.filter(i => i.status === 'ready').length}枚）の${selectedProcessingMode === 'ai_generate' || selectedTemplate ? '背景を合成する' : '背景を透過する'}`}</span>
+                </>
+              )}
+            </PrimaryButton>
+            {aiBgPromptIncomplete && (
+              <p className="text-xs text-amber-800 text-center font-medium leading-snug px-1" role="status">
+                上の「プロンプトを設定」でプリセットを選ぶか、イメージを入力してから押してください。
+              </p>
             )}
-          </PrimaryButton>
+          </div>
         )}
 
         {/* エラーファイル一括再処理ボタン */}
@@ -3595,6 +3618,15 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                   >
                     仕上：{selectedProcessingMode === 'standard' ? '標準' : selectedProcessingMode === 'pro_high_precision' ? '高精度' : 'AI生成'}
                   </button>
+                  {selectedProcessingMode === 'ai_generate' && (
+                    <button
+                      type="button"
+                      onClick={() => scrollToSectionWithHeaderOffset(sectionAiPromptRef.current)}
+                      className="px-3 py-1.5 sm:px-4 sm:py-1.5 rounded-full bg-fuchsia-50/90 backdrop-blur border border-fuchsia-200 text-fuchsia-800 text-[10px] sm:text-xs font-bold shadow-sm cursor-pointer hover:bg-fuchsia-100 transition-colors"
+                    >
+                      プロンプト
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => scrollToSectionWithHeaderOffset(sectionSizeRef.current)}
@@ -3630,7 +3662,12 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                 {!hasCompletedResults && (
                   <button
                     onClick={() => void handleRemove()}
-                    disabled={inputs.filter(i => i.status === 'ready').length === 0}
+                    disabled={inputs.filter(i => i.status === 'ready').length === 0 || aiBgPromptIncomplete}
+                    title={
+                      aiBgPromptIncomplete
+                        ? 'プリセットを選ぶか、プロンプト欄にイメージを入力してください'
+                        : undefined
+                    }
                     className="pointer-events-auto flex flex-col sm:flex-row items-center justify-center bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-5 py-3.5 sm:px-10 sm:py-5 rounded-2xl shadow-xl transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed group w-full sm:w-auto"
                   >
                     <span className="sm:hidden text-[11px] font-medium text-blue-100 mb-0.5">
