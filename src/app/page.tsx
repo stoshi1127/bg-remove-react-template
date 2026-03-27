@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import BgRemoverMulti from '../components/BgRemover';
 import BrandIcon from '../components/BrandIcon';
+import ComparisonShowcase from '../components/ComparisonShowcase';
 import GuideCard from '../components/GuideCard';
 import ProCtaSection from '../components/ProCtaSection';
 import TrackedLink from '../components/TrackedLink';
@@ -36,6 +37,31 @@ const batchUseCases = [
     description: '人物やモノの切り抜きをまとめて用意し、投稿画像やプレゼン資料の素材づくりを効率化できます。',
   },
 ];
+const comparisonExamples = [
+  {
+    title: '背景透過の仕上がり例',
+    description:
+      '被写体を切り抜いた状態の比較です。EC商品画像やサムネイル素材の下準備をイメージしやすくしています。',
+    beforeSrc: '/examples/bg-removal-before.png',
+    afterSrc: '/examples/bg-removal-after.png',
+    beforeAlt: '撮影背景が残った商品画像のサンプル',
+    afterAlt: '背景透過後に被写体だけを残した商品画像のサンプル',
+    beforeLabel: '元画像',
+    afterLabel: '背景透過後',
+  },
+  {
+    title: '背景合成の仕上がり例',
+    description:
+      '被写体の背景を販売ページやバナー向けの背景に合成したイメージです。',
+    beforeSrc: '/examples/bg-composite-before.jpg',
+    afterSrc: '/examples/bg-composite-after.png',
+    beforeAlt: '透明背景上に切り抜き素材を置いたサンプル',
+    afterAlt: '切り抜き素材に新しい背景を合成したサンプル',
+    beforeLabel: '元画像',
+    afterLabel: '背景合成後',
+    isPro: true,
+  },
+] as const;
 const faqItems = [
   {
     question: '背景透過はブラウザだけでできますか？',
@@ -267,6 +293,8 @@ export default async function Home() {
           </div>
 
           <ProCtaSection isLoggedIn={isLoggedIn} isPro={isPro} />
+
+          <ComparisonShowcase examples={comparisonExamples} />
         </div>
       </section>
 
