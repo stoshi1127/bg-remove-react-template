@@ -3683,11 +3683,13 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
             )}
             {!inputs.some(i => i.status === 'ready') && hasCompletedResults && (
               <>
-                <StickyCtaSponsorBanner
-                  slotId="bgremover_sticky_download"
-                  variant="B"
-                  userPlan={adUserPlan}
-                />
+                {!isPro && (
+                  <StickyCtaSponsorBanner
+                    slotId="bgremover_sticky_download"
+                    variant="B"
+                    userPlan={adUserPlan}
+                  />
+                )}
                 <div className="pointer-events-auto w-full sm:w-auto bg-white/90 backdrop-blur-md p-3 sm:p-4 rounded-2xl shadow-xl border border-gray-200">
 
                   {(() => {
