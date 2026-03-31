@@ -280,9 +280,9 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
   const adsEnabled = process.env.NEXT_PUBLIC_ADS_ENABLED !== 'false';
   const adPlacement: AdPlacement = process.env.NEXT_PUBLIC_AD_PLACEMENT === 'bottom' ? 'bottom' : 'after_cta';
   const adHref = process.env.NEXT_PUBLIC_AD_RESULT_URL;
-  const adTitle = process.env.NEXT_PUBLIC_AD_RESULT_TITLE || '画像作業に役立つおすすめサービス';
+  const adTitle = process.env.NEXT_PUBLIC_AD_RESULT_TITLE || 'おすすめサービス';
   const adDescription =
-    process.env.NEXT_PUBLIC_AD_RESULT_DESCRIPTION || '背景透過の次の作業に使える関連ツールを紹介しています。';
+    process.env.NEXT_PUBLIC_AD_RESULT_DESCRIPTION || 'おすすめのサービスを紹介しています。';
   const adCtaLabel = process.env.NEXT_PUBLIC_AD_RESULT_CTA_LABEL || '詳細を見る';
   const hasCompletedResults = inputs.some(input => input.status === 'completed');
   const shouldShowResultAd = adsEnabled && !isPro && hasCompletedResults;

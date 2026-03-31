@@ -22,6 +22,12 @@ declare global {
   }
 }
 
+const DEFAULT_SPONSOR_BANNER = {
+  href: 'https://px.a8.net/svt/ejp?a8mat=45BYEN+3KN6I+2PEO+O720X',
+  imageSrc: '/api/affiliate-assets/banner',
+  trackingSrc: '/api/affiliate-assets/pixel',
+} as const;
+
 function sendAdEvent(name: string, params: Record<string, unknown>) {
   if (typeof window === 'undefined' || typeof window.gtag !== 'function') return;
   window.gtag('event', name, params);
@@ -34,7 +40,7 @@ export default function AdSlot({
   minHeight = 164,
   href,
   title = 'スポンサーリンク',
-  description = '便利な関連サービスをご紹介しています。',
+  description = '関連サービスをご紹介しています。',
   ctaLabel = '詳しく見る',
 }: AdSlotProps) {
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -92,9 +98,41 @@ export default function AdSlot({
           {ctaLabel}
         </span>
       ) : (
-        <span className="mt-3 inline-flex rounded-md bg-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700">
-          準備中
-        </span>
+        <div className="mt-4 text-center">
+          <a
+            href={DEFAULT_SPONSOR_BANNER.href}
+            target="_blank"
+            rel="nofollow sponsored noopener noreferrer"
+            className="inline-block"
+            onClick={() => {
+              sendAdEvent('ad_click', {
+                ad_slot: slotId,
+                variant,
+                user_plan: userPlan,
+              });
+            }}
+          >
+            <img
+              border={0}
+              width={468}
+              height={60}
+              alt="画像作業に役立つおすすめサービス"
+              src={DEFAULT_SPONSOR_BANNER.imageSrc}
+              loading="lazy"
+              decoding="async"
+              className="h-auto max-w-full"
+            />
+          </a>
+          <img
+            border={0}
+            width={1}
+            height={1}
+            src={DEFAULT_SPONSOR_BANNER.trackingSrc}
+            alt=""
+            aria-hidden="true"
+            className="pointer-events-none absolute h-px w-px opacity-0"
+          />
+        </div>
       )}
     </>
   );
