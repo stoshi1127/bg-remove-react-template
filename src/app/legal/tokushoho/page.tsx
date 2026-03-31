@@ -19,7 +19,7 @@ export default function TokushohoPage() {
             </tr>
             <tr className="border-b border-gray-200">
               <th className="bg-gray-50 px-4 py-3 text-left font-semibold">運営責任者</th>
-              <td className="px-4 py-3">新海 継俊</td>
+              <td className="px-4 py-3">請求があった場合、遅滞なく開示します。</td>
             </tr>
             <tr className="border-b border-gray-200">
               <th className="bg-gray-50 px-4 py-3 text-left font-semibold">所在地</th>
