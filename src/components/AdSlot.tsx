@@ -16,6 +16,15 @@ type AdSlotProps = {
   ctaLabel?: string;
 };
 
+type SponsorBannerConfig = {
+  href: string;
+  imageSrc: string;
+  trackingSrc: string;
+  width: number;
+  height: number;
+  alt: string;
+};
+
 declare global {
   interface Window {
     gtag?: (...args: unknown[]) => void;
@@ -26,11 +35,93 @@ const DEFAULT_SPONSOR_BANNER = {
   href: 'https://px.a8.net/svt/ejp?a8mat=45BYEN+3KN6I+2PEO+O720X',
   imageSrc: '/api/affiliate-assets/banner',
   trackingSrc: '/api/affiliate-assets/pixel',
+  width: 468,
+  height: 60,
+  alt: '画像作業に役立つおすすめサービス',
+} as const satisfies SponsorBannerConfig;
+
+const STICKY_CTA_BANNER = {
+  href: 'https://px.a8.net/svt/ejp?a8mat=45BYEN+3KN6I+2PEO+O1P4H',
+  imageSrc: '/api/affiliate-assets/sticky-banner',
+  trackingSrc: '/api/affiliate-assets/sticky-pixel',
+  width: 234,
+  height: 60,
+  alt: '画像作業に役立つおすすめサービス',
 } as const;
 
 function sendAdEvent(name: string, params: Record<string, unknown>) {
   if (typeof window === 'undefined' || typeof window.gtag !== 'function') return;
   window.gtag('event', name, params);
+}
+
+function SponsorBanner({
+  banner,
+  slotId,
+  variant,
+  userPlan,
+  className,
+}: {
+  banner: SponsorBannerConfig;
+  slotId: string;
+  variant: AdVariant;
+  userPlan: AdUserPlan;
+  className?: string;
+}) {
+  return (
+    <div className={className}>
+      <a
+        href={banner.href}
+        target="_blank"
+        rel="nofollow sponsored noopener noreferrer"
+        className="inline-block"
+        onClick={() => {
+          sendAdEvent('ad_click', {
+            ad_slot: slotId,
+            variant,
+            user_plan: userPlan,
+          });
+        }}
+      >
+        <img
+          width={banner.width}
+          height={banner.height}
+          alt={banner.alt}
+          src={banner.imageSrc}
+          loading="lazy"
+          decoding="async"
+          className="h-auto max-w-full"
+        />
+      </a>
+      <img
+        width={1}
+        height={1}
+        src={banner.trackingSrc}
+        alt=""
+        aria-hidden="true"
+        className="pointer-events-none absolute h-px w-px opacity-0"
+      />
+    </div>
+  );
+}
+
+export function StickyCtaSponsorBanner({
+  slotId,
+  variant,
+  userPlan,
+}: {
+  slotId: string;
+  variant: AdVariant;
+  userPlan: AdUserPlan;
+}) {
+  return (
+    <SponsorBanner
+      banner={STICKY_CTA_BANNER}
+      slotId={slotId}
+      variant={variant}
+      userPlan={userPlan}
+      className="pointer-events-auto mb-2 flex justify-center sm:justify-end"
+    />
+  );
 }
 
 export default function AdSlot({
@@ -98,39 +189,13 @@ export default function AdSlot({
           {ctaLabel}
         </span>
       ) : (
-        <div className="mt-4 text-center">
-          <a
-            href={DEFAULT_SPONSOR_BANNER.href}
-            target="_blank"
-            rel="nofollow sponsored noopener noreferrer"
-            className="inline-block"
-            onClick={() => {
-              sendAdEvent('ad_click', {
-                ad_slot: slotId,
-                variant,
-                user_plan: userPlan,
-              });
-            }}
-          >
-            <img
-              width={468}
-              height={60}
-              alt="画像作業に役立つおすすめサービス"
-              src={DEFAULT_SPONSOR_BANNER.imageSrc}
-              loading="lazy"
-              decoding="async"
-              className="h-auto max-w-full"
-            />
-          </a>
-          <img
-            width={1}
-            height={1}
-            src={DEFAULT_SPONSOR_BANNER.trackingSrc}
-            alt=""
-            aria-hidden="true"
-            className="pointer-events-none absolute h-px w-px opacity-0"
-          />
-        </div>
+        <SponsorBanner
+          banner={DEFAULT_SPONSOR_BANNER}
+          slotId={slotId}
+          variant={variant}
+          userPlan={userPlan}
+          className="mt-4 text-center"
+        />
       )}
     </>
   );

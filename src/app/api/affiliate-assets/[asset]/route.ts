@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server';
 const ASSET_SOURCES = {
   banner: 'https://www22.a8.net/svt/bgt?aid=250820591006&wid=002&eno=01&mid=s00000012624004064000&mc=1',
   pixel: 'https://www19.a8.net/0.gif?a8mat=45BYEN+3KN6I+2PEO+O720X',
+  'sticky-banner': 'https://www20.a8.net/svt/bgt?aid=250820591006&wid=002&eno=01&mid=s00000012624004039000&mc=1',
+  'sticky-pixel': 'https://www10.a8.net/0.gif?a8mat=45BYEN+3KN6I+2PEO+O1P4H',
 } as const;
 
 type AssetName = keyof typeof ASSET_SOURCES;

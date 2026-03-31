@@ -44,7 +44,7 @@ type InFile = {
 
 import UploadArea from "./UploadArea";
 import PrimaryButton from "./PrimaryButton";
-import AdSlot from "./AdSlot";
+import AdSlot, { StickyCtaSponsorBanner } from "./AdSlot";
 import {
   normalizeDataUrlLongSide,
   resizeDataUrlLongSide,
@@ -3682,93 +3682,100 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
               </>
             )}
             {!inputs.some(i => i.status === 'ready') && hasCompletedResults && (
-              <div className="pointer-events-auto w-full sm:w-auto bg-white/90 backdrop-blur-md p-3 sm:p-4 rounded-2xl shadow-xl border border-gray-200">
+              <>
+                <StickyCtaSponsorBanner
+                  slotId="bgremover_sticky_download"
+                  variant="B"
+                  userPlan={adUserPlan}
+                />
+                <div className="pointer-events-auto w-full sm:w-auto bg-white/90 backdrop-blur-md p-3 sm:p-4 rounded-2xl shadow-xl border border-gray-200">
 
-                {(() => {
-                  const enhancedByTarget = inputs
-                    .filter(i => i.status === 'completed' && i.wasEnhanced && (i.outputLongSide ?? 0) >= 1024)
-                    .reduce<Record<EnhanceTarget, number>>(
-                      (acc, i) => {
-                        const long = i.outputLongSide ?? 0;
-                        if (long >= toEnhanceLongSide('4k')) acc['4k'] = (acc['4k'] ?? 0) + 1;
-                        else if (long >= toEnhanceLongSide('2k')) acc['2k'] = (acc['2k'] ?? 0) + 1;
-                        else if (long >= toEnhanceLongSide('1k')) acc['1k'] = (acc['1k'] ?? 0) + 1;
-                        return acc;
-                      },
-                      { '1k': 0, '2k': 0, '4k': 0 }
-                    );
-                  const parts = (['4k', '2k', '1k'] as const)
-                    .filter(t => enhancedByTarget[t] > 0)
-                    .map(t => `${enhancedByTarget[t]}枚を${t.toUpperCase()}`);
-                  const upscaleSummary = parts.length > 0 ? parts.join('、') + 'に高画質化済み' : null;
-                  return upscaleSummary ? (
-                    <p className="text-center text-[11px] font-medium text-gray-600">
-                      {upscaleSummary}
-                    </p>
-                  ) : null;
-                })()}
-                {isPro && !batchEnhanceState.inProgress && (
-                  <div className="rounded-lg border border-purple-200 bg-purple-50/70 p-2.5 space-y-2">
-                    <p className="text-[11px] font-semibold text-purple-700">一括高画質化（Pro）</p>
-                    <div className="inline-flex w-full rounded-lg border border-purple-200 overflow-hidden">
-                      {(['1k', '2k', '4k'] as EnhanceTarget[]).map((target) => {
-                        const targetPx = toEnhanceLongSide(target);
-                        const eligibleCount = inputs.filter(
+                  {(() => {
+                    const enhancedByTarget = inputs
+                      .filter(i => i.status === 'completed' && i.wasEnhanced && (i.outputLongSide ?? 0) >= 1024)
+                      .reduce<Record<EnhanceTarget, number>>(
+                        (acc, i) => {
+                          const long = i.outputLongSide ?? 0;
+                          if (long >= toEnhanceLongSide('4k')) acc['4k'] = (acc['4k'] ?? 0) + 1;
+                          else if (long >= toEnhanceLongSide('2k')) acc['2k'] = (acc['2k'] ?? 0) + 1;
+                          else if (long >= toEnhanceLongSide('1k')) acc['1k'] = (acc['1k'] ?? 0) + 1;
+                          return acc;
+                        },
+                        { '1k': 0, '2k': 0, '4k': 0 }
+                      );
+                    const parts = (['4k', '2k', '1k'] as const)
+                      .filter(t => enhancedByTarget[t] > 0)
+                      .map(t => `${enhancedByTarget[t]}枚を${t.toUpperCase()}`);
+                    const upscaleSummary = parts.length > 0 ? parts.join('、') + 'に高画質化済み' : null;
+                    return upscaleSummary ? (
+                      <p className="text-center text-[11px] font-medium text-gray-600">
+                        {upscaleSummary}
+                      </p>
+                    ) : null;
+                  })()}
+                  {isPro && !batchEnhanceState.inProgress && (
+                    <div className="rounded-lg border border-purple-200 bg-purple-50/70 p-2.5 space-y-2">
+                      <p className="text-[11px] font-semibold text-purple-700">一括高画質化（Pro）</p>
+                      <div className="inline-flex w-full rounded-lg border border-purple-200 overflow-hidden">
+                        {(['1k', '2k', '4k'] as EnhanceTarget[]).map((target) => {
+                          const targetPx = toEnhanceLongSide(target);
+                          const eligibleCount = inputs.filter(
+                            i => i.status === 'completed' && (i.highQualityOutputUrl || i.outputUrl) && (i.outputLongSide ?? 0) < targetPx
+                          ).length;
+                          const isSelected = pendingBatchTarget === target;
+                          return (
+                            <button
+                              key={`sticky-batch-${target}`}
+                              type="button"
+                              onClick={() => setPendingBatchTarget(isSelected ? null : target)}
+                              disabled={busy || eligibleCount === 0}
+                              className={`flex-1 px-2 py-1.5 text-xs font-semibold border-r last:border-r-0 border-purple-200 transition-colors ${isSelected
+                                ? 'bg-purple-600 text-white'
+                                : eligibleCount === 0
+                                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                  : 'bg-white text-purple-700 hover:bg-purple-100'
+                                }`}
+                            >
+                              {target === '1k' ? '1K' : target === '2k' ? '2K' : '4K'}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {pendingBatchTarget && (() => {
+                        const targetPx = toEnhanceLongSide(pendingBatchTarget);
+                        const eligible = inputs.filter(
                           i => i.status === 'completed' && (i.highQualityOutputUrl || i.outputUrl) && (i.outputLongSide ?? 0) < targetPx
-                        ).length;
-                        const isSelected = pendingBatchTarget === target;
+                        );
+                        if (eligible.length === 0) return null;
                         return (
                           <button
-                            key={`sticky-batch-${target}`}
                             type="button"
-                            onClick={() => setPendingBatchTarget(isSelected ? null : target)}
-                            disabled={busy || eligibleCount === 0}
-                            className={`flex-1 px-2 py-1.5 text-xs font-semibold border-r last:border-r-0 border-purple-200 transition-colors ${isSelected
-                              ? 'bg-purple-600 text-white'
-                              : eligibleCount === 0
-                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                : 'bg-white text-purple-700 hover:bg-purple-100'
-                              }`}
+                            onClick={() => { void handleBatchEnhance(pendingBatchTarget); }}
+                            className="w-full inline-flex items-center justify-center px-3 py-2 rounded-lg text-xs font-semibold text-white bg-purple-600 hover:bg-purple-700"
                           >
-                            {target === '1k' ? '1K' : target === '2k' ? '2K' : '4K'}
+                            {eligible.length}枚を{pendingBatchTarget.toUpperCase()}に高画質化
                           </button>
                         );
-                      })}
+                      })()}
                     </div>
-                    {pendingBatchTarget && (() => {
-                      const targetPx = toEnhanceLongSide(pendingBatchTarget);
-                      const eligible = inputs.filter(
-                        i => i.status === 'completed' && (i.highQualityOutputUrl || i.outputUrl) && (i.outputLongSide ?? 0) < targetPx
-                      );
-                      if (eligible.length === 0) return null;
-                      return (
-                        <button
-                          type="button"
-                          onClick={() => { void handleBatchEnhance(pendingBatchTarget); }}
-                          className="w-full inline-flex items-center justify-center px-3 py-2 rounded-lg text-xs font-semibold text-white bg-purple-600 hover:bg-purple-700"
-                        >
-                          {eligible.length}枚を{pendingBatchTarget.toUpperCase()}に高画質化
-                        </button>
-                      );
-                    })()}
-                  </div>
-                )}
-                {!isPro && (
-                  <div className="rounded-lg border border-amber-200 bg-amber-50/70 p-2.5 mb-2">
-                    <p className="text-[11px] text-amber-700 mb-2">Proなら高画質化（拡大）、高精度モードが使えます</p>
-                    <button
-                      type="button"
-                      onClick={() => goToProPurchase('sticky_download_upsell')}
-                      className="w-full inline-flex items-center justify-center px-3 py-2 rounded-lg text-xs font-semibold text-white bg-pro-orange hover:bg-orange-600"
-                    >
-                      Proで高画質化する
-                    </button>
-                  </div>
-                )}
-                <PrimaryButton onClick={handleDownloadAll} disabled={batchEnhanceState.inProgress} variant="primary" className="w-full">
-                  すべてダウンロード (.zip)
-                </PrimaryButton>
-              </div>
+                  )}
+                  {!isPro && (
+                    <div className="rounded-lg border border-amber-200 bg-amber-50/70 p-2.5 mb-2">
+                      <p className="text-[11px] text-amber-700 mb-2">Proなら高画質化（拡大）、高精度モードが使えます</p>
+                      <button
+                        type="button"
+                        onClick={() => goToProPurchase('sticky_download_upsell')}
+                        className="w-full inline-flex items-center justify-center px-3 py-2 rounded-lg text-xs font-semibold text-white bg-pro-orange hover:bg-orange-600"
+                      >
+                        Proで高画質化する
+                      </button>
+                    </div>
+                  )}
+                  <PrimaryButton onClick={handleDownloadAll} disabled={batchEnhanceState.inProgress} variant="primary" className="w-full">
+                    すべてダウンロード (.zip)
+                  </PrimaryButton>
+                </div>
+              </>
             )}
           </div>
         )
