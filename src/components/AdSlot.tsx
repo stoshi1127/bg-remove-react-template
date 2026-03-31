@@ -113,7 +113,6 @@ export default function AdSlot({
             }}
           >
             <img
-              border={0}
               width={468}
               height={60}
               alt="画像作業に役立つおすすめサービス"
@@ -124,7 +123,6 @@ export default function AdSlot({
             />
           </a>
           <img
-            border={0}
             width={1}
             height={1}
             src={DEFAULT_SPONSOR_BANNER.trackingSrc}
