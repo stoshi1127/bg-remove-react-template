@@ -1,5 +1,6 @@
 // "use client";
 import './globals.css';
+import { Suspense } from 'react';
 import { Inter } from 'next/font/google';
 import type { Metadata } from 'next';
 import Script from 'next/script';
@@ -82,7 +83,9 @@ export default function RootLayout({
         `}
       </Script>
       <body className={`${inter.className} bg-gray-50`}>
-        <AnalyticsPageTracker />
+        <Suspense fallback={null}>
+          <AnalyticsPageTracker />
+        </Suspense>
         <Header />
 
         <main className="min-h-screen">

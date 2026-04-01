@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 
@@ -47,7 +48,9 @@ export default async function AccountPage() {
 
   return (
     <div className="container mx-auto px-4 py-12 max-w-2xl">
-      <BillingTracking />
+      <Suspense fallback={null}>
+        <BillingTracking />
+      </Suspense>
       <h1 className="text-2xl font-bold text-gray-900 mb-6">アカウント</h1>
 
       <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-soft">
