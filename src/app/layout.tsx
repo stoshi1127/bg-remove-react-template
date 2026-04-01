@@ -6,6 +6,8 @@ import Script from 'next/script';
 import Link from 'next/link';
 import Header from '../components/Header';
 import BrandIcon from '../components/BrandIcon';
+import AnalyticsPageTracker from '../components/AnalyticsPageTracker';
+import { GA_MEASUREMENT_ID } from '@/lib/analytics/events';
 
 const inter = Inter({ subsets: ['latin'] });
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bg.quicktools.jp';
@@ -40,14 +42,15 @@ export default function RootLayout({
       </head>
       <Script
         strategy="afterInteractive"
-        src="https://www.googletagmanager.com/gtag/js?id=G-YT0ZDBKL81"
+        src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
       />
       <Script id="google-analytics-config" strategy="afterInteractive">
         {`
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
+          window.gtag = gtag;
           gtag('js', new Date());
-          gtag('config', 'G-YT0ZDBKL81');
+          gtag('config', '${GA_MEASUREMENT_ID}', { send_page_view: false });
         `}
       </Script>
 
@@ -79,6 +82,7 @@ export default function RootLayout({
         `}
       </Script>
       <body className={`${inter.className} bg-gray-50`}>
+        <AnalyticsPageTracker />
         <Header />
 
         <main className="min-h-screen">

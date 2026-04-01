@@ -291,5 +291,36 @@ bash scripts/dev-test.sh
 
 Free/ゲスト向け広告を表示する場合、広告表示・クリックに関する情報が計測されることがあります（Google Analytics / Google AdSense の利用方針を含む）。
 
+## Analytics / GA4
+
+- GA4 は `src/app/layout.tsx` で読み込んでいます。測定IDは `G-YT0ZDBKL81` です。
+- App Router のクライアント遷移でも `page_view` を送るため、`src/components/AnalyticsPageTracker.tsx` で `pathname` / `searchParams` 変化時に手動送信しています。
+- 初期化時の `gtag('config', ...)` は `send_page_view: false` にしてあり、初回表示と SPA 遷移の重複計測を避けています。
+
+追跡できる主なイベント:
+
+- `page_view`: ページ表示。`page_path`、`page_title`、`page_location` を送信
+- `pro_purchase_click`: Pro 購入導線のクリック
+- `checkout_started`: Stripe Checkout への遷移開始
+- `checkout_completed`: 購入完了後に `/account?billing=success` へ戻った時
+- `checkout_canceled`: 購入キャンセル後に `/account?billing=cancel` へ戻った時
+- `pricing_table_view`: 料金表の表示
+- `processing_mode_selected`: 処理モード切り替え
+- `enhance_started` / `enhance_succeeded` / `enhance_failed`: 高精度処理の開始・成功・失敗
+- `premium_ai_consumed`: プレミアムAI使用回数の消費
+- `ad_loaded` / `ad_impression` / `ad_click`: 広告枠の読込・表示・クリック
+
+確認方法:
+
+- GA4 の `Realtime` でイベント到達を確認
+- GA4 の `DebugView` でイベント名とパラメータを確認
+- ブラウザ DevTools の `Network` で `g/collect` リクエストを確認
+
+関連ファイル:
+
+- `src/app/layout.tsx`
+- `src/components/AnalyticsPageTracker.tsx`
+- `src/lib/analytics/events.ts`
+
 - `src/app/privacy-policy/page.tsx`
 - `src/app/legal/tokushoho/page.tsx`（特定商取引法に基づく表記。表内の「URL」は `NEXT_PUBLIC_SITE_URL`（未設定時はローカルでは `http://localhost:3000` 等）を表示）
