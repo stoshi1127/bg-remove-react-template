@@ -292,3 +292,4 @@ bash scripts/dev-test.sh
 Free/ゲスト向け広告を表示する場合、広告表示・クリックに関する情報が計測されることがあります（Google Analytics / Google AdSense の利用方針を含む）。
 
 - `src/app/privacy-policy/page.tsx`
+- `src/app/legal/tokushoho/page.tsx`（特定商取引法に基づく表記。表内の「URL」は `NEXT_PUBLIC_SITE_URL`（未設定時はローカルでは `http://localhost:3000` 等）を表示）
