@@ -12,9 +12,10 @@ const proHighlights = ['EC商品画像', '大量処理', '高画質出力', '広
 type ProCtaSectionProps = {
   isLoggedIn: boolean;
   isPro?: boolean;
+  billingEnabled?: boolean;
 };
 
-export default function ProCtaSection({ isLoggedIn, isPro = false }: ProCtaSectionProps) {
+export default function ProCtaSection({ isLoggedIn, isPro = false, billingEnabled = true }: ProCtaSectionProps) {
   const [pricingModalOpen, setPricingModalOpen] = useState(false);
   const [guestPurchaseOpen, setGuestPurchaseOpen] = useState(false);
 
@@ -55,7 +56,7 @@ export default function ProCtaSection({ isLoggedIn, isPro = false }: ProCtaSecti
               variant="full"
               source="top_cta"
               currentPlan={!isLoggedIn ? 'guest' : isPro ? 'pro' : 'free'}
-              renderProCta={() => (
+              renderProCta={billingEnabled ? () => (
                 <div className="flex flex-col gap-3 w-full mt-4">
                   {!isLoggedIn ? (
                     <>
@@ -86,6 +87,10 @@ export default function ProCtaSection({ isLoggedIn, isPro = false }: ProCtaSecti
                     </Link>
                   )}
                 </div>
+              ) : () => (
+                <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-center text-sm font-medium text-slate-600">
+                  現在、Proプランの新規お申し込みは一時停止しています。
+                </div>
               )}
             />
 
@@ -98,8 +103,8 @@ export default function ProCtaSection({ isLoggedIn, isPro = false }: ProCtaSecti
         open={pricingModalOpen}
         onClose={() => setPricingModalOpen(false)}
         source="top_cta"
-        showPurchaseCta={!isLoggedIn}
-        onPurchaseClick={!isLoggedIn ? handlePurchaseFromPricingModal : undefined}
+        showPurchaseCta={billingEnabled && !isLoggedIn}
+        onPurchaseClick={billingEnabled && !isLoggedIn ? handlePurchaseFromPricingModal : undefined}
       />
     </>
   );

@@ -6,6 +6,7 @@ import GuideCard from '../components/GuideCard';
 import ProCtaSection from '../components/ProCtaSection';
 import TrackedLink from '../components/TrackedLink';
 import { getCurrentUser } from '@/lib/auth/session';
+import { isBillingEnabled } from '@/lib/billing/config';
 
 const siteName = 'イージーカット';
 const heroTrustPoints = ['登録不要', 'ブラウザ完結', 'JPG・PNG・HEIC対応', '一括処理', '商用利用可'];
@@ -178,6 +179,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function Home() {
   const user = await getCurrentUser();
+  const billingEnabled = isBillingEnabled();
   const isLoggedIn = !!user;
   const isPro = !!user?.isPro;
   const adUserPlan: 'pro' | 'free' | 'guest' = !user ? 'guest' : user.isPro ? 'pro' : 'free';
@@ -288,11 +290,11 @@ export default async function Home() {
 
           <div id="upload-tool" className="animate-fade-in-up mb-8 sm:mb-10 md:mb-12 scroll-mt-28" style={{ animationDelay: '0.1s' }}>
             <div className="bg-white border-2 border-blue-200 rounded-xl sm:rounded-2xl py-2 sm:py-3 shadow-lg">
-              <BgRemoverMulti isPro={isPro} adUserPlan={adUserPlan} />
+              <BgRemoverMulti isPro={isPro} adUserPlan={adUserPlan} billingEnabled={billingEnabled} />
             </div>
           </div>
 
-          <ProCtaSection isLoggedIn={isLoggedIn} isPro={isPro} />
+          <ProCtaSection isLoggedIn={isLoggedIn} isPro={isPro} billingEnabled={billingEnabled} />
 
           <ComparisonShowcase examples={comparisonExamples} />
         </div>

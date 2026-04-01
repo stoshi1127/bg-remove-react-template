@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
+import { isBillingEnabled } from '@/lib/billing/config';
 import LoginForm from './ui/LoginForm';
 
 export const metadata: Metadata = {
@@ -27,6 +28,7 @@ export default async function LoginPage({
     typeof resolved?.callbackUrl === 'string'
       ? resolved.callbackUrl
       : '/account';
+  const billingEnabled = isBillingEnabled();
 
   return (
     <div className="container mx-auto px-4 py-12 max-w-lg">
@@ -36,17 +38,23 @@ export default async function LoginPage({
       </p>
 
       <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-soft">
-        <LoginForm error={error} callbackUrl={callbackUrl} />
+        <LoginForm error={error} callbackUrl={callbackUrl} billingEnabled={billingEnabled} />
       </div>
 
       <div className="mt-6 bg-blue-50 border border-blue-100 rounded-2xl p-5">
         <div className="mt-3">
-          <Link
-            href="/?buyPro=1#pro"
-            className="inline-flex items-center px-5 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-colors"
-          >
-            Proを購入する
-          </Link>
+          {billingEnabled ? (
+            <Link
+              href="/?buyPro=1#pro"
+              className="inline-flex items-center px-5 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-colors"
+            >
+              Proを購入する
+            </Link>
+          ) : (
+            <p className="text-sm text-blue-900">
+              現在、Proプランの新規お申し込みは一時停止しています。
+            </p>
+          )}
         </div>
       </div>
 
@@ -56,4 +64,3 @@ export default async function LoginPage({
     </div>
   );
 }
-

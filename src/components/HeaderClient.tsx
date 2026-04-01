@@ -10,9 +10,10 @@ import PremiumUsageBadge from './PremiumUsageBadge';
 type HeaderClientProps = {
   isLoggedIn: boolean;
   isPro?: boolean;
+  billingEnabled?: boolean;
 };
 
-export default function HeaderClient({ isLoggedIn, isPro = false }: HeaderClientProps) {
+export default function HeaderClient({ isLoggedIn, isPro = false, billingEnabled = true }: HeaderClientProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
 
@@ -84,13 +85,15 @@ export default function HeaderClient({ isLoggedIn, isPro = false }: HeaderClient
           <div className="hidden lg:flex items-center gap-3 xl:gap-4">
             {!isLoggedIn ? (
               <>
-                <Link
-                  href="/?buyPro=1#pro"
-                  onClick={() => trackAnalyticsEvent('pro_purchase_click', { source: 'header' })}
-                  className="bg-pro-orange hover:bg-orange-600 text-white px-5 xl:px-6 py-2.5 rounded-full text-sm font-extrabold transition-all shadow-md shadow-orange-200 whitespace-nowrap"
-                >
-                  Proを購入する
-                </Link>
+                {billingEnabled ? (
+                  <Link
+                    href="/?buyPro=1#pro"
+                    onClick={() => trackAnalyticsEvent('pro_purchase_click', { source: 'header' })}
+                    className="bg-pro-orange hover:bg-orange-600 text-white px-5 xl:px-6 py-2.5 rounded-full text-sm font-extrabold transition-all shadow-md shadow-orange-200 whitespace-nowrap"
+                  >
+                    Proを購入する
+                  </Link>
+                ) : null}
                 <Link
                   href="/login"
                   className="bg-slate-100 hover:bg-slate-200 text-slate-900 px-5 xl:px-6 py-2.5 rounded-full text-sm font-extrabold transition-all whitespace-nowrap"
@@ -172,16 +175,18 @@ export default function HeaderClient({ isLoggedIn, isPro = false }: HeaderClient
 
             {!isLoggedIn ? (
               <>
-                <Link
-                  href="/?buyPro=1#pro"
-                  className="block px-4 py-2 rounded-lg font-semibold text-white bg-pro-orange hover:bg-orange-600"
-                  onClick={() => {
-                    trackAnalyticsEvent('pro_purchase_click', { source: 'header_mobile' });
-                    closeMenu();
-                  }}
-                >
-                  Proを購入する
-                </Link>
+                {billingEnabled ? (
+                  <Link
+                    href="/?buyPro=1#pro"
+                    className="block px-4 py-2 rounded-lg font-semibold text-white bg-pro-orange hover:bg-orange-600"
+                    onClick={() => {
+                      trackAnalyticsEvent('pro_purchase_click', { source: 'header_mobile' });
+                      closeMenu();
+                    }}
+                  >
+                    Proを購入する
+                  </Link>
+                ) : null}
                 <Link
                   href="/login"
                   className="block px-4 py-2 rounded-lg text-gray-700 hover:text-blue-600 hover:bg-gray-50 font-medium transition-colors duration-200"

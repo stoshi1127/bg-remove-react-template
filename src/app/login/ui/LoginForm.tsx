@@ -4,7 +4,15 @@ import { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { signIn } from 'next-auth/react';
 
-export default function LoginForm({ error, callbackUrl }: { error?: string, callbackUrl: string }) {
+export default function LoginForm({
+  error,
+  callbackUrl,
+  billingEnabled = true,
+}: {
+  error?: string,
+  callbackUrl: string,
+  billingEnabled?: boolean,
+}) {
   const errorMessage = useMemo(() => {
     if (error === 'expired') return 'リンクの有効期限が切れています。もう一度お試しください。';
     if (error === 'invalid') return 'リンクが無効です。もう一度お試しください。';
@@ -112,11 +120,18 @@ export default function LoginForm({ error, callbackUrl }: { error?: string, call
       ) : null}
 
       <p className="text-xs text-gray-500 leading-relaxed">
-        ※ マジックリンクは会員（Pro購入者）登録済みのメールアドレスにのみ届きます。未登録の方は上の「Googleでログイン」をご利用いただくか、{' '}
-        <Link href="/?buyPro=1#pro" className="text-blue-700 hover:underline font-medium">
-          Proを購入する
-        </Link>
-        {' '}してください。
+        ※ マジックリンクは会員（Pro購入者）登録済みのメールアドレスにのみ届きます。
+        {billingEnabled ? (
+          <>
+            {' '}未登録の方は上の「Googleでログイン」をご利用いただくか、{' '}
+            <Link href="/?buyPro=1#pro" className="text-blue-700 hover:underline font-medium">
+              Proを購入する
+            </Link>
+            {' '}してください。
+          </>
+        ) : (
+          <> 現在、Proプランの新規お申し込みは一時停止しています。</>
+        )}
       </p>
 
       {status === 'error' ? (

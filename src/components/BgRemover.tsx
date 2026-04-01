@@ -201,9 +201,14 @@ async function padImageToRatio(blob: Blob, ratio: string): Promise<Blob> {
 type BgRemoverMultiProps = {
   isPro?: boolean;
   adUserPlan?: AdUserPlan;
+  billingEnabled?: boolean;
 };
 
-export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: BgRemoverMultiProps) {
+export default function BgRemoverMulti({
+  isPro = false,
+  adUserPlan = 'guest',
+  billingEnabled = true,
+}: BgRemoverMultiProps) {
 
   /* ------------ state --------------- */
   const [inputs, setInputs] = useState<InFile[]>([]);
@@ -717,10 +722,14 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
   }, [changeExtension, getImageDimensions]);
 
   const goToProPurchase = useCallback((reason: string) => {
+    if (!billingEnabled) {
+      setMsg('現在、Proプランの新規お申し込みは一時停止しています。');
+      return;
+    }
     trackAnalyticsEvent('pro_purchase_click', { source: reason });
     trackAnalyticsEvent('pro_high_precision_click', { reason, isPro });
     window.location.href = '/?buyPro=1#pro';
-  }, [isPro]);
+  }, [billingEnabled, isPro]);
 
   // --- プレミアムAI残回数の取得 ---
   const fetchPremiumRemaining = useCallback(async () => {
@@ -2286,18 +2295,24 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
               ))}
             </ul>
             <div className="mt-5 space-y-3">
-              <button
-                type="button"
-                className="w-full inline-flex items-center justify-center px-4 py-3 rounded-xl font-semibold text-white bg-pro-orange hover:bg-orange-600 transition-colors shadow-sm"
-                onClick={() => {
-                  console.info('[pro_original_chosen]', { count: oversizedPromptItems.length });
-                  setOversizedPromptItems([]);
-                  setMsg(null);
-                  goToProPurchase('oversized_modal');
-                }}
-              >
-                そのままキレイに処理する（Pro）
-              </button>
+              {billingEnabled ? (
+                <button
+                  type="button"
+                  className="w-full inline-flex items-center justify-center px-4 py-3 rounded-xl font-semibold text-white bg-pro-orange hover:bg-orange-600 transition-colors shadow-sm"
+                  onClick={() => {
+                    console.info('[pro_original_chosen]', { count: oversizedPromptItems.length });
+                    setOversizedPromptItems([]);
+                    setMsg(null);
+                    goToProPurchase('oversized_modal');
+                  }}
+                >
+                  そのままキレイに処理する（Pro）
+                </button>
+              ) : (
+                <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                  現在、Proプランの新規お申し込みは一時停止しています。
+                </p>
+              )}
               <div className="space-y-2">
                 <button
                   type="button"
@@ -3210,7 +3225,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
       )}
 
       {/* Pro アップセルバナー（結果表示後、CTAの前） */}
-      {hasCompletedResults && !isPro && (
+      {billingEnabled && hasCompletedResults && !isPro && (
         <div className="w-[90%] mx-auto relative overflow-hidden rounded-2xl border border-orange-200/60 bg-gradient-to-br from-orange-50/80 via-white/60 to-amber-50/70 backdrop-blur-xl shadow-lg shadow-orange-100/40 group">
           {/* 背景の装飾 - 右奥の光 */}
           <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-[var(--color-pro-orange)]/10 blur-2xl pointer-events-none" />
@@ -3761,7 +3776,7 @@ export default function BgRemoverMulti({ isPro = false, adUserPlan = 'guest' }: 
                       })()}
                     </div>
                   )}
-                  {!isPro && (
+                  {!isPro && billingEnabled && (
                     <div className="rounded-lg border border-amber-200 bg-amber-50/70 p-2.5 mb-2">
                       <p className="text-[11px] text-amber-700 mb-2">Proなら高画質化（拡大）、高精度モードが使えます</p>
                       <button
