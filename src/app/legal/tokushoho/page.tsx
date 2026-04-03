@@ -5,6 +5,10 @@ import { getSiteUrl } from '@/lib/auth/siteUrl';
 export const metadata: Metadata = {
   title: 'QuickTools | 特定商取引法に基づく表記',
   description: 'QuickTools（イージーカット）の特定商取引法に基づく表記です。',
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 /** 消費者庁「通信販売に関する表示について」 */
@@ -36,18 +40,14 @@ export default function TokushohoPage() {
         <table className="w-full border border-gray-200 text-sm">
           <tbody>
             <tr className="border-b border-gray-200">
-              <th className="w-1/3 bg-gray-50 px-4 py-3 text-left font-semibold">販売事業者</th>
+              <th className="w-1/3 bg-gray-50 px-4 py-3 text-left font-semibold">販売事業者の名称</th>
               <td className="px-4 py-3">
-                販売事業者の氏名（名称）は、消費者からの請求があれば書面または電子メール等により遅滞なく提供いたします（ご請求先:{' '}
-                <a href="mailto:support@quicktools.jp" className="text-blue-600 hover:underline">
-                  support@quicktools.jp
-                </a>
-                ）。
+                QuickTools イージーカット
               </td>
             </tr>
             <tr className="border-b border-gray-200">
               <th className="bg-gray-50 px-4 py-3 text-left font-semibold">代表者</th>
-              <td className="px-4 py-3">（個人事業のため、販売事業者に同じ）</td>
+              <td className="px-4 py-3">新開 嗣敏</td>
             </tr>
             <tr className="border-b border-gray-200">
               <th className="bg-gray-50 px-4 py-3 text-left font-semibold">所在地</th>
@@ -125,7 +125,7 @@ export default function TokushohoPage() {
       
 
       <p className="mt-8 text-sm text-gray-500">制定日: 2026年3月25日</p>
-      <p className="text-sm text-gray-500">最終改定日: 2026年4月1日</p>
+      <p className="text-sm text-gray-500">最終改定日: 2026年4月3日</p>
     </div>
   );
 }
