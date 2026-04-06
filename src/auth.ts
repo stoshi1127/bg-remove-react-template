@@ -65,6 +65,35 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const baseAdapter = PrismaAdapter(prisma);
         return {
             ...baseAdapter,
+            async createUser(data: Parameters<NonNullable<typeof baseAdapter.createUser>>[0]) {
+                try {
+                    const createUser = baseAdapter.createUser;
+                    if (!createUser) {
+                        throw new Error('Adapter createUser is unavailable');
+                    }
+                    const result = await createUser(data);
+                    await setMagicLinkDebugCookie('adapter_create_user_ok');
+                    return result;
+                } catch (error) {
+                    await setMagicLinkDebugCookie('adapter_create_user_error');
+                    throw error;
+                }
+            },
+            async getUser(id: string) {
+                try {
+                    const getUser = baseAdapter.getUser;
+                    if (!getUser) {
+                        await setMagicLinkDebugCookie('adapter_get_user_unavailable');
+                        return null;
+                    }
+                    const result = await getUser(id);
+                    await setMagicLinkDebugCookie(result ? 'adapter_get_user_hit' : 'adapter_get_user_miss');
+                    return result;
+                } catch (error) {
+                    await setMagicLinkDebugCookie('adapter_get_user_error');
+                    throw error;
+                }
+            },
             async createVerificationToken(data: Parameters<NonNullable<typeof baseAdapter.createVerificationToken>>[0]) {
                 try {
                     const createVerificationToken = baseAdapter.createVerificationToken;
@@ -126,6 +155,23 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                     throw error;
                 }
             },
+            async getSessionAndUser(sessionToken: string) {
+                try {
+                    const getSessionAndUser = baseAdapter.getSessionAndUser;
+                    if (!getSessionAndUser) {
+                        await setMagicLinkDebugCookie('adapter_get_session_and_user_unavailable');
+                        return null;
+                    }
+                    const result = await getSessionAndUser(sessionToken);
+                    await setMagicLinkDebugCookie(
+                        result ? 'adapter_get_session_and_user_hit' : 'adapter_get_session_and_user_miss',
+                    );
+                    return result;
+                } catch (error) {
+                    await setMagicLinkDebugCookie('adapter_get_session_and_user_error');
+                    throw error;
+                }
+            },
             async createSession(data: Parameters<NonNullable<typeof baseAdapter.createSession>>[0]) {
                 try {
                     const createSession = baseAdapter.createSession;
@@ -137,6 +183,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                     return result;
                 } catch (error) {
                     await setMagicLinkDebugCookie('adapter_create_session_error');
+                    throw error;
+                }
+            },
+            async linkAccount(data: Parameters<NonNullable<typeof baseAdapter.linkAccount>>[0]) {
+                try {
+                    const linkAccount = baseAdapter.linkAccount;
+                    if (!linkAccount) {
+                        throw new Error('Adapter linkAccount is unavailable');
+                    }
+                    await linkAccount(data);
+                    await setMagicLinkDebugCookie('adapter_link_account_ok');
+                    return;
+                } catch (error) {
+                    await setMagicLinkDebugCookie('adapter_link_account_error');
                     throw error;
                 }
             },
