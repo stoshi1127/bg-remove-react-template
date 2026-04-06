@@ -155,3 +155,24 @@ model PendingCheckout {
   @@index([emailHash, stripeMode, createdAt])
   @@index([stripeMode, createdAt])
 }
+
+model PendingGooglePurchase {
+  id                      String     @id @default(cuid())
+  stateHash               String     @unique
+  googleSub               String?
+  emailEnc                String?
+  emailHash               String?
+  name                    String?
+  image                   String?
+  stripeCheckoutSessionId String?    @unique
+  stripeMode              StripeMode
+  expiresAt               DateTime
+  authorizedAt            DateTime?
+  completedAt             DateTime?
+  usedAt                  DateTime?
+  createdAt               DateTime   @default(now())
+
+  @@index([emailHash, stripeMode, createdAt])
+  @@index([stripeMode, createdAt])
+  @@index([googleSub, stripeMode, createdAt])
+}

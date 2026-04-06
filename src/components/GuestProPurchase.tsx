@@ -3,7 +3,6 @@
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { signIn } from 'next-auth/react';
 import { trackAnalyticsEvent } from '@/lib/analytics/events';
 
 type GuestCheckoutResponse =
@@ -30,7 +29,7 @@ export default function GuestProPurchase({
   const [message, setMessage] = useState<string | null>(null);
   const searchParams = useSearchParams();
   const autoOpenedRef = useRef(false);
-  const cancelNoticeShownRef = useRef(false);
+  const noticeShownRef = useRef(false);
 
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : internalOpen;
@@ -49,11 +48,24 @@ export default function GuestProPurchase({
   }, [searchParams, setOpen]);
 
   useEffect(() => {
-    if (cancelNoticeShownRef.current) return;
-    if (searchParams.get('billing') !== 'cancel') return;
+    if (noticeShownRef.current) return;
 
-    cancelNoticeShownRef.current = true;
-    setMessage('購入手続きをキャンセルしました。必要なときに、もう一度お試しください。');
+    const billing = searchParams.get('billing');
+    if (!billing) return;
+
+    const messages: Record<string, string> = {
+      cancel: '購入手続きをキャンセルしました。必要なときに、もう一度お試しください。',
+      already_pro: 'すでにProの可能性があります。ログインしてアカウントをご確認ください。',
+      google_auth_failed: 'Google認証の確認に失敗しました。もう一度お試しください。',
+      google_unavailable: 'Google購入が現在利用できません。時間をおいて再度お試しください。',
+      checkout_failed: '購入手続きの開始に失敗しました。時間をおいて再度お試しください。',
+    };
+
+    const nextMessage = messages[billing];
+    if (!nextMessage) return;
+
+    noticeShownRef.current = true;
+    setMessage(nextMessage);
     setOpen(true);
   }, [searchParams, setOpen]);
 
@@ -134,7 +146,7 @@ export default function GuestProPurchase({
                 <h2 className="text-lg font-bold text-gray-900">Proを購入する</h2>
                 <p className="text-3xl font-semibold text-amber-700 my-1">月額780円</p>
                 <p className="text-sm text-gray-600 text-center">
-                  広告なし・高精度・大きな画像・プレミアムAIが使えます。メールアドレスを入力して購入に進みます。
+                  広告なし・高精度・大きな画像・プレミアムAIが使えます。Google認証またはメールアドレスで購入に進めます。
                 </p>
               </div>
 
@@ -143,7 +155,7 @@ export default function GuestProPurchase({
                   type="button"
                   onClick={() => {
                     setLoading(true);
-                    signIn('google', { callbackUrl: '/api/billing/checkout' });
+                    window.location.href = '/api/billing/google-purchase/start';
                   }}
                   disabled={loading}
                   className="w-full inline-flex justify-center items-center px-5 py-3 bg-white border border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
@@ -154,7 +166,7 @@ export default function GuestProPurchase({
                     <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
                     <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                   </svg>
-                  Googleアカウントで登録・購入
+                  Googleで認証して購入に進む
                 </button>
 
                 <div className="relative py-1">

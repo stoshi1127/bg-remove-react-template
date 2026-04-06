@@ -5,6 +5,8 @@ import { normalizeEmail } from '@/lib/auth/email';
 import { getStripeClient } from '@/lib/billing/stripe';
 import { getStripeMode } from '@/lib/billing/stripeMode';
 import { decryptEmail } from '@/lib/billing/pendingCheckoutEmail';
+import { attachDatabaseSessionCookie, createDatabaseSessionForUser } from '@/lib/auth/sessionCookie';
+import { upsertGooglePurchaseUser } from '@/lib/billing/googlePurchase';
 
 export const runtime = 'nodejs';
 
@@ -37,9 +39,68 @@ export async function GET(req: Request) {
     }
 
     // New flow: "会員＝課金者" -> create user only after successful payment.
+    const pendingGooglePurchaseId =
+      typeof session.metadata?.pendingGooglePurchaseId === 'string'
+        ? session.metadata.pendingGooglePurchaseId
+        : null;
     const pendingCheckoutId =
       (typeof session.metadata?.pendingCheckoutId === 'string' ? session.metadata.pendingCheckoutId : null) ??
-      (typeof session.client_reference_id === 'string' ? session.client_reference_id : null);
+      (!pendingGooglePurchaseId && typeof session.client_reference_id === 'string'
+        ? session.client_reference_id
+        : null);
+
+    if (pendingGooglePurchaseId) {
+      const now = new Date();
+      await prisma.pendingGooglePurchase.deleteMany({
+        where: {
+          OR: [{ expiresAt: { lte: now } }, { usedAt: { not: null } }],
+        },
+      });
+
+      const pendingGoogle = await prisma.pendingGooglePurchase.findUnique({
+        where: { id: pendingGooglePurchaseId },
+        select: {
+          id: true,
+          googleSub: true,
+          emailEnc: true,
+          name: true,
+          image: true,
+          stripeMode: true,
+          expiresAt: true,
+          usedAt: true,
+        },
+      });
+
+      if (
+        !pendingGoogle ||
+        pendingGoogle.stripeMode !== stripeMode ||
+        pendingGoogle.expiresAt.getTime() <= now.getTime() ||
+        pendingGoogle.usedAt ||
+        !pendingGoogle.googleSub ||
+        !pendingGoogle.emailEnc
+      ) {
+        return NextResponse.redirect(new URL('/login?error=expired_checkout', url));
+      }
+
+      const email = normalizeEmail(decryptEmail(pendingGoogle.emailEnc));
+      const { userId } = await upsertGooglePurchaseUser(prisma, {
+        email,
+        googleSub: pendingGoogle.googleSub,
+        name: pendingGoogle.name,
+        image: pendingGoogle.image,
+      });
+
+      await prisma.pendingGooglePurchase.updateMany({
+        where: { id: pendingGooglePurchaseId, stripeMode, usedAt: null },
+        data: { usedAt: now },
+      });
+
+      const res = NextResponse.redirect(new URL('/account?billing=success', url));
+      const { sessionToken, expires } = await createDatabaseSessionForUser(prisma, userId);
+      attachDatabaseSessionCookie(res, req.url, sessionToken, expires);
+      res.headers.set('Cache-Control', 'no-store');
+      return res;
+    }
 
     if (!pendingCheckoutId) {
       return NextResponse.redirect(new URL('/login?error=missing_checkout', url));
@@ -94,4 +155,3 @@ export async function GET(req: Request) {
     return NextResponse.redirect(new URL('/?billing=verify_failed', url));
   }
 }
-

@@ -8,6 +8,7 @@ import { getStripeClient } from '@/lib/billing/stripe';
 import { getStripeMode } from '@/lib/billing/stripeMode';
 import { computeEntitlementFromSubscription } from '@/lib/billing/entitlement';
 import { decryptEmail } from '@/lib/billing/pendingCheckoutEmail';
+import { upsertGooglePurchaseUser } from '@/lib/billing/googlePurchase';
 
 export const runtime = 'nodejs';
 
@@ -201,7 +202,27 @@ export async function POST(req: Request) {
         }) => Promise<{ count: number }>;
         deleteMany: (args: unknown) => Promise<{ count: number }>;
       };
-      const itx = tx as unknown as Prisma.TransactionClient & { pendingCheckout: PendingCheckoutDelegate };
+      type PendingGooglePurchaseDelegate = {
+        findUnique: (args: unknown) => Promise<unknown>;
+        updateMany: (args: {
+          where: {
+            id?: string;
+            stripeCheckoutSessionId?: string;
+            stripeMode: 'test' | 'live';
+            expiresAt: { gt: Date };
+            completedAt: null;
+          };
+          data: {
+            stripeCheckoutSessionId?: string;
+            completedAt?: Date;
+          };
+        }) => Promise<{ count: number }>;
+        deleteMany: (args: unknown) => Promise<{ count: number }>;
+      };
+      const itx = tx as unknown as Prisma.TransactionClient & {
+        pendingCheckout: PendingCheckoutDelegate;
+        pendingGooglePurchase: PendingGooglePurchaseDelegate;
+      };
 
       // Deduplicate on (eventId, stripeMode).
       try {
@@ -221,8 +242,10 @@ export async function POST(req: Request) {
         if (!session) return;
 
         const metadata = asRecord(session.metadata) ?? {};
+        const pendingGooglePurchaseId = getString(metadata, 'pendingGooglePurchaseId');
         const pendingCheckoutId =
-          getString(metadata, 'pendingCheckoutId') ?? getString(session, 'client_reference_id');
+          getString(metadata, 'pendingCheckoutId') ??
+          (!pendingGooglePurchaseId ? getString(session, 'client_reference_id') : null);
         const customerId = asStripeId(session.customer);
         const sessionId = getString(session, 'id');
         const legacyUserId = getString(metadata, 'userId');
@@ -236,10 +259,58 @@ export async function POST(req: Request) {
             OR: [{ expiresAt: { lte: now } }, { usedAt: { not: null } }],
           },
         });
+        await itx.pendingGooglePurchase.deleteMany({
+          where: {
+            OR: [{ expiresAt: { lte: now } }, { usedAt: { not: null } }],
+          },
+        });
 
         // New flow: "会員＝課金者" -> create user only after successful payment (using PendingCheckout email).
         let userId: string | null = null;
-        if (pendingCheckoutId) {
+        if (pendingGooglePurchaseId) {
+          const pendingUnknown = await itx.pendingGooglePurchase.findUnique({
+            where: { id: pendingGooglePurchaseId },
+            select: {
+              id: true,
+              googleSub: true,
+              emailEnc: true,
+              name: true,
+              image: true,
+              stripeMode: true,
+              expiresAt: true,
+              usedAt: true,
+            },
+          });
+          const pending = asRecord(pendingUnknown);
+          const pendingStripeMode = pending ? getString(pending, 'stripeMode') : null;
+          const expiresAt = pending && pending.expiresAt instanceof Date ? pending.expiresAt : null;
+          const usedAt = pending && pending.usedAt instanceof Date ? pending.usedAt : null;
+          const googleSub = pending ? getString(pending, 'googleSub') : null;
+          const emailEnc = pending ? getString(pending, 'emailEnc') : null;
+          const name = pending ? getString(pending, 'name') : null;
+          const image = pending ? getString(pending, 'image') : null;
+
+          if (
+            pending &&
+            pendingStripeMode === stripeMode &&
+            expiresAt &&
+            expiresAt.getTime() > now.getTime() &&
+            !usedAt &&
+            googleSub &&
+            emailEnc
+          ) {
+            const email = normalizeEmail(decryptEmail(emailEnc));
+            const user = await upsertGooglePurchaseUser(tx, {
+              email,
+              googleSub,
+              name,
+              image,
+            });
+            userId = user.userId;
+          }
+        }
+
+        if (!userId && pendingCheckoutId) {
           const pendingUnknown = await itx.pendingCheckout.findUnique({
             where: { id: pendingCheckoutId },
             select: {
@@ -315,7 +386,20 @@ export async function POST(req: Request) {
         }
 
         // Link/activate PendingCheckout (best-effort).
-        if (pendingCheckoutId) {
+        if (pendingGooglePurchaseId) {
+          await itx.pendingGooglePurchase.updateMany({
+            where: {
+              id: pendingGooglePurchaseId,
+              stripeMode,
+              expiresAt: { gt: now },
+              completedAt: null,
+            },
+            data: {
+              stripeCheckoutSessionId: sessionId ?? undefined,
+              completedAt: now,
+            },
+          });
+        } else if (pendingCheckoutId) {
           await itx.pendingCheckout.updateMany({
             where: {
               id: pendingCheckoutId,
@@ -416,4 +500,3 @@ export async function POST(req: Request) {
     return res;
   }
 }
-
