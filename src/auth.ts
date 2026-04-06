@@ -172,6 +172,30 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                     throw error;
                 }
             },
+            async deleteSession(sessionToken: string) {
+                try {
+                    const deleteSession = baseAdapter.deleteSession;
+                    if (!deleteSession) {
+                        await setMagicLinkDebugCookie('adapter_delete_session_unavailable');
+                        return undefined;
+                    }
+                    await deleteSession(sessionToken);
+                    await setMagicLinkDebugCookie('adapter_delete_session_ok');
+                    return undefined;
+                } catch (error) {
+                    if (
+                        error &&
+                        typeof error === 'object' &&
+                        'code' in error &&
+                        (error as { code?: unknown }).code === 'P2025'
+                    ) {
+                        await setMagicLinkDebugCookie('adapter_delete_session_p2025_ignored');
+                        return undefined;
+                    }
+                    await setMagicLinkDebugCookie('adapter_delete_session_error');
+                    throw error;
+                }
+            },
             async createSession(data: Parameters<NonNullable<typeof baseAdapter.createSession>>[0]) {
                 try {
                     const createSession = baseAdapter.createSession;
