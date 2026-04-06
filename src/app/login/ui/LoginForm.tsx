@@ -16,6 +16,9 @@ export default function LoginForm({
   const errorMessage = useMemo(() => {
     if (error === 'expired') return 'リンクの有効期限が切れています。もう一度お試しください。';
     if (error === 'invalid') return 'リンクが無効です。もう一度お試しください。';
+    if (error === 'google_requires_purchase') {
+      return 'このGoogleアカウントではまだログインできません。先にProをご購入ください。';
+    }
     if (error === '1') return 'ログインエラーが発生しました。もう一度お試しください。';
     return null;
   }, [error]);
@@ -78,7 +81,7 @@ export default function LoginForm({
           <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
           <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
         </svg>
-        Google でログイン
+        購入済みの方はこちら
       </button>
 
       <div className="relative py-2">
@@ -120,14 +123,14 @@ export default function LoginForm({
       ) : null}
 
       <p className="text-xs text-gray-500 leading-relaxed">
-        ※ マジックリンクは会員（Pro購入者）登録済みのメールアドレスにのみ届きます。
+        ※ Googleログインとマジックリンクは、購入済み・登録済みのアカウント向けです。
         {billingEnabled ? (
           <>
-            {' '}未登録の方は上の「Googleでログイン」をご利用いただくか、{' '}
+            {' '}まだご利用前の方は、{' '}
             <Link href="/?buyPro=1#pro" className="text-blue-700 hover:underline font-medium">
               Proを購入する
             </Link>
-            {' '}してください。
+            {' '}からお申し込みください。
           </>
         ) : (
           <> 現在、Proプランの新規お申し込みは一時停止しています。</>

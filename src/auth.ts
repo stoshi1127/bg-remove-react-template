@@ -72,10 +72,42 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }),
     ],
     callbacks: {
-        async signIn({ user, account }) {
-            // Googleログインは未登録ユーザーも許可し、PrismaAdapter経由で新規作成する。
+        async signIn({ user, account, profile }) {
             if (account?.provider === 'google') {
-                if (!user.email) return false;
+                const email = typeof user.email === 'string' ? user.email : null;
+                const providerAccountId =
+                    typeof account.providerAccountId === 'string' ? account.providerAccountId : null;
+
+                if (!email || !providerAccountId) {
+                    return '/login?error=google_requires_purchase';
+                }
+
+                const [existingGoogleAccount, existingUserByEmail] = await Promise.all([
+                    prisma.account.findUnique({
+                        where: {
+                            provider_providerAccountId: {
+                                provider: 'google',
+                                providerAccountId,
+                            },
+                        },
+                        select: { userId: true },
+                    }),
+                    prisma.user.findUnique({
+                        where: { email },
+                        select: { id: true },
+                    }),
+                ]);
+
+                if (!existingGoogleAccount && !existingUserByEmail) {
+                    console.log('Blocked Google login for non-member account', {
+                        email,
+                        sub:
+                            typeof profile === 'object' && profile && 'sub' in profile
+                                ? profile.sub
+                                : undefined,
+                    });
+                    return '/login?error=google_requires_purchase';
+                }
             }
             // Allow all other sign in attempts (Resend handles restrictions in sendVerificationRequest)
             return true;
