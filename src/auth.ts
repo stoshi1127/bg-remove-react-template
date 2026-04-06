@@ -3,6 +3,7 @@ import type { DefaultSession } from 'next-auth';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import Resend from 'next-auth/providers/resend';
 import Google from 'next-auth/providers/google';
+import { cookies } from 'next/headers';
 import { prisma } from '@/lib/db';
 import { normalizeEmail } from '@/lib/auth/email';
 import { hashNormalizedEmail } from '@/lib/billing/crypto';
@@ -42,6 +43,17 @@ function debugLog(
     }).catch(() => {});
 }
 
+async function setMagicLinkDebugCookie(value: string) {
+    const cookieStore = await cookies();
+    cookieStore.set('magic-link-debug', value, {
+        path: '/',
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: false,
+        maxAge: 60 * 10,
+    });
+}
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
     adapter: PrismaAdapter(prisma),
     providers: [
@@ -53,6 +65,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 const runId = `resend-${Date.now()}`;
                 const normalizedEmail = normalizeEmail(email);
                 const emailHashPrefix = hashNormalizedEmail(normalizedEmail).slice(0, 12);
+                await setMagicLinkDebugCookie('requested');
                 // #region agent log
                 await debugLog(runId, 'H1-H2-H4', 'src/auth.ts:40', 'magic link send requested', {
                     emailHashPrefix,
@@ -81,6 +94,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 // #endregion
 
                 if (!user) {
+                    await setMagicLinkDebugCookie('user_missing');
                     // For privacy/security, we don't throw an error, we just silently fail to send the email.
                     // In signIn() we'll return a generic "Check your email" message anyway.
                     console.log(`Login attempt for non-existent email: ${email}`);
@@ -89,6 +103,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
                 // The URL is used as-is from NextAuth
                 if (process.env.NODE_ENV !== 'production') {
+                    await setMagicLinkDebugCookie('dev_link_generated');
                     console.log(`\n\n========== DEV LOGIN LINK ==========\nTo: ${email}\nLink: ${url}\n====================================\n\n`);
                     return;
                 }
@@ -119,6 +134,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                     status: res.status,
                 });
                 // #endregion
+                await setMagicLinkDebugCookie(res.ok ? 'resend_ok' : `resend_error_${res.status}`);
 
                 if (!res.ok) {
                     throw new Error('Resend error: ' + await res.text());
@@ -145,6 +161,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 hasProfile: !!profile,
             });
             // #endregion
+            if (account?.provider === 'resend') {
+                await setMagicLinkDebugCookie('resend_signin_callback');
+            }
 
             if (account?.provider === 'google') {
                 const providerAccountId =

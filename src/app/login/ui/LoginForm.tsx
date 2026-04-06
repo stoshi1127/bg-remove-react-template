@@ -25,6 +25,12 @@ export default function LoginForm({
 
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  const [debugInfo, setDebugInfo] = useState<string | null>(null);
+
+  const readDebugCookie = () => {
+    const match = document.cookie.match(/(?:^|; )magic-link-debug=([^;]+)/);
+    return match ? decodeURIComponent(match[1]) : null;
+  };
 
   useEffect(() => {
     // If we land here with ?sent=1, show success
@@ -32,11 +38,14 @@ export default function LoginForm({
     if (params.get('sent') === '1') {
       setStatus('sent');
     }
+    setDebugInfo(readDebugCookie());
   }, []);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus('sending');
+    setDebugInfo(null);
+    document.cookie = 'magic-link-debug=; Max-Age=0; path=/';
 
     try {
       const res = await signIn('resend', {
@@ -44,6 +53,7 @@ export default function LoginForm({
         redirect: false,
         callbackUrl,
       });
+      setDebugInfo(readDebugCookie());
 
       // Privacy: Always show the same UX regardless of account existence.
       if (res?.error) {
@@ -52,6 +62,7 @@ export default function LoginForm({
         setStatus('sent');
       }
     } catch {
+      setDebugInfo(readDebugCookie());
       setStatus('error');
     }
   };
@@ -140,6 +151,12 @@ export default function LoginForm({
       {status === 'error' ? (
         <div className="bg-red-50 border border-red-200 text-red-900 px-4 py-3 rounded-xl text-sm">
           送信に失敗しました。時間をおいて再度お試しください。
+        </div>
+      ) : null}
+
+      {debugInfo ? (
+        <div className="bg-slate-50 border border-slate-200 text-slate-700 px-4 py-3 rounded-xl text-xs break-all">
+          debug: {debugInfo}
         </div>
       ) : null}
     </form>
