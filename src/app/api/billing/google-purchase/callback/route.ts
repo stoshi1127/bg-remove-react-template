@@ -88,6 +88,23 @@ function redirectWithStatus(path: string): NextResponse {
   return res;
 }
 
+function redirectWithBillingReason(path: string, reason: string): NextResponse {
+  const target = new URL(path, getSiteUrl());
+  target.searchParams.set('billing_reason', reason);
+  const res = NextResponse.redirect(target);
+  res.cookies.set({
+    name: GOOGLE_PURCHASE_STATE_COOKIE,
+    value: '',
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: getSiteUrl().startsWith('https://'),
+    path: '/',
+    expires: new Date(0),
+  });
+  res.headers.set('Cache-Control', 'no-store');
+  return res;
+}
+
 export async function GET(req: Request) {
   let stage = 'entry';
   const runId = `callback-${Date.now()}`;
@@ -210,7 +227,7 @@ export async function GET(req: Request) {
         hasExistingUser: true,
       });
       // #endregion
-      return redirectWithStatus('/?buyPro=1&billing=already_pro');
+      return redirectWithBillingReason('/?buyPro=1&billing=already_pro', 'user_is_pro');
     }
 
     if (existingUser?.id) {
@@ -233,7 +250,7 @@ export async function GET(req: Request) {
           subscriptionStatus: existingSub?.status ?? null,
         });
         // #endregion
-        return redirectWithStatus('/?buyPro=1&billing=already_pro');
+        return redirectWithBillingReason('/?buyPro=1&billing=already_pro', 'subscription_entitlement');
       }
 
       const stripeCustomer = await prisma.stripeCustomer.findUnique({
@@ -258,7 +275,7 @@ export async function GET(req: Request) {
             customerMode: stripeCustomer.stripeMode,
           });
           // #endregion
-          return redirectWithStatus('/?buyPro=1&billing=already_pro');
+          return redirectWithBillingReason('/?buyPro=1&billing=already_pro', 'managed_customer_subscription');
         }
       }
     }
@@ -277,7 +294,7 @@ export async function GET(req: Request) {
         emailHashPrefix: emailHash.slice(0, 12),
       });
       // #endregion
-      return redirectWithStatus('/?buyPro=1&billing=already_pro');
+      return redirectWithBillingReason('/?buyPro=1&billing=already_pro', 'email_matched_subscription');
     }
 
     const priceId = getProPriceId();
