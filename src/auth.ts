@@ -106,6 +106,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                     throw error;
                 }
             },
+            async updateUser(data: Parameters<NonNullable<typeof baseAdapter.updateUser>>[0]) {
+                try {
+                    const updateUser = baseAdapter.updateUser;
+                    if (!updateUser) {
+                        throw new Error('Adapter updateUser is unavailable');
+                    }
+                    const result = await updateUser(data);
+                    await setMagicLinkDebugCookie('adapter_update_user_ok');
+                    return result;
+                } catch (error) {
+                    await setMagicLinkDebugCookie('adapter_update_user_error');
+                    throw error;
+                }
+            },
             async createSession(data: Parameters<NonNullable<typeof baseAdapter.createSession>>[0]) {
                 try {
                     const createSession = baseAdapter.createSession;
