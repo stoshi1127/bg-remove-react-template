@@ -44,14 +44,20 @@ function debugLog(
 }
 
 async function setMagicLinkDebugCookie(value: string) {
-    const cookieStore = await cookies();
-    cookieStore.set('magic-link-debug', value, {
-        path: '/',
-        sameSite: 'lax',
-        secure: process.env.NODE_ENV === 'production',
-        httpOnly: false,
-        maxAge: 60 * 10,
-    });
+    try {
+        const cookieStore = await cookies();
+        const current = cookieStore.get('magic-link-debug')?.value;
+        const next = current ? `${current} -> ${value}` : value;
+        cookieStore.set('magic-link-debug', next.slice(-500), {
+            path: '/',
+            sameSite: 'lax',
+            secure: process.env.NODE_ENV === 'production',
+            httpOnly: false,
+            maxAge: 60 * 10,
+        });
+    } catch {
+        // Never let debug instrumentation break auth flow.
+    }
 }
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
