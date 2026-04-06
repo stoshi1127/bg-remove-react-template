@@ -61,7 +61,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             ...baseAdapter,
             async createVerificationToken(data: Parameters<NonNullable<typeof baseAdapter.createVerificationToken>>[0]) {
                 try {
-                    const result = await baseAdapter.createVerificationToken!(data);
+                    const createVerificationToken = baseAdapter.createVerificationToken;
+                    if (!createVerificationToken) {
+                        throw new Error('Adapter createVerificationToken is unavailable');
+                    }
+                    const result = await createVerificationToken(data);
                     await setMagicLinkDebugCookie('adapter_create_verification_token_ok');
                     return result;
                 } catch (error) {
@@ -71,7 +75,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             },
             async useVerificationToken(data: Parameters<NonNullable<typeof baseAdapter.useVerificationToken>>[0]) {
                 try {
-                    const result = await baseAdapter.useVerificationToken!(data);
+                    const adapterUseVerificationToken = baseAdapter.useVerificationToken;
+                    if (!adapterUseVerificationToken) {
+                        throw new Error('Adapter useVerificationToken is unavailable');
+                    }
+                    const result = await adapterUseVerificationToken(data);
                     await setMagicLinkDebugCookie(
                         result ? 'adapter_use_verification_token_ok' : 'adapter_use_verification_token_null',
                     );
@@ -83,8 +91,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             },
             async getUserByEmail(email: string) {
                 try {
-                    const result = await baseAdapter.getUserByEmail(email);
-                    await setMagicLinkDebugCookie(result ? 'adapter_get_user_by_email_hit' : 'adapter_get_user_by_email_miss');
+                    const getUserByEmail = baseAdapter.getUserByEmail;
+                    if (!getUserByEmail) {
+                        await setMagicLinkDebugCookie('adapter_get_user_by_email_unavailable');
+                        return null;
+                    }
+                    const result = await getUserByEmail(email);
+                    await setMagicLinkDebugCookie(
+                        result ? 'adapter_get_user_by_email_hit' : 'adapter_get_user_by_email_miss',
+                    );
                     return result;
                 } catch (error) {
                     await setMagicLinkDebugCookie('adapter_get_user_by_email_error');
@@ -93,7 +108,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             },
             async createSession(data: Parameters<NonNullable<typeof baseAdapter.createSession>>[0]) {
                 try {
-                    const result = await baseAdapter.createSession!(data);
+                    const createSession = baseAdapter.createSession;
+                    if (!createSession) {
+                        throw new Error('Adapter createSession is unavailable');
+                    }
+                    const result = await createSession(data);
                     await setMagicLinkDebugCookie('adapter_create_session_ok');
                     return result;
                 } catch (error) {
