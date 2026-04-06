@@ -32,47 +32,19 @@ export async function hasBlockingStripeSubscriptionByEmail(args: {
   stripe: Stripe;
   email: string;
 }): Promise<boolean> {
-  const summary = await getBlockingStripeSubscriptionSummaryByEmail(args);
-  return summary.hasBlocking;
-}
-
-export async function getBlockingStripeSubscriptionSummaryByEmail(args: {
-  stripe: Stripe;
-  email: string;
-}): Promise<{
-  hasBlocking: boolean;
-  customerCount: number;
-  blockingCustomerCount: number;
-  blockingStatuses: string[];
-}> {
   const customers = await args.stripe.customers.list({
     email: args.email,
     limit: 10,
   });
 
-  const blockingStatuses = new Set<string>();
-  let blockingCustomerCount = 0;
-
   for (const customer of customers.data) {
     if (!customer.id) continue;
-    const subscriptions = await args.stripe.subscriptions.list({
-      customer: customer.id,
-      status: 'all',
-      limit: 10,
+    const hasBlocking = await hasBlockingStripeSubscription({
+      stripe: args.stripe,
+      customerId: customer.id,
     });
-    const customerBlockingStatuses = subscriptions.data
-      .map((subscription) => subscription.status)
-      .filter((status) => hasBlockingSubscriptionStatus(status));
-    if (customerBlockingStatuses.length > 0) {
-      blockingCustomerCount += 1;
-      customerBlockingStatuses.forEach((status) => blockingStatuses.add(status));
-    }
+    if (hasBlocking) return true;
   }
 
-  return {
-    hasBlocking: blockingCustomerCount > 0,
-    customerCount: customers.data.length,
-    blockingCustomerCount,
-    blockingStatuses: Array.from(blockingStatuses).sort(),
-  };
+  return false;
 }
