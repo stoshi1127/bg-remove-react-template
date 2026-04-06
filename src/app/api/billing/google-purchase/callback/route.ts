@@ -11,8 +11,8 @@ import { encryptEmail } from '@/lib/billing/pendingCheckoutEmail';
 import { GOOGLE_PURCHASE_TTL_MINUTES } from '@/lib/billing/googlePurchase';
 import { computeEntitlementFromSubscription } from '@/lib/billing/entitlement';
 import {
+  getBlockingStripeSubscriptionSummaryByEmail,
   hasBlockingStripeSubscription,
-  hasBlockingStripeSubscriptionByEmail,
 } from '@/lib/billing/subscriptionGuard';
 
 export const runtime = 'nodejs';
@@ -281,20 +281,30 @@ export async function GET(req: Request) {
     }
 
     stage = 'email-subscription-check';
-    const hasBlockingByEmail = await hasBlockingStripeSubscriptionByEmail({ stripe, email });
+    const emailSubscriptionSummary = await getBlockingStripeSubscriptionSummaryByEmail({ stripe, email });
+    const hasBlockingByEmail = emailSubscriptionSummary.hasBlocking;
     // #region agent log
     await debugLog(runId, 'H4', 'src/app/api/billing/google-purchase/callback/route.ts:231', 'email-based stripe lookup evaluated', {
       hasBlockingByEmail,
+      customerCount: emailSubscriptionSummary.customerCount,
+      blockingCustomerCount: emailSubscriptionSummary.blockingCustomerCount,
+      blockingStatuses: emailSubscriptionSummary.blockingStatuses,
       emailHashPrefix: emailHash.slice(0, 12),
     });
     // #endregion
     if (hasBlockingByEmail) {
       // #region agent log
       await debugLog(runId, 'H4', 'src/app/api/billing/google-purchase/callback/route.ts:237', 'redirecting already_pro from email-based stripe lookup', {
+        customerCount: emailSubscriptionSummary.customerCount,
+        blockingCustomerCount: emailSubscriptionSummary.blockingCustomerCount,
+        blockingStatuses: emailSubscriptionSummary.blockingStatuses,
         emailHashPrefix: emailHash.slice(0, 12),
       });
       // #endregion
-      return redirectWithBillingReason('/?buyPro=1&billing=already_pro', 'email_matched_subscription');
+      return redirectWithBillingReason(
+        `/?buyPro=1&billing=already_pro&billing_match_count=${emailSubscriptionSummary.customerCount}&billing_blocking_customer_count=${emailSubscriptionSummary.blockingCustomerCount}&billing_blocking_statuses=${encodeURIComponent(emailSubscriptionSummary.blockingStatuses.join(',')) || 'none'}`,
+        'email_matched_subscription',
+      );
     }
 
     const priceId = getProPriceId();
