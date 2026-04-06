@@ -39,7 +39,7 @@ export default async function LoginPage({
       </p>
 
       <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-soft">
-        <LoginForm error={error} callbackUrl={callbackUrl} billingEnabled={billingEnabled} />
+        <LoginForm error={error} callbackUrl={callbackUrl} />
       </div>
 
       <div className="mt-6 bg-white border border-gray-200 rounded-2xl p-6 shadow-soft">

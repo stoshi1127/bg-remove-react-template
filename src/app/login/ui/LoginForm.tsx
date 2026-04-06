@@ -1,17 +1,14 @@
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
-import Link from 'next/link';
 import { signIn } from 'next-auth/react';
 
 export default function LoginForm({
   error,
   callbackUrl,
-  billingEnabled = true,
 }: {
   error?: string,
   callbackUrl: string,
-  billingEnabled?: boolean,
 }) {
   const errorMessage = useMemo(() => {
     if (error === 'expired') return 'リンクの有効期限が切れています。もう一度お試しください。';
