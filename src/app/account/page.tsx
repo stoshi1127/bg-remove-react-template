@@ -75,9 +75,11 @@ export default async function AccountPage() {
                 </div>
               )}
             </div>
-            <div className="text-xs text-gray-500">
-              {stripeMode === 'live' ? '本番' : 'テスト'}モード
-            </div>
+            {stripeMode !== 'live' ? (
+              <div className="inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-[11px] font-medium text-sky-700">
+                テスト環境
+              </div>
+            ) : null}
           </div>
 
           {showPaymentWarning && (
@@ -111,7 +113,7 @@ export default async function AccountPage() {
           )}
         </div>
 
-        <div className="mt-6">
+        <div className="mt-8 border-t border-gray-100 pt-6">
           <LogoutButton />
         </div>
       </div>

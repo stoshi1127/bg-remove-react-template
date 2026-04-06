@@ -70,7 +70,7 @@ export default function BillingButtons({ isPro }: { isPro: boolean }) {
             type="button"
             onClick={goCheckout}
             disabled={loading !== null}
-            className="inline-flex items-center justify-center px-5 py-3 rounded-xl font-semibold text-white bg-pro-orange hover:bg-orange-600 transition-colors disabled:opacity-60"
+            className="inline-flex min-h-14 items-center justify-center px-5 py-3 rounded-xl font-semibold text-white bg-pro-orange hover:bg-orange-600 transition-colors disabled:opacity-60"
           >
             {loading === 'checkout' ? '購入画面へ…' : 'Proを購入する'}
           </button>
@@ -80,9 +80,14 @@ export default function BillingButtons({ isPro }: { isPro: boolean }) {
           type="button"
           onClick={goPortal}
           disabled={loading !== null}
-          className="inline-flex items-center justify-center px-5 py-3 rounded-xl font-medium border border-gray-300 text-gray-900 hover:bg-gray-50 transition-colors disabled:opacity-60"
+          className="inline-flex min-h-14 flex-col items-center justify-center px-5 py-3 rounded-xl bg-slate-900 text-white shadow-sm transition-colors hover:bg-slate-800 disabled:opacity-60"
         >
-          {loading === 'portal' ? '開いています…' : 'Proを管理する'}
+          <span className="font-semibold">
+            {loading === 'portal' ? '開いています…' : 'Proを管理する'}
+          </span>
+          <span className="text-xs font-medium text-slate-300">
+            請求・支払い方法を確認
+          </span>
         </button>
       </div>
 
@@ -94,4 +99,3 @@ export default function BillingButtons({ isPro }: { isPro: boolean }) {
     </div>
   );
 }
-
