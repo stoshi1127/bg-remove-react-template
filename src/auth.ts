@@ -4,6 +4,8 @@ import { PrismaAdapter } from '@auth/prisma-adapter';
 import Resend from 'next-auth/providers/resend';
 import Google from 'next-auth/providers/google';
 import { prisma } from '@/lib/db';
+import { normalizeEmail } from '@/lib/auth/email';
+import { hashNormalizedEmail } from '@/lib/billing/crypto';
 
 declare module 'next-auth' {
     interface Session {
@@ -15,6 +17,31 @@ declare module 'next-auth' {
     }
 }
 
+function debugLog(
+    runId: string,
+    hypothesisId: string,
+    location: string,
+    message: string,
+    data: Record<string, unknown>,
+) {
+    return fetch('http://127.0.0.1:7243/ingest/d5b9b24e-cf56-4f8e-b90c-eeb7b2ed6fe0', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Debug-Session-Id': '54f1f6',
+        },
+        body: JSON.stringify({
+            sessionId: '54f1f6',
+            runId,
+            hypothesisId,
+            location,
+            message,
+            data,
+            timestamp: Date.now(),
+        }),
+    }).catch(() => {});
+}
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
     adapter: PrismaAdapter(prisma),
     providers: [
@@ -23,10 +50,35 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             from: process.env.EMAIL_FROM,
             // override sendVerificationRequest to only allow existing users
             sendVerificationRequest: async ({ identifier: email, url, provider }) => {
+                const runId = `resend-${Date.now()}`;
+                const normalizedEmail = normalizeEmail(email);
+                const emailHashPrefix = hashNormalizedEmail(normalizedEmail).slice(0, 12);
+                // #region agent log
+                await debugLog(runId, 'H1-H2-H4', 'src/auth.ts:40', 'magic link send requested', {
+                    emailHashPrefix,
+                    hasResendApiKey: !!provider.apiKey,
+                    hasEmailFrom: !!provider.from,
+                    urlHost: (() => {
+                        try {
+                            return new URL(url).host;
+                        } catch {
+                            return 'invalid';
+                        }
+                    })(),
+                });
+                // #endregion
+
                 // Only send link if user exists
                 const user = await prisma.user.findUnique({
-                    where: { email },
+                    where: { email: normalizedEmail },
                 });
+
+                // #region agent log
+                await debugLog(runId, 'H1', 'src/auth.ts:56', 'magic link user lookup completed', {
+                    emailHashPrefix,
+                    hasUser: !!user,
+                });
+                // #endregion
 
                 if (!user) {
                     // For privacy/security, we don't throw an error, we just silently fail to send the email.
@@ -60,6 +112,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                     }),
                 });
 
+                // #region agent log
+                await debugLog(runId, 'H2', 'src/auth.ts:85', 'magic link resend response received', {
+                    emailHashPrefix,
+                    ok: res.ok,
+                    status: res.status,
+                });
+                // #endregion
+
                 if (!res.ok) {
                     throw new Error('Resend error: ' + await res.text());
                 }
@@ -73,8 +133,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     ],
     callbacks: {
         async signIn({ user, account, profile }) {
+            const runId = `signin-${Date.now()}`;
+            const email =
+                typeof user.email === 'string' ? normalizeEmail(user.email) : null;
+            const emailHashPrefix = email ? hashNormalizedEmail(email).slice(0, 12) : null;
+            // #region agent log
+            await debugLog(runId, 'H3-H4', 'src/auth.ts:102', 'nextauth signIn callback entered', {
+                provider: account?.provider ?? null,
+                hasUserId: !!user.id,
+                emailHashPrefix,
+                hasProfile: !!profile,
+            });
+            // #endregion
+
             if (account?.provider === 'google') {
-                const email = typeof user.email === 'string' ? user.email : null;
                 const providerAccountId =
                     typeof account.providerAccountId === 'string' ? account.providerAccountId : null;
 
