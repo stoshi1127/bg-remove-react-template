@@ -19,18 +19,12 @@ export default function LoginForm({
     if (error === 'google_requires_purchase') {
       return 'このGoogleアカウントではまだログインできません。先にProをご購入ください。';
     }
-    if (error === '1') return 'ログインエラーが発生しました。もう一度お試しください。';
+    if (error === '1' || error === 'Configuration') return 'ログインエラーが発生しました。もう一度お試しください。';
     return null;
   }, [error]);
 
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
-  const [debugInfo, setDebugInfo] = useState<string | null>(null);
-
-  const readDebugCookie = () => {
-    const match = document.cookie.match(/(?:^|; )magic-link-debug=([^;]+)/);
-    return match ? decodeURIComponent(match[1]) : null;
-  };
 
   useEffect(() => {
     // If we land here with ?sent=1, show success
@@ -38,14 +32,11 @@ export default function LoginForm({
     if (params.get('sent') === '1') {
       setStatus('sent');
     }
-    setDebugInfo(readDebugCookie());
   }, []);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus('sending');
-    setDebugInfo(null);
-    document.cookie = 'magic-link-debug=; Max-Age=0; path=/';
 
     try {
       const res = await signIn('resend', {
@@ -53,7 +44,6 @@ export default function LoginForm({
         redirect: false,
         callbackUrl,
       });
-      setDebugInfo(readDebugCookie());
 
       // Privacy: Always show the same UX regardless of account existence.
       if (res?.error) {
@@ -62,7 +52,6 @@ export default function LoginForm({
         setStatus('sent');
       }
     } catch {
-      setDebugInfo(readDebugCookie());
       setStatus('error');
     }
   };
@@ -133,30 +122,10 @@ export default function LoginForm({
         </div>
       ) : null}
 
-      <p className="text-xs text-gray-500 leading-relaxed">
-        ※ Googleログインとマジックリンクは、購入済み・登録済みのアカウント向けです。
-        {billingEnabled ? (
-          <>
-            {' '}まだご利用前の方は、{' '}
-            <Link href="/?buyPro=1#pro" className="text-blue-700 hover:underline font-medium">
-              Proを購入する
-            </Link>
-            {' '}からお申し込みください。
-          </>
-        ) : (
-          <> 現在、Proプランの新規お申し込みは一時停止しています。</>
-        )}
-      </p>
 
       {status === 'error' ? (
         <div className="bg-red-50 border border-red-200 text-red-900 px-4 py-3 rounded-xl text-sm">
           送信に失敗しました。時間をおいて再度お試しください。
-        </div>
-      ) : null}
-
-      {debugInfo ? (
-        <div className="bg-slate-50 border border-slate-200 text-slate-700 px-4 py-3 rounded-xl text-xs break-all">
-          debug: {debugInfo}
         </div>
       ) : null}
     </form>
