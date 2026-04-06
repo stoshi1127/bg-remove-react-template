@@ -363,12 +363,32 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
     logger: {
         error: async (error) => {
-            const errorLike = error as Error & { type?: string };
+            const errorLike = error as Error & {
+                type?: string;
+                cause?: unknown;
+            };
             const code = errorLike.type ?? errorLike.name ?? 'unknown';
             const message =
                 typeof errorLike.message === 'string' ? errorLike.message.slice(0, 80) : null;
+            const cause = errorLike.cause;
+            const causeMessage =
+                cause && typeof cause === 'object' && 'err' in cause
+                    ? (() => {
+                        const err = (cause as { err?: unknown }).err;
+                        if (err && typeof err === 'object' && 'message' in err && typeof err.message === 'string') {
+                            return err.message.slice(0, 120);
+                        }
+                        return null;
+                    })()
+                    : cause && typeof cause === 'object' && 'message' in cause && typeof cause.message === 'string'
+                        ? cause.message.slice(0, 120)
+                        : null;
             await setMagicLinkDebugCookie(
-                message ? `logger_${code}:${message}` : `logger_${code}`,
+                causeMessage
+                    ? `logger_${code}:${causeMessage}`
+                    : message
+                        ? `logger_${code}:${message}`
+                        : `logger_${code}`,
             );
         },
     },
