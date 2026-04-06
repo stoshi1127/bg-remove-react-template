@@ -295,6 +295,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             return session;
         },
     },
+    logger: {
+        error: async (error) => {
+            const errorLike = error as Error & { type?: string };
+            const code = errorLike.type ?? errorLike.name ?? 'unknown';
+            const message =
+                typeof errorLike.message === 'string' ? errorLike.message.slice(0, 80) : null;
+            await setMagicLinkDebugCookie(
+                message ? `logger_${code}:${message}` : `logger_${code}`,
+            );
+        },
+    },
     pages: {
         signIn: '/login',
         verifyRequest: '/login?sent=1',
