@@ -55,7 +55,54 @@ async function setMagicLinkDebugCookie(value: string) {
 }
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-    adapter: PrismaAdapter(prisma),
+    adapter: (() => {
+        const baseAdapter = PrismaAdapter(prisma);
+        return {
+            ...baseAdapter,
+            async createVerificationToken(data: Parameters<NonNullable<typeof baseAdapter.createVerificationToken>>[0]) {
+                try {
+                    const result = await baseAdapter.createVerificationToken!(data);
+                    await setMagicLinkDebugCookie('adapter_create_verification_token_ok');
+                    return result;
+                } catch (error) {
+                    await setMagicLinkDebugCookie('adapter_create_verification_token_error');
+                    throw error;
+                }
+            },
+            async useVerificationToken(data: Parameters<NonNullable<typeof baseAdapter.useVerificationToken>>[0]) {
+                try {
+                    const result = await baseAdapter.useVerificationToken!(data);
+                    await setMagicLinkDebugCookie(
+                        result ? 'adapter_use_verification_token_ok' : 'adapter_use_verification_token_null',
+                    );
+                    return result;
+                } catch (error) {
+                    await setMagicLinkDebugCookie('adapter_use_verification_token_error');
+                    throw error;
+                }
+            },
+            async getUserByEmail(email: string) {
+                try {
+                    const result = await baseAdapter.getUserByEmail(email);
+                    await setMagicLinkDebugCookie(result ? 'adapter_get_user_by_email_hit' : 'adapter_get_user_by_email_miss');
+                    return result;
+                } catch (error) {
+                    await setMagicLinkDebugCookie('adapter_get_user_by_email_error');
+                    throw error;
+                }
+            },
+            async createSession(data: Parameters<NonNullable<typeof baseAdapter.createSession>>[0]) {
+                try {
+                    const result = await baseAdapter.createSession!(data);
+                    await setMagicLinkDebugCookie('adapter_create_session_ok');
+                    return result;
+                } catch (error) {
+                    await setMagicLinkDebugCookie('adapter_create_session_error');
+                    throw error;
+                }
+            },
+        };
+    })(),
     providers: [
         Resend({
             apiKey: process.env.AUTH_RESEND_KEY || process.env.RESEND_API_KEY,
@@ -218,7 +265,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     pages: {
         signIn: '/login',
         verifyRequest: '/login?sent=1',
-        error: '/login?error=1',
+        error: '/login',
     },
     session: {
         strategy: 'database',
