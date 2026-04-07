@@ -735,8 +735,8 @@ export default function BgRemoverMulti({
     // JPEGよりWebPのほうが同等品質でサイズを稼ぎやすいので、まずWebPを試し、ダメならJPEGへ。
     const preferredMimes: Array<'image/webp' | 'image/jpeg'> = ['image/webp', 'image/jpeg'];
     const qualitySteps = [0.88, 0.8, 0.72];
-    // まず12MP付近まで落としてから、最小限の追加縮小のみ行う。
-    const initialMpRatio = Math.min(1, Math.sqrt((FREE_MAX_MP * 1.05) / Math.max(dims.mp, 0.1)));
+    // Blob token 発行側は FREE_MAX_MP を厳密に見るため、クライアント側も同じ上限に合わせる。
+    const initialMpRatio = Math.min(1, Math.sqrt(FREE_MAX_MP / Math.max(dims.mp, 0.1)));
     const scaleSteps = [1, 0.95, 0.88];
 
     let bestBlob: Blob | null = null;
