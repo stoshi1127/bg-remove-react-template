@@ -2290,6 +2290,21 @@ export default function BgRemoverMulti({
     }
   };
 
+  const handleDownloadSingle = useCallback(async (imageUrl: string, fileName: string) => {
+    try {
+      const response = await fetch(imageUrl);
+      if (!response.ok) {
+        throw new Error('画像の取得に失敗しました。');
+      }
+
+      const blob = await response.blob();
+      saveAs(blob, fileName);
+    } catch (error) {
+      console.error('単体ダウンロード処理エラー:', error);
+      setMsg('画像の保存に失敗しました。時間をおいて再度お試しください。');
+    }
+  }, []);
+
   /* ------------ UI --------------- */
   return (
     <div className="w-full max-w-3xl mx-auto px-3 py-4 sm:p-6 space-y-5 sm:space-y-6 bg-white rounded-lg sm:rounded-xl">
@@ -3169,26 +3184,30 @@ export default function BgRemoverMulti({
                           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                             {/* ダウンロードボタン */}
                             {!isPro && (
-                              <a
-                                href={input.outputUrl}
-                                download={`processed_${input.name.replace(/\.[^.]+$/, ".png")}`}
-                                className="flex-1 sm:flex-none"
+                              <PrimaryButton
+                                variant="primary"
+                                size="sm"
+                                className="w-full sm:w-auto flex-1 sm:flex-none"
+                                onClick={() => void handleDownloadSingle(
+                                  input.outputUrl!,
+                                  `processed_${input.name.replace(/\.[^.]+$/, ".png")}`,
+                                )}
                               >
-                                <PrimaryButton variant="primary" size="sm" className="w-full sm:w-auto">
                                   保存
-                                </PrimaryButton>
-                              </a>
+                              </PrimaryButton>
                             )}
                             {isPro && (
-                              <a
-                                href={input.highQualityOutputUrl || input.outputUrl}
-                                download={`processed_hq_${input.name.replace(/\.[^.]+$/, ".png")}`}
-                                className="flex-1 sm:flex-none"
+                              <PrimaryButton
+                                variant="primary"
+                                size="sm"
+                                className="w-full sm:w-auto flex-1 sm:flex-none"
+                                onClick={() => void handleDownloadSingle(
+                                  (input.highQualityOutputUrl || input.outputUrl)!,
+                                  `processed_hq_${input.name.replace(/\.[^.]+$/, ".png")}`,
+                                )}
                               >
-                                <PrimaryButton variant="primary" size="sm" className="w-full sm:w-auto">
                                   {input.wasEnhanced ? '高画質化して保存' : '保存'}
-                                </PrimaryButton>
-                              </a>
+                              </PrimaryButton>
                             )}
                             {/* イージートリミングで編集ボタン - Linkを使用 */}
                             {input.boundingBox && input.outputUrl && (
