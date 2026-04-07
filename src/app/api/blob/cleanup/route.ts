@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import {
+  deleteExpiredInputBlobs,
   deleteExpiredProcessedBlobs,
+  INPUT_BLOB_RETENTION_HOURS,
   PROCESSED_BLOB_RETENTION_HOURS,
 } from '@/lib/blob/imageStorage';
 
@@ -24,11 +26,21 @@ export async function GET(request: NextRequest) {
   const dryRun = request.nextUrl.searchParams.get('dryRun') === '1';
 
   try {
-    const result = await deleteExpiredProcessedBlobs({ dryRun });
+    const [inputResult, processedResult] = await Promise.all([
+      deleteExpiredInputBlobs({ dryRun }),
+      deleteExpiredProcessedBlobs({ dryRun }),
+    ]);
     const response = NextResponse.json({
       ok: true,
-      ...result,
-      retentionHours: PROCESSED_BLOB_RETENTION_HOURS,
+      dryRun,
+      inputs: {
+        ...inputResult,
+        retentionHours: INPUT_BLOB_RETENTION_HOURS,
+      },
+      processed: {
+        ...processedResult,
+        retentionHours: PROCESSED_BLOB_RETENTION_HOURS,
+      },
     });
     response.headers.set('Cache-Control', 'no-store');
     return response;

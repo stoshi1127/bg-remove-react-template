@@ -164,6 +164,7 @@ pnpm start
   - 入力画像は原則として Blob client upload 経由で送信し、巨大ボディをFunctionへ送らない経路で処理します
   - `processingMode=pro_high_precision` は **Pro会員のみ**（サーバー側で403ガード）
   - `url` モードでは、処理結果は Vercel Blob に72時間以内を目安に一時保存されます
+  - 入力画像の一時 Blob は処理後すぐに削除を試み、途中離脱などで残った orphan は 24 時間以内を目安に削除されます
 
 ### `POST /api/enhance`
 
@@ -205,14 +206,14 @@ curl -X POST -F "file=@./test.jpg" "http://localhost:3000/api/remove-bg" --outpu
 
 ### `GET /api/blob/cleanup`
 
-処理結果として一時保存された `processed/` 配下の Blob を削除します。Vercel Cron から毎日実行する前提です。
+一時保存された Blob を削除します。Vercel Cron から毎日実行する前提です。
 
 - **Runtime**: Node.js
 - **認証**: `Authorization: Bearer $CRON_SECRET`
 - **Query**:
   - `dryRun=1` を付けると削除せず候補だけ集計
 - **Response**:
-  - `200` + JSON `{ ok: true, dryRun, matchedCount, deletedCount, retentionHours }`
+  - `200` + JSON `{ ok: true, dryRun, inputs: { matchedCount, deletedCount, retentionHours }, processed: { matchedCount, deletedCount, retentionHours } }`
 
 ### 認証（NextAuth.js マジックリンク & Googleログイン）
 
@@ -291,11 +292,12 @@ Pro専用のAI背景生成・合成です。被写体を保ちながら、指定
 - **一時Blobの削除**:
   - `sourceBlobUrl` / `sourceRefBlobUrl` を渡した場合のみ、サーバーはレスポンス返却後に削除を試みます
   - `imageUrl` / `refImageUrl` 自体は削除対象として扱わないため、外部URLや再利用用Blobを誤削除しません
+  - `uploads/inputs/` に残った orphan は Cron cleanup により 24 時間以内を目安に削除されます
 - **Response**:
   - 成功時（新契約）: `200` + JSON `{ ok: true, outputUrl, contentType, premiumRemaining }`
   - 成功時（互換）: `200` + 画像バイナリ。ヘッダー `x-premium-remaining` で残回数を返却
   - 失敗時: `4xx/5xx` + JSON `{ error: string }`。失敗時は回数を消費しない
-  - `url` モードでは、処理結果は Vercel Blob に72時間以内を目安に一時保存されます
+- `url` モードでは、処理結果は Vercel Blob に72時間以内を目安に一時保存されます
 
 #### Webhook（ローカル検証の例）
 

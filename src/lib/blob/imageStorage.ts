@@ -2,6 +2,8 @@ import { del, list, put } from '@vercel/blob';
 
 export const INPUT_BLOB_PREFIX = 'uploads/inputs';
 export const PROCESSED_BLOB_PREFIX = 'processed';
+export const INPUT_BLOB_RETENTION_HOURS = 24;
+export const INPUT_BLOB_RETENTION_MS = INPUT_BLOB_RETENTION_HOURS * 60 * 60 * 1000;
 export const PROCESSED_BLOB_RETENTION_HOURS = 72;
 export const PROCESSED_BLOB_RETENTION_MS = PROCESSED_BLOB_RETENTION_HOURS * 60 * 60 * 1000;
 
@@ -50,12 +52,14 @@ export async function uploadProcessedImage(args: {
   });
 }
 
-export async function deleteExpiredProcessedBlobs(args: {
+async function deleteExpiredBlobsByPrefix(args: {
+  prefix: string;
+  retentionMs: number;
   now?: Date;
   dryRun?: boolean;
 }) {
   const now = args.now ?? new Date();
-  const threshold = now.getTime() - PROCESSED_BLOB_RETENTION_MS;
+  const threshold = now.getTime() - args.retentionMs;
   const deletions: string[] = [];
   let cursor: string | undefined;
 
@@ -63,7 +67,7 @@ export async function deleteExpiredProcessedBlobs(args: {
     const page = await list({
       cursor,
       limit: 1000,
-      prefix: `${PROCESSED_BLOB_PREFIX}/`,
+      prefix: `${args.prefix}/`,
     });
 
     for (const blob of page.blobs) {
@@ -87,3 +91,26 @@ export async function deleteExpiredProcessedBlobs(args: {
   };
 }
 
+export async function deleteExpiredInputBlobs(args: {
+  now?: Date;
+  dryRun?: boolean;
+}) {
+  return deleteExpiredBlobsByPrefix({
+    prefix: INPUT_BLOB_PREFIX,
+    retentionMs: INPUT_BLOB_RETENTION_MS,
+    now: args.now,
+    dryRun: args.dryRun,
+  });
+}
+
+export async function deleteExpiredProcessedBlobs(args: {
+  now?: Date;
+  dryRun?: boolean;
+}) {
+  return deleteExpiredBlobsByPrefix({
+    prefix: PROCESSED_BLOB_PREFIX,
+    retentionMs: PROCESSED_BLOB_RETENTION_MS,
+    now: args.now,
+    dryRun: args.dryRun,
+  });
+}

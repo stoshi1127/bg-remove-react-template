@@ -60,7 +60,7 @@ export default function PrivacyPolicyPage() {
           アップロード画像は、背景除去やトリミング等の画像処理目的でのみ利用し、Replicate社が提供するAPIに送信されます。
         </li>
         <li>
-          Replicate社へ送信されたアップロード画像及び処理結果の画像データは、Replicate社のシステム上で処理後、同社のプライバシーポリシーに基づき、サービス提供に必要な期間、一時的に保存されることがあります。また、当サイトでは画像処理の安定化と処理結果の配信のため、アップロード画像および処理結果画像を当サイトが管理するオブジェクトストレージ（Vercel Blob）へ一時保存します。これらのデータは原則として72時間以内に削除されます。Replicate社におけるデータの取り扱いについては、Replicate社のプライバシーポリシー（<a href="https://replicate.com/privacy" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">https://replicate.com/privacy</a>）をご確認ください。
+          Replicate社へ送信されたアップロード画像及び処理結果の画像データは、Replicate社のシステム上で処理後、同社のプライバシーポリシーに基づき、サービス提供に必要な期間、一時的に保存されることがあります。また、当サイトでは画像処理の安定化と処理結果の配信のため、アップロード画像および処理結果画像を当サイトが管理するオブジェクトストレージ（Vercel Blob）へ一時保存します。入力画像の一時Blobは処理後すぐに削除を試み、途中離脱等で残った入力画像は原則24時間以内、処理結果画像は原則72時間以内に削除されます。Replicate社におけるデータの取り扱いについては、Replicate社のプライバシーポリシー（<a href="https://replicate.com/privacy" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">https://replicate.com/privacy</a>）をご確認ください。
         </li>
         <li>
           当サイトは、アップロード画像及び処理結果の画像データを、上記処理目的以外で利用したり、第三者に不当に開示したりすることはありません。ただし、法令に基づく場合や、人の生命、身体または財産の保護のために必要がある場合であって、本人の同意を得ることが困難であるときなどを除きます。
@@ -133,7 +133,7 @@ export default function PrivacyPolicyPage() {
         <li>送信される情報の利用目的：Proサブスクリプションの購入、請求、支払い管理、カスタマーポータルの提供</li>
         <li>送信先事業者名：Vercel Inc.（Vercel Blob）</li>
         <li>送信される情報の内容：アップロード画像および処理結果画像</li>
-        <li>送信される情報の利用目的：画像処理前の一時保管、処理結果の配信、および72時間以内の削除運用</li>
+        <li>送信される情報の利用目的：画像処理前の一時保管、処理結果の配信、入力画像の24時間以内削除運用、および処理結果画像の72時間以内削除運用</li>
       </ul>
 
       <h2 className="text-2xl font-semibold mt-6 mb-3">6. 安全管理措置</h2>
