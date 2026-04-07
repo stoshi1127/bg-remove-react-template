@@ -2,9 +2,29 @@ import { del } from '@vercel/blob';
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth/session';
 import { getPremiumUsage, consumePremiumUsage } from '@/lib/premiumUsage';
+import { buildProcessedUploadPath, uploadProcessedImage } from '@/lib/blob/imageStorage';
+import { getRequestedImageResponseMode, type ImageSuccessResponse } from '@/lib/imageApi';
 
 export const runtime = 'nodejs';
 export const maxDuration = 90; // ポーリング最大90秒に合わせる
+
+function getFileNameFromUrl(url: string | null | undefined, fallback: string): string {
+    if (!url) return fallback;
+
+    try {
+        const pathname = new URL(url).pathname;
+        const candidate = pathname.split('/').pop();
+        return candidate && candidate.length > 0 ? candidate : fallback;
+    } catch {
+        return fallback;
+    }
+}
+
+function buildImageSuccessResponse(body: ImageSuccessResponse) {
+    const response = NextResponse.json(body);
+    response.headers.set('Cache-Control', 'no-store');
+    return response;
+}
 
 /**
  * POST /api/ai/generate-background
@@ -24,6 +44,7 @@ export const maxDuration = 90; // ポーリング最大90秒に合わせる
 export async function POST(req: NextRequest) {
     const replicateApiKey = process.env.REPLICATE_API_TOKEN;
     const cleanupBlobUrls = new Set<string>();
+    const responseMode = getRequestedImageResponseMode(req);
     if (!replicateApiKey) {
         return NextResponse.json({ error: 'サーバー設定エラー' }, { status: 500 });
     }
@@ -54,12 +75,14 @@ export async function POST(req: NextRequest) {
     let prompt: string;
     let mode: 'generate' | 'blend' = 'generate';
     let refImageInput: string | undefined;
+    let sourceImageUrl: string | null = null;
     try {
         const body = await req.json();
         const imageUrl = typeof body.imageUrl === 'string' ? body.imageUrl : null;
         const sourceBlobUrl = typeof body.sourceBlobUrl === 'string' ? body.sourceBlobUrl : null;
         const imageDataUrl = typeof body.imageDataUrl === 'string' ? body.imageDataUrl : null;
         imageInput = imageUrl || imageDataUrl || '';
+        sourceImageUrl = imageUrl;
         prompt = body.prompt ?? '';
         mode = body.mode === 'blend' ? 'blend' : 'generate';
         const refImageUrl = typeof body.refImageUrl === 'string' ? body.refImageUrl : null;
@@ -198,15 +221,34 @@ export async function POST(req: NextRequest) {
         }
 
         const imageBlob = await imageResponse.blob();
-
-        // 残回数も返す
+        const outputContentType = imageResponse.headers.get('content-type') || imageBlob.type || 'image/png';
         const updatedUsage = await getPremiumUsage(user.id, user.isPro);
-        return new NextResponse(imageBlob, {
-            status: 200,
-            headers: {
-                'Content-Type': imageBlob.type || 'image/png',
-                'x-premium-remaining': String(updatedUsage?.remaining ?? 0),
-            },
+
+        if (responseMode === 'blob') {
+            return new NextResponse(imageBlob, {
+                status: 200,
+                headers: {
+                    'Content-Type': outputContentType,
+                    'x-premium-remaining': String(updatedUsage?.remaining ?? 0),
+                },
+            });
+        }
+
+        const uploaded = await uploadProcessedImage({
+            pathname: buildProcessedUploadPath(
+                mode === 'blend' ? 'generate-background-blend' : 'generate-background',
+                getFileNameFromUrl(sourceImageUrl, 'generate-background-output.png'),
+                outputContentType,
+            ),
+            body: imageBlob,
+            contentType: outputContentType,
+        });
+
+        return buildImageSuccessResponse({
+            ok: true,
+            outputUrl: uploaded.url,
+            contentType: outputContentType,
+            premiumRemaining: updatedUsage?.remaining ?? 0,
         });
     } catch (err: unknown) {
         console.error('[generate-background] unexpected error:', err);

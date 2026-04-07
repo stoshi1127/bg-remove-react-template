@@ -55,6 +55,8 @@ import {
 } from '@/lib/image/enhance';
 import { trackAnalyticsEvent } from '@/lib/analytics/events';
 import { normalizeClientImageMime } from '@/lib/upload/limits';
+import { buildInputUploadPath } from '@/lib/blob/imageStorage';
+import { IMAGE_RESPONSE_MODE_HEADER, type ImageSuccessResponse } from '@/lib/imageApi';
 
 type AdUserPlan = 'pro' | 'free' | 'guest';
 type AdPlacement = 'after_cta' | 'bottom';
@@ -97,8 +99,55 @@ const PRO_MAX_MP = Number(process.env.NEXT_PUBLIC_PRO_MAX_MP || '90');
 const PRO_MAX_SIDE = Number(process.env.NEXT_PUBLIC_PRO_MAX_SIDE_PX || '10000');
 const FREE_OUTPUT_MAX_SIDE = Number(process.env.NEXT_PUBLIC_FREE_OUTPUT_MAX_SIDE_PX || '3200');
 const PRO_OUTPUT_MAX_SIDE = Number(process.env.NEXT_PUBLIC_PRO_OUTPUT_MAX_SIDE_PX || '7000');
-const USE_DIRECT_UPLOAD_FOR_PRO = process.env.NEXT_PUBLIC_UPLOAD_DIRECT_ENABLED !== 'false';
+const USE_DIRECT_UPLOAD = process.env.NEXT_PUBLIC_UPLOAD_DIRECT_ENABLED !== 'false';
+const IMAGE_API_MODE = process.env.NEXT_PUBLIC_IMAGE_API_MODE === 'blob' ? 'blob' : 'url';
 const PROCESSING_MODE_SESSION_KEY = 'bgremover_processing_mode';
+
+function isDataUrl(value: string): boolean {
+  return value.startsWith('data:');
+}
+
+async function blobToDataUrl(blob: Blob): Promise<string> {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error('画像の読み込みに失敗しました。'));
+    reader.readAsDataURL(blob);
+  });
+}
+
+function withImageResponseMode(init?: HeadersInit): HeadersInit {
+  return {
+    ...(init ?? {}),
+    [IMAGE_RESPONSE_MODE_HEADER]: IMAGE_API_MODE,
+  };
+}
+
+async function parseImageApiSuccess(response: Response): Promise<{
+  contentType: string;
+  outputUrl: string;
+  premiumRemaining?: number;
+  processingMode?: ProcessingMode;
+}> {
+  const contentType = response.headers.get('content-type') || '';
+  if (contentType.includes('application/json')) {
+    const data = await response.json() as ImageSuccessResponse;
+    return {
+      contentType: data.contentType,
+      outputUrl: data.outputUrl,
+      premiumRemaining: data.premiumRemaining,
+      processingMode: data.processingMode as ProcessingMode | undefined,
+    };
+  }
+
+  const blob = await response.blob();
+  return {
+    contentType: blob.type || contentType || 'image/png',
+    outputUrl: await blobToDataUrl(blob),
+    premiumRemaining: Number(response.headers.get('x-premium-remaining') || '') || undefined,
+    processingMode: (response.headers.get('x-processing-mode') as ProcessingMode | null) ?? undefined,
+  };
+}
 
 /** blob: または data: を Replicate が受け付ける data URI に変換 */
 async function urlToDataUrl(url: string): Promise<string> {
@@ -510,7 +559,9 @@ export default function BgRemoverMulti({
 
   // 新しいオブジェクトURLを登録
   const registerObjectUrl = (url: string) => {
-    objectUrlsRef.current.push(url);
+    if (url.startsWith('blob:')) {
+      objectUrlsRef.current.push(url);
+    }
   };
 
   // コンポーネントのアンマウント時にクリーンアップ
@@ -574,6 +625,9 @@ export default function BgRemoverMulti({
               console.error("Bounding box calculation failed:", err);
             });
             const img = new Image();
+            if (!isDataUrl(newOutputUrl)) {
+              img.crossOrigin = 'anonymous';
+            }
             img.onload = () => {
               const w = img.naturalWidth;
               const h = img.naturalHeight;
@@ -619,6 +673,24 @@ export default function BgRemoverMulti({
         reject(new Error('画像サイズの取得に失敗しました。'));
       };
       img.src = objectUrl;
+    });
+  }, []);
+
+  const getImageDimensionsFromUrl = useCallback(async (imageUrl: string): Promise<{ width: number; height: number; longSide: number }> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      if (!isDataUrl(imageUrl)) {
+        img.crossOrigin = 'anonymous';
+      }
+      img.onload = () => {
+        resolve({
+          width: img.naturalWidth,
+          height: img.naturalHeight,
+          longSide: Math.max(img.naturalWidth, img.naturalHeight),
+        });
+      };
+      img.onerror = () => reject(new Error('画像サイズの取得に失敗しました。'));
+      img.src = imageUrl;
     });
   }, []);
 
@@ -800,26 +872,40 @@ export default function BgRemoverMulti({
     }, 100);
   }, [goToProPurchase, isPro, scrollToSectionWithHeaderOffset]);
 
-  const createStandardOutputFromDataUrl = useCallback(async (dataUrl: string) => {
-    return resizeDataUrlLongSide(dataUrl, 1600);
+  const createStandardOutputUrl = useCallback(async (imageUrl: string) => {
+    if (!isDataUrl(imageUrl)) {
+      return imageUrl;
+    }
+    return resizeDataUrlLongSide(imageUrl, 1600);
   }, []);
 
-  const runEnhance = useCallback(async (sourceDataUrl: string, target: EnhanceTarget) => {
+  const runEnhance = useCallback(async (sourceImageUrl: string, target: EnhanceTarget) => {
     const targetLongSide = toEnhanceLongSide(target);
-    const normalized = await normalizeDataUrlLongSide(sourceDataUrl, 1440);
-    const scale = pickEsrganScaleForTarget(normalized.longSide, targetLongSide);
-    const compressedDataUrl = await compressDataUrlForApi(normalized.dataUrl);
+    const normalizedSource = isDataUrl(sourceImageUrl)
+      ? await normalizeDataUrlLongSide(sourceImageUrl, 1440)
+      : null;
+    const sourceLongSide = normalizedSource
+      ? normalizedSource.longSide
+      : (await getImageDimensionsFromUrl(sourceImageUrl)).longSide;
+    const scale = pickEsrganScaleForTarget(sourceLongSide, targetLongSide);
 
     trackAnalyticsEvent('enhance_started', { target, targetLongSide, scale });
     const startedAt = Date.now();
 
+    const body = isDataUrl(sourceImageUrl)
+      ? {
+          imageDataUrl: await compressDataUrlForApi(normalizedSource!.dataUrl),
+          scale,
+        }
+      : {
+          imageUrl: sourceImageUrl,
+          scale,
+        };
+
     const response = await fetch('/api/enhance', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        imageDataUrl: compressedDataUrl,
-        scale,
-      }),
+      headers: withImageResponseMode({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify(body),
     });
 
     if (!response.ok) {
@@ -833,22 +919,17 @@ export default function BgRemoverMulti({
       throw new Error(errorData?.error || 'くっきり処理に失敗しました。');
     }
 
-    const blob = await response.blob();
-    const enhancedDataUrl = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = () => reject(new Error('くっきり画像の読み込みに失敗しました。'));
-      reader.readAsDataURL(blob);
-    });
-
-    const finalDataUrl = await resizeDataUrlLongSide(enhancedDataUrl, targetLongSide);
+    const enhanced = await parseImageApiSuccess(response);
+    const finalDataUrl = isDataUrl(enhanced.outputUrl)
+      ? await resizeDataUrlLongSide(enhanced.outputUrl, targetLongSide)
+      : enhanced.outputUrl;
     trackAnalyticsEvent('enhance_succeeded', {
       target,
       targetLongSide,
       durationMs: Date.now() - startedAt,
     });
     return finalDataUrl;
-  }, []);
+  }, [getImageDimensionsFromUrl]);
 
   // 画像合成関数
   const applyTemplate = async (
@@ -1269,7 +1350,7 @@ export default function BgRemoverMulti({
             img.onerror = reject;
             img.src = blendRefImageDataUrl!;
           });
-          const refResult = await uploadToBlob(refFile.name, refFile, {
+          const refResult = await uploadToBlob(buildInputUploadPath(refFile.name), refFile, {
             access: 'public',
             handleUploadUrl: '/api/upload/blob',
             clientPayload: JSON.stringify({
@@ -1445,14 +1526,13 @@ export default function BgRemoverMulti({
 
               // Phase 1: 背景除去 (透明PNG取得)
               // Pro で 4MB超は Vercel のリクエストボディ上限を超えやすいため、Blob直アップロード→JSON（URL）で呼ぶ
-              const phase1UseBlobUrl =
-                isPro && USE_DIRECT_UPLOAD_FOR_PRO && blobForRequest.size > MAX_UPLOAD_BYTES;
+              const phase1UseBlobUrl = USE_DIRECT_UPLOAD;
               let phase1Res: Response;
               if (phase1UseBlobUrl) {
                 const uploadFile = new File([blobForRequest], nameForRequest, {
                   type: normalizeClientImageMime(blobForRequest, nameForRequest),
                 });
-                const phase1BlobResult = await uploadToBlob(uploadFile.name, uploadFile, {
+                const phase1BlobResult = await uploadToBlob(buildInputUploadPath(uploadFile.name), uploadFile, {
                   access: 'public',
                   handleUploadUrl: '/api/upload/blob',
                   clientPayload: JSON.stringify({
@@ -1464,7 +1544,7 @@ export default function BgRemoverMulti({
                 });
                 phase1Res = await fetch("/api/remove-bg", {
                   method: "POST",
-                  headers: { "Content-Type": "application/json" },
+                  headers: withImageResponseMode({ "Content-Type": "application/json" }),
                   body: JSON.stringify({
                     imageUrl: phase1BlobResult.url,
                     sourceBlobUrl: phase1BlobResult.url,
@@ -1478,6 +1558,7 @@ export default function BgRemoverMulti({
                 phase1FormData.append("processingMode", requestedProcessingMode);
                 phase1Res = await fetch("/api/remove-bg", {
                   method: "POST",
+                  headers: withImageResponseMode(),
                   body: phase1FormData,
                   signal: combinedSignal,
                 });
@@ -1497,7 +1578,7 @@ export default function BgRemoverMulti({
                 ? blobForRequest
                 : new File([blobForRequest], nameForRequest, { type: 'image/png' });
 
-              const blobResult = await uploadToBlob(uploadFile.name, uploadFile, {
+              const blobResult = await uploadToBlob(buildInputUploadPath(uploadFile.name), uploadFile, {
                 access: 'public',
                 handleUploadUrl: '/api/upload/blob',
                 clientPayload: JSON.stringify({
@@ -1531,7 +1612,7 @@ export default function BgRemoverMulti({
 
               response = await fetch('/api/ai/generate-background', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: withImageResponseMode({ 'Content-Type': 'application/json' }),
                 body: JSON.stringify(aiBody),
                 signal: combinedSignal,
               });
@@ -1545,7 +1626,7 @@ export default function BgRemoverMulti({
               type: normalizeClientImageMime(blobForRequest, nameForRequest),
             });
 
-            const blobResult = await uploadToBlob(uploadFile.name, uploadFile, {
+            const blobResult = await uploadToBlob(buildInputUploadPath(uploadFile.name), uploadFile, {
               access: 'public',
               handleUploadUrl: '/api/upload/blob',
               clientPayload: JSON.stringify({
@@ -1579,17 +1660,17 @@ export default function BgRemoverMulti({
 
             response = await fetch('/api/ai/generate-background', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: withImageResponseMode({ 'Content-Type': 'application/json' }),
               body: JSON.stringify(aiBody),
               signal: combinedSignal,
             });
           }
 
-        } else if (isPro && USE_DIRECT_UPLOAD_FOR_PRO) {
+        } else if (USE_DIRECT_UPLOAD) {
           const uploadFile = new File([blobForRequest], nameForRequest, {
             type: normalizeClientImageMime(blobForRequest, nameForRequest),
           });
-          const blobResult = await uploadToBlob(uploadFile.name, uploadFile, {
+          const blobResult = await uploadToBlob(buildInputUploadPath(uploadFile.name), uploadFile, {
             access: 'public',
             handleUploadUrl: '/api/upload/blob',
             clientPayload: JSON.stringify({
@@ -1602,7 +1683,7 @@ export default function BgRemoverMulti({
 
           response = await fetch("/api/remove-bg", {
             method: "POST",
-            headers: { 'Content-Type': 'application/json' },
+            headers: withImageResponseMode({ 'Content-Type': 'application/json' }),
             body: JSON.stringify({
               imageUrl: blobResult.url,
               sourceBlobUrl: blobResult.url,
@@ -1616,6 +1697,7 @@ export default function BgRemoverMulti({
           formData.append("processingMode", requestedProcessingMode);
           response = await fetch("/api/remove-bg", {
             method: "POST",
+            headers: withImageResponseMode(),
             body: formData,
             signal: combinedSignal,
           });
@@ -1666,205 +1748,138 @@ export default function BgRemoverMulti({
 
         // AI API成功時: 残回数を更新
         if (useAiApi) {
-          const remaining = response.headers.get('x-premium-remaining');
-          if (remaining !== null) setPremiumRemaining(Number(remaining));
           trackAnalyticsEvent('premium_ai_consumed', {
             feature: bgMode === 'ai_generate' ? 'bg_generate' : 'bg_blend',
           });
         }
 
+        const imageResult = await parseImageApiSuccess(response);
+        if (useAiApi && imageResult.premiumRemaining !== undefined) {
+          setPremiumRemaining(imageResult.premiumRemaining);
+        }
+
         updateInputStatus(input.id, "processing");
-        const imageBlob = await response.blob();
-        const appliedProcessingMode = useAiApi ? 'pro_high_precision' : ((response.headers.get('x-processing-mode') as ProcessingMode | null) ?? requestedProcessingMode);
+        const appliedProcessingMode = useAiApi ? 'pro_high_precision' : (imageResult.processingMode ?? requestedProcessingMode);
 
         // ログ記録：後処理開始
         addLog({
           id: input.id,
           fileName: input.name,
           event: 'processing',
-          details: `処理後サイズ: ${(imageBlob.size / 1024).toFixed(1)}KB`
+          details: imageResult.contentType ? `処理後形式: ${imageResult.contentType}` : '処理後画像を受信'
         });
 
-        // メモリ効率のためのサイズチェック
-        if (imageBlob.size > 50 * 1024 * 1024) { // 50MB制限
-          throw new Error(`仕上がりのデータが大きすぎるため保存できませんでした（${Math.round(imageBlob.size / 1024 / 1024)}MB）`);
-        }
+        let finalUrl = imageResult.outputUrl;
 
-        // BlobをData URLに変換し、必要であればテンプレートを適用
-        return new Promise<void>((resolve, reject) => {
-          const reader = new FileReader();
+        try {
+          if (useAiApi) {
+            // AI処理時: 既に完成画像なのでテンプレート適用不要
+            // 出力が約1MP固定になるbriaモデルの制約を回避するため、元画像が大きい場合は自動で高画質化(アップスケール)する
+            const originalLongSide = Math.max(imageMeta.width, imageMeta.height);
+            if (originalLongSide > 1200) {
+              try {
+                updateInputStatus(input.id, "processing", "AI生成完了。高画質化しています...");
+                let target: EnhanceTarget = '1k';
+                if (originalLongSide > 2500) target = '4k';
+                else if (originalLongSide > 1500) target = '2k';
 
-          // FileReader のタイムアウト設定
-          const readerTimeoutId = setTimeout(() => {
-            reader.abort();
-            reject(new Error('画像読み込みタイムアウト'));
-          }, 30000); // 30秒
-
-          reader.onloadend = async () => {
-            clearTimeout(readerTimeoutId);
-            try {
-              const removedBgUrl = reader.result as string;
-
-              let finalUrl = removedBgUrl;
-
-              if (useAiApi) {
-                // AI処理時: 既に完成画像なのでテンプレート適用不要
-                // 出力が約1MP固定になるbriaモデルの制約を回避するため、元画像が大きい場合は自動で高画質化(アップスケール)する
-                const originalLongSide = Math.max(imageMeta.width, imageMeta.height);
-                if (originalLongSide > 1200) {
-                  try {
-                    updateInputStatus(input.id, "processing", "AI生成完了。高画質化しています...");
-                    let target: EnhanceTarget = '1k';
-                    if (originalLongSide > 2500) target = '4k';
-                    else if (originalLongSide > 1500) target = '2k';
-
-                    finalUrl = await runEnhance(removedBgUrl, target);
-                  } catch (enhanceErr) {
-                    console.warn('Auto enhance failed after bria generation:', enhanceErr);
-                    // 失敗時はアップスケール前の画像をそのまま使う
-                  }
-                }
-              } else {
-                // 通常処理: 背景除去後の画像からバウンディングボックスを計算してテンプレ適用
-                const subjectBbox = await Promise.race([
-                  calculateBoundingBox(removedBgUrl),
-                  new Promise<undefined>((_, reject) =>
-                    setTimeout(() => reject(new Error('バウンディングボックス計算タイムアウト')), 15000)
-                  )
-                ]);
-
-                // アスペクト比がデフォルトでない場合、またはテンプレートが選択されている場合は常に画像処理を行う
-                if (selectedRatio !== '1:1' || selectedTemplate) {
-                  const templateUrl = selectedTemplate ?? 'transparent';
-                  // 計算したバウンディングボックスをテンプレート適用関数に渡す
-                  finalUrl = await Promise.race([
-                    applyTemplate(removedBgUrl, templateUrl, selectedRatio, subjectBbox),
-                    new Promise<string>((_, reject) =>
-                      setTimeout(() => reject(new Error('テンプレート適用タイムアウト')), 30000)
-                    )
-                  ]);
-                }
+                finalUrl = await runEnhance(finalUrl, target);
+              } catch (enhanceErr) {
+                console.warn('Auto enhance failed after bria generation:', enhanceErr);
               }
-
-              updateInputStatus(input.id, "completed", undefined, finalUrl);
-              setInputs(prev => prev.map(i => {
-                if (i.id !== input.id) return i;
-                const next = { ...i } as InFile;
-                next.sourceQualityMode = selectedProcessingMode;
-                next.lastProcessingMode = appliedProcessingMode;
-                next.wasCompressedForFree = wasCompressedForFree;
-                next.highQualityOutputUrl = finalUrl;
-                next.wasEnhanced = false;
-                if (isPro) {
-                  void createStandardOutputFromDataUrl(finalUrl).then((standardUrl) => {
-                    setInputs(current => current.map(item => item.id === input.id ? {
-                      ...item,
-                      standardOutputUrl: standardUrl,
-                    } : item));
-                  }).catch(() => {
-                    // fallback to same data
-                    setInputs(current => current.map(item => item.id === input.id ? {
-                      ...item,
-                      standardOutputUrl: finalUrl,
-                    } : item));
-                  });
-                  next.standardOutputUrl = finalUrl;
-                } else {
-                  next.standardOutputUrl = finalUrl;
-                }
-                return next;
-              }));
-
-              // 処理時間を計算
-              const totalDuration = Date.now() - startTime;
-
-              // ログ記録：完了
-              addLog({
-                id: input.id,
-                fileName: input.name,
-                event: 'completed',
-                duration: totalDuration,
-                responseTime
-              });
-
-              // パフォーマンス統計更新
-              setPerformanceStats(stats => ({
-                ...stats,
-                totalProcessed: stats.totalProcessed + 1,
-                totalTime: stats.totalTime + totalDuration,
-                avgFileSize: (stats.avgFileSize * stats.totalProcessed + blobForRequest.size) / (stats.totalProcessed + 1)
-              }));
-
-              // 完了カウントと進捗を更新
-              setProcessedCount(prev => {
-                const newCount = prev + 1;
-                const newProgress = Math.round((newCount / filesToProcess.length) * 100);
-                setProgress(newProgress);
-                return newCount;
-              });
-
-              resolve();
-            } catch (e) {
-              clearTimeout(readerTimeoutId);
-              console.error("Template application failed", e);
-              const errorMessage = e instanceof Error ? e.message : "不明なエラー";
-
-              // ログ記録：エラー
-              addLog({
-                id: input.id,
-                fileName: input.name,
-                event: 'error',
-                details: `処理エラー: ${errorMessage}`,
-                duration: Date.now() - startTime
-              });
-
-              updateInputStatus(input.id, "error", `処理エラー: ${errorMessage}`);
-              setMsg(prev => prev ? `${prev}\n${input.name}: ${errorMessage}` : `${input.name}: ${errorMessage}`);
-
-              // エラー統計更新
-              setPerformanceStats(stats => ({
-                ...stats,
-                totalErrors: stats.totalErrors + 1
-              }));
-
-              // エラーでも並行数調整を行う
-              adjustConcurrency(responseTime, false);
-              reject(e);
             }
-          };
+          } else {
+            // 通常処理: 背景除去後の画像からバウンディングボックスを計算してテンプレ適用
+            const subjectBbox = await Promise.race([
+              calculateBoundingBox(finalUrl),
+              new Promise<undefined>((_, reject) =>
+                setTimeout(() => reject(new Error('バウンディングボックス計算タイムアウト')), 15000)
+              )
+            ]);
 
-          reader.onerror = (e) => {
-            clearTimeout(readerTimeoutId);
-            console.error("Blob to Data URL conversion failed", e);
+            if (selectedRatio !== '1:1' || selectedTemplate) {
+              const templateUrl = selectedTemplate ?? 'transparent';
+              finalUrl = await Promise.race([
+                applyTemplate(finalUrl, templateUrl, selectedRatio, subjectBbox),
+                new Promise<string>((_, reject) =>
+                  setTimeout(() => reject(new Error('テンプレート適用タイムアウト')), 30000)
+                )
+              ]);
+            }
+          }
 
-            // ログ記録：エラー
-            addLog({
-              id: input.id,
-              fileName: input.name,
-              event: 'error',
-              details: 'Blob読み込みエラー',
-              duration: Date.now() - startTime
+          updateInputStatus(input.id, "completed", undefined, finalUrl);
+          setInputs(prev => prev.map(i => {
+            if (i.id !== input.id) return i;
+            const next = { ...i } as InFile;
+            next.sourceQualityMode = selectedProcessingMode;
+            next.lastProcessingMode = appliedProcessingMode;
+            next.wasCompressedForFree = wasCompressedForFree;
+            next.highQualityOutputUrl = finalUrl;
+            next.standardOutputUrl = finalUrl;
+            next.wasEnhanced = false;
+            return next;
+          }));
+
+          if (isPro) {
+            void createStandardOutputUrl(finalUrl).then((standardUrl) => {
+              setInputs(current => current.map(item => item.id === input.id ? {
+                ...item,
+                standardOutputUrl: standardUrl,
+              } : item));
+            }).catch(() => {
+              setInputs(current => current.map(item => item.id === input.id ? {
+                ...item,
+                standardOutputUrl: finalUrl,
+              } : item));
             });
+          }
 
-            updateInputStatus(input.id, "error", `処理済み画像の読み込みエラー: ${input.name}`);
-            setMsg(prevMsg => prevMsg ? `${prevMsg}\n${input.name}: 処理済み画像の読み込みに失敗しました。` : `${input.name}: 処理済み画像の読み込みに失敗しました。`);
+          const totalDuration = Date.now() - startTime;
+          addLog({
+            id: input.id,
+            fileName: input.name,
+            event: 'completed',
+            duration: totalDuration,
+            responseTime
+          });
 
-            setPerformanceStats(stats => ({
-              ...stats,
-              totalErrors: stats.totalErrors + 1
-            }));
+          setPerformanceStats(stats => ({
+            ...stats,
+            totalProcessed: stats.totalProcessed + 1,
+            totalTime: stats.totalTime + totalDuration,
+            avgFileSize: (stats.avgFileSize * stats.totalProcessed + blobForRequest.size) / (stats.totalProcessed + 1)
+          }));
 
-            adjustConcurrency(responseTime, false);
-            reject(e);
-          };
+          setProcessedCount(prev => {
+            const newCount = prev + 1;
+            const newProgress = Math.round((newCount / filesToProcess.length) * 100);
+            setProgress(newProgress);
+            return newCount;
+          });
+        } catch (e) {
+          console.error("Template application failed", e);
+          const errorMessage = e instanceof Error ? e.message : "不明なエラー";
 
-          reader.onabort = () => {
-            clearTimeout(readerTimeoutId);
-            reject(new Error('読み込み中断'));
-          };
+          addLog({
+            id: input.id,
+            fileName: input.name,
+            event: 'error',
+            details: `処理エラー: ${errorMessage}`,
+            duration: Date.now() - startTime
+          });
 
-          reader.readAsDataURL(imageBlob);
-        });
+          updateInputStatus(input.id, "error", `処理エラー: ${errorMessage}`);
+          setMsg(prev => prev ? `${prev}\n${input.name}: ${errorMessage}` : `${input.name}: ${errorMessage}`);
+
+          setPerformanceStats(stats => ({
+            ...stats,
+            totalErrors: stats.totalErrors + 1
+          }));
+
+          adjustConcurrency(responseTime, false);
+          throw e;
+        }
 
       } catch (error: unknown) {
         console.error("ファイル処理エラー:", error, input.name);
@@ -2034,9 +2049,9 @@ export default function BgRemoverMulti({
       const processingMode: ProcessingMode = reason === 'edge_cleanup' ? 'pro_high_precision' : selectedProcessingMode;
       let response: Response;
 
-      if (USE_DIRECT_UPLOAD_FOR_PRO) {
+      if (USE_DIRECT_UPLOAD) {
         const uploadFile = input.originalFile;
-        const blobResult = await uploadToBlob(uploadFile.name, uploadFile, {
+        const blobResult = await uploadToBlob(buildInputUploadPath(uploadFile.name), uploadFile, {
           access: 'public',
           handleUploadUrl: '/api/upload/blob',
           clientPayload: JSON.stringify({
@@ -2049,7 +2064,7 @@ export default function BgRemoverMulti({
 
         response = await fetch('/api/remove-bg', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: withImageResponseMode({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({
             imageUrl: blobResult.url,
             sourceBlobUrl: blobResult.url,
@@ -2062,6 +2077,7 @@ export default function BgRemoverMulti({
         formData.append('processingMode', processingMode);
         response = await fetch('/api/remove-bg', {
           method: 'POST',
+          headers: withImageResponseMode(),
           body: formData,
         });
       }
@@ -2071,13 +2087,8 @@ export default function BgRemoverMulti({
         throw new Error(errorData.error || '作り直しに失敗しました。');
       }
 
-      const imageBlob = await response.blob();
-      const remadeDataUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.onerror = () => reject(new Error('画像の読み込みに失敗しました。'));
-        reader.readAsDataURL(imageBlob);
-      });
+      const remadeImage = await parseImageApiSuccess(response);
+      const remadeDataUrl = remadeImage.outputUrl;
 
       updateInputStatus(input.id, 'completed', undefined, remadeDataUrl);
       trackAnalyticsEvent('post_upgrade_remake_succeeded', {
@@ -2085,7 +2096,7 @@ export default function BgRemoverMulti({
         mode: processingMode,
       });
 
-      const standardUrl = await createStandardOutputFromDataUrl(remadeDataUrl).catch(() => remadeDataUrl);
+      const standardUrl = await createStandardOutputUrl(remadeDataUrl).catch(() => remadeDataUrl);
       setInputs(prev => prev.map(item => item.id === input.id ? {
         ...item,
         sourceQualityMode: selectedProcessingMode,
@@ -2127,18 +2138,18 @@ export default function BgRemoverMulti({
 
     try {
       trackAnalyticsEvent('enhance_target_selected', { target });
-      const sourceDataUrl = input.highQualityOutputUrl || input.outputUrl;
-      if (!sourceDataUrl) {
+      const sourceImageUrl = input.highQualityOutputUrl || input.outputUrl;
+      if (!sourceImageUrl) {
         throw new Error('くっきり処理する画像が見つかりません。');
       }
-      const enhancedDataUrl = await runEnhance(sourceDataUrl, target);
+      const enhancedDataUrl = await runEnhance(sourceImageUrl, target);
       if (enhanceProgressTimerRef.current) {
         clearInterval(enhanceProgressTimerRef.current);
         enhanceProgressTimerRef.current = null;
       }
       setEnhanceProgress(100);
       updateInputStatus(input.id, 'completed', undefined, enhancedDataUrl);
-      const standardUrl = await createStandardOutputFromDataUrl(enhancedDataUrl).catch(() => enhancedDataUrl);
+      const standardUrl = await createStandardOutputUrl(enhancedDataUrl).catch(() => enhancedDataUrl);
       setInputs(prev => prev.map(item => item.id === input.id ? {
         ...item,
         highQualityOutputUrl: enhancedDataUrl,
@@ -2190,13 +2201,13 @@ export default function BgRemoverMulti({
     for (const input of completedFiles) {
       setEnhancingFileId(input.id);
       try {
-        const sourceDataUrl = input.highQualityOutputUrl || input.outputUrl;
-        if (!sourceDataUrl) {
+        const sourceImageUrl = input.highQualityOutputUrl || input.outputUrl;
+        if (!sourceImageUrl) {
           throw new Error('くっきり処理する画像が見つかりません。');
         }
-        const enhancedDataUrl = await runEnhance(sourceDataUrl, target);
+        const enhancedDataUrl = await runEnhance(sourceImageUrl, target);
         updateInputStatus(input.id, 'completed', undefined, enhancedDataUrl);
-        const standardUrl = await createStandardOutputFromDataUrl(enhancedDataUrl).catch(() => enhancedDataUrl);
+        const standardUrl = await createStandardOutputUrl(enhancedDataUrl).catch(() => enhancedDataUrl);
         setInputs(prev => prev.map(item => item.id === input.id ? {
           ...item,
           highQualityOutputUrl: enhancedDataUrl,
@@ -3179,7 +3190,6 @@ export default function BgRemoverMulti({
                                 href="/trim"
                                 onClick={() => {
                                   // localStorageに画像URLとバウンディングボックスを保存
-                                  // outputUrlは既にData URLになっているはず
                                   localStorage.setItem('trimImage', input.outputUrl || '');
                                   localStorage.setItem('trimBoundingBox', JSON.stringify(input.boundingBox));
                                   // ページ遷移はLinkコンポーネントが行う

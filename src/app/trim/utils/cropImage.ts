@@ -2,6 +2,9 @@
 export const getCroppedImg = (imageSrc: string, pixelCrop: { x: number; y: number; width: number; height: number }): Promise<string> => {
   return new Promise((resolve, reject) => {
     const image = new window.Image();
+    if (!imageSrc.startsWith('data:')) {
+      image.crossOrigin = 'anonymous';
+    }
     image.src = imageSrc;
     image.onload = () => {
       const canvas = document.createElement('canvas');

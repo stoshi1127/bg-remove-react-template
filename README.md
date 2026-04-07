@@ -42,7 +42,7 @@
 - **イージートリミング（`/trim`）**
   - 画像をトリミング（比率プリセット + カスタム比率）
   - PNGとしてダウンロード
-  - `/` 側の「イージートリミングで編集」導線から、画像とバウンディングボックスを引き継ぎ可能（localStorage経由）
+  - `/` 側の「イージートリミングで編集」導線から、画像URLとバウンディングボックスを引き継ぎ可能（localStorage経由）
 
 ## 必要要件
 
@@ -75,11 +75,12 @@ pnpm install
     - `https://stg-bg.quicktools.jp/api/billing/google-purchase/callback`
     - `https://bg.quicktools.jp/api/auth/callback/google`
     - `https://bg.quicktools.jp/api/billing/google-purchase/callback`
-- **必須（Pro直送アップロード）**: `BLOB_READ_WRITE_TOKEN`
+- **必須（Blobアップロード / 出力保存）**: `BLOB_READ_WRITE_TOKEN`
 - **推奨（本番URL固定）**: `NEXT_PUBLIC_SITE_URL`（例: `https://bg.quicktools.jp`）
 - **任意**: `BILLING_ENABLED`（課金導線の一括OFF。ロールバック用）, `STRIPE_MODE`（未指定時は `STRIPE_SECRET_KEY` のprefixから推定）
 - **任意（アップロード制御）**:
-  - `UPLOAD_DIRECT_ENABLED` / `NEXT_PUBLIC_UPLOAD_DIRECT_ENABLED`（Proの直送経路ON/OFF）
+  - `UPLOAD_DIRECT_ENABLED` / `NEXT_PUBLIC_UPLOAD_DIRECT_ENABLED`（Blob直送経路ON/OFF）
+  - `NEXT_PUBLIC_IMAGE_API_MODE`（`url` / `blob`。既定 `url`。新旧レスポンス契約の段階切替用）
   - `NEXT_PUBLIC_PRO_MAX_UPLOAD_MB`（Proサイズ上限MB、既定25。クライアントと `/api/upload/blob` の検証はこの値のみ参照）
   - `NEXT_PUBLIC_PRO_MAX_MP`（Proメガピクセル上限、既定90。同上）
   - `NEXT_PUBLIC_PRO_MAX_SIDE_PX`（長辺px上限、既定10000。同上）
@@ -97,6 +98,8 @@ pnpm install
   - `NEXT_PUBLIC_AD_RESULT_URL`（広告リンク先URL）
   - `NEXT_PUBLIC_AD_RESULT_TITLE` / `NEXT_PUBLIC_AD_RESULT_DESCRIPTION` / `NEXT_PUBLIC_AD_RESULT_CTA_LABEL`（広告枠文言の上書き）
   - 注意: 本リポジトリは `Cross-Origin-Embedder-Policy: require-corp` を有効化しています。第三者広告スクリプトを導入する場合は配信可否を事前検証してください。
+- **任意（Cron保護）**:
+  - `CRON_SECRET`（`/api/blob/cleanup` を Vercel Cron から安全に呼ぶための共有シークレット）
 
 #### `.env` の作成
 
@@ -138,7 +141,7 @@ pnpm start
 
 ### `POST /api/remove-bg`
 
-アップロードされた画像を Replicate で処理し、**PNG（背景透過）** を返します。
+アップロードされた画像を Replicate で処理し、背景透過画像を生成します。
 - 標準: `851-labs/background-remover`（固定version）
 - 高精度（Proのみ）: `fottoai/remove-bg-2`（固定versionまたは環境変数指定）
 
@@ -147,17 +150,20 @@ pnpm start
   - `multipart/form-data`（Free/既存互換）:
     - **field**: `file`（画像ファイル）
     - **field**: `processingMode`（任意。`standard` / `pro_high_precision`）
-  - `application/json`（Pro直送）:
+  - `application/json`（標準経路）:
     - **field**: `imageUrl`（オブジェクトストレージ上の一時URL）
     - **field**: `sourceBlobUrl`（処理後に削除する一時URL）
     - **field**: `processingMode`（任意。`standard` / `pro_high_precision`）
+  - **header**: `X-Image-Response-Mode: url|blob`（未指定時は `NEXT_PUBLIC_IMAGE_API_MODE`。`url` が新契約）
 - **Response**:
-  - 成功時: `200` + `image/png`（バイナリ）
+  - 成功時（新契約）: `200` + JSON `{ ok: true, outputUrl, contentType, processingMode? }`
+  - 成功時（互換）: `200` + 画像バイナリ（`X-Image-Response-Mode: blob` 指定時）
   - 失敗時: `4xx/5xx` + JSON `{ error: string }`
 - **制限**:
   - Freeは4MB超を選択しても、クライアント側で自動圧縮して継続できます
-  - Proは直送アップロードにより、巨大ボディをFunctionへ送らない経路で処理します（プレミアムAIの「比率指定→2段階処理」のフェーズ1も、4MB超は同じくBlob URL経由で `/api/remove-bg` を呼びます。Vercel等のリクエストボディ上限による 413 を避けるため）
+  - 入力画像は原則として Blob client upload 経由で送信し、巨大ボディをFunctionへ送らない経路で処理します
   - `processingMode=pro_high_precision` は **Pro会員のみ**（サーバー側で403ガード）
+  - `url` モードでは、処理結果は Vercel Blob に72時間以内を目安に一時保存されます
 
 ### `POST /api/enhance`
 
@@ -166,29 +172,47 @@ Pro専用の「くっきり高画質に」処理です。内部で `nightmareai/
 - **Runtime**: Node.js
 - **認証**: ログイン済みかつ `isPro=true` のみ許可
 - **Request（application/json）**:
-  - `imageDataUrl`: 入力画像（Data URL）
+  - `imageUrl`: 入力画像URL（推奨）
+  - `imageDataUrl`: 入力画像（既存互換）
   - `scale`: `2` または `4`（UI非表示・内部決定）
+  - **header**: `X-Image-Response-Mode: url|blob`
 - **Response**:
-  - 成功時: `200` + `image/png`
+  - 成功時（新契約）: `200` + JSON `{ ok: true, outputUrl, contentType }`
+  - 成功時（互換）: `200` + 画像バイナリ
   - 失敗時: `4xx/5xx` + JSON `{ error: string }`
-- **処理方針**:
-  - 入力は長辺1440px以下に正規化
-  - 目標出力は 1K/2K/4K（長辺1024/2048/3840）に最終リサイズ
 
 ### `POST /api/upload/blob`
 
-Pro向けの直送アップロード用トークンを発行します（Vercel Blobのclient upload）。
+Blob client upload 用トークンを発行します（Free/Pro 共通）。
 
 - **Runtime**: Node.js
-- **認証**: ログイン済みかつ `isPro=true` のみ許可
 - **用途**: ブラウザからオブジェクトストレージへ直接アップロードし、Function/Edgeに巨大バイナリを通さない
-- **検証**: `sizeBytes`（正の数であることのみ）/ `mimeType`（`;` 以降を除く）/ 寸法フィールドの存在。**MB 上限・MP・長辺はトークン発行の JSON では厳密比較しない**（同上の env ずれ・並列時に別ファイルだけ 400 になるのを防ぐ）。実ファイルは **`maximumSizeInBytes`（`PRO_MAX_UPLOAD_BYTES`）** で Blob 側が制限。クライアントでも事前チェック済み
+- **Path 制約**: `uploads/inputs/` 配下のみ許可
+- **検証**:
+  - MIME は画像のみ
+  - Free は `EDGE_SAFE_UPLOAD_BYTES` と `FREE_MAX_MP`
+  - Pro は `PRO_MAX_UPLOAD_BYTES` / `PRO_MAX_MP` / `PRO_MAX_SIDE`
+- **簡易レート制限**:
+  - ゲスト: `IP + User-Agent` ベース
+  - ログイン済み: `user.id` ベース
+  - best-effort のため厳密分散制御ではありません
 
 #### curl 例
 
 ```bash
 curl -X POST -F "file=@./test.jpg" "http://localhost:3000/api/remove-bg" --output out.png
 ```
+
+### `GET /api/blob/cleanup`
+
+処理結果として一時保存された `processed/` 配下の Blob を削除します。Vercel Cron から毎日実行する前提です。
+
+- **Runtime**: Node.js
+- **認証**: `Authorization: Bearer $CRON_SECRET`
+- **Query**:
+  - `dryRun=1` を付けると削除せず候補だけ集計
+- **Response**:
+  - `200` + JSON `{ ok: true, dryRun, matchedCount, deletedCount, retentionHours }`
 
 ### 認証（NextAuth.js マジックリンク & Googleログイン）
 
@@ -263,12 +287,15 @@ Pro専用のAI背景生成・合成です。被写体を保ちながら、指定
   - `refImageUrl`: 参照背景画像のURL（blend時、推奨）
   - `sourceRefBlobUrl`: 処理後に削除してよい参照背景画像の一時Blob URL（任意）
   - `refImageDataUrl`: 参照背景画像（Data URL、blend時。小さい場合のみ。`refImageUrl` がない場合のフォールバック）
+  - **header**: `X-Image-Response-Mode: url|blob`
 - **一時Blobの削除**:
   - `sourceBlobUrl` / `sourceRefBlobUrl` を渡した場合のみ、サーバーはレスポンス返却後に削除を試みます
   - `imageUrl` / `refImageUrl` 自体は削除対象として扱わないため、外部URLや再利用用Blobを誤削除しません
 - **Response**:
-  - 成功時: `200` + 画像バイナリ。ヘッダー `x-premium-remaining` で残回数を返却
+  - 成功時（新契約）: `200` + JSON `{ ok: true, outputUrl, contentType, premiumRemaining }`
+  - 成功時（互換）: `200` + 画像バイナリ。ヘッダー `x-premium-remaining` で残回数を返却
   - 失敗時: `4xx/5xx` + JSON `{ error: string }`。失敗時は回数を消費しない
+  - `url` モードでは、処理結果は Vercel Blob に72時間以内を目安に一時保存されます
 
 #### Webhook（ローカル検証の例）
 

@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth/session';
+import { buildProcessedUploadPath, uploadProcessedImage } from '@/lib/blob/imageStorage';
+import { getRequestedImageResponseMode, type ImageSuccessResponse } from '@/lib/imageApi';
 
 export const runtime = 'nodejs';
 
 type EnhanceBody = {
+  imageUrl?: string;
   imageDataUrl?: string;
   scale?: number;
 };
@@ -12,8 +15,27 @@ function safeScale(scale: unknown): 2 | 4 {
   return scale === 4 ? 4 : 2;
 }
 
+function getFileNameFromUrl(url: string | null | undefined, fallback: string): string {
+  if (!url) return fallback;
+
+  try {
+    const pathname = new URL(url).pathname;
+    const candidate = pathname.split('/').pop();
+    return candidate && candidate.length > 0 ? candidate : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function buildImageSuccessResponse(body: ImageSuccessResponse) {
+  const response = NextResponse.json(body);
+  response.headers.set('Cache-Control', 'no-store');
+  return response;
+}
+
 export async function POST(req: NextRequest) {
   const replicateApiKey = process.env.REPLICATE_API_TOKEN;
+  const responseMode = getRequestedImageResponseMode(req);
   if (!replicateApiKey) {
     return NextResponse.json({ error: 'REPLICATE_API_TOKEN is not set' }, { status: 500 });
   }
@@ -24,8 +46,10 @@ export async function POST(req: NextRequest) {
   }
 
   const body = (await req.json().catch(() => null)) as EnhanceBody | null;
+  const imageUrl = typeof body?.imageUrl === 'string' ? body.imageUrl : '';
   const imageDataUrl = typeof body?.imageDataUrl === 'string' ? body.imageDataUrl : '';
-  if (!imageDataUrl.startsWith('data:image/')) {
+  const imageInput = imageUrl || imageDataUrl;
+  if (!imageInput || (!imageInput.startsWith('data:image/') && !imageInput.startsWith('http://') && !imageInput.startsWith('https://'))) {
     return NextResponse.json({ error: '入力画像が不正です。' }, { status: 400 });
   }
 
@@ -43,7 +67,9 @@ export async function POST(req: NextRequest) {
     body: JSON.stringify({
       version: modelVersion,
       input: {
-        image: imageDataUrl,
+        ...(imageInput.startsWith('http://') || imageInput.startsWith('https://')
+          ? { image: imageInput }
+          : { image: imageInput }),
         scale,
       },
     }),
@@ -107,11 +133,27 @@ export async function POST(req: NextRequest) {
   }
 
   const imageBlob = await imageResponse.blob();
-  return new NextResponse(imageBlob, {
-    status: 200,
-    headers: {
-      'Content-Type': 'image/png',
-      'x-enhance-scale': String(scale),
-    },
+  const outputContentType = imageResponse.headers.get('content-type') || 'image/png';
+
+  if (responseMode === 'blob') {
+    return new NextResponse(imageBlob, {
+      status: 200,
+      headers: {
+        'Content-Type': outputContentType,
+        'x-enhance-scale': String(scale),
+      },
+    });
+  }
+
+  const uploaded = await uploadProcessedImage({
+    pathname: buildProcessedUploadPath('enhance', getFileNameFromUrl(imageUrl, 'enhance-output.png'), outputContentType),
+    body: imageBlob,
+    contentType: outputContentType,
+  });
+
+  return buildImageSuccessResponse({
+    ok: true,
+    outputUrl: uploaded.url,
+    contentType: outputContentType,
   });
 }

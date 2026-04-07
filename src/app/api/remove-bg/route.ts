@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { del } from '@vercel/blob';
 import { getCurrentUser } from '@/lib/auth/session';
+import { buildProcessedUploadPath, uploadProcessedImage } from '@/lib/blob/imageStorage';
+import { getRequestedImageResponseMode, type ImageSuccessResponse } from '@/lib/imageApi';
 
 export const runtime = 'nodejs';
 /** Replicate ポーリング最大60秒＋余裕。未設定だとデフォルト上限で 504 になりやすい */
@@ -20,6 +22,24 @@ function asString(v: unknown): string | null {
 
 async function arrayBufferToBase64(buffer: ArrayBuffer): Promise<string> {
   return Buffer.from(buffer).toString('base64');
+}
+
+function getFileNameFromUrl(url: string | null | undefined, fallback: string): string {
+  if (!url) return fallback;
+
+  try {
+    const pathname = new URL(url).pathname;
+    const candidate = pathname.split('/').pop();
+    return candidate && candidate.length > 0 ? candidate : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function buildImageSuccessResponse(body: ImageSuccessResponse) {
+  const response = NextResponse.json(body);
+  response.headers.set('Cache-Control', 'no-store');
+  return response;
 }
 
 async function startPrediction(args: {
@@ -49,6 +69,7 @@ async function startPrediction(args: {
 export async function POST(req: NextRequest) {
   const replicateApiKey = process.env.REPLICATE_API_TOKEN;
   let sourceBlobUrl: string | null = null;
+  const responseMode = getRequestedImageResponseMode(req);
 
   if (!replicateApiKey) {
     throw new Error('REPLICATE_API_TOKEN is not set');
@@ -61,12 +82,14 @@ export async function POST(req: NextRequest) {
     const contentType = req.headers.get('content-type') ?? '';
     let imageInput: string | null = null;
     let requestedProcessingMode: ProcessingMode = 'standard';
+    let sourceFileName = 'remove-bg-output.png';
 
     if (contentType.includes('application/json')) {
       const body = (await req.json().catch(() => null)) as JsonBody | null;
       imageInput = asString(body?.imageUrl);
       sourceBlobUrl = asString(body?.sourceBlobUrl);
       requestedProcessingMode = body?.processingMode === 'pro_high_precision' ? 'pro_high_precision' : 'standard';
+      sourceFileName = getFileNameFromUrl(imageInput, sourceFileName);
     } else {
       const formData = await req.formData();
       const file = formData.get('file') as File | null;
@@ -79,6 +102,7 @@ export async function POST(req: NextRequest) {
       const mimeType = file.type || 'application/octet-stream';
       const base64String = await arrayBufferToBase64(fileBuffer);
       imageInput = `data:${mimeType};base64,${base64String}`;
+      sourceFileName = file.name || sourceFileName;
     }
 
     if (!imageInput) {
@@ -105,7 +129,7 @@ export async function POST(req: NextRequest) {
     });
 
     // URL入力が失敗した場合だけData URIへフォールバック（既存互換）
-    if (!startPredictionResponse.ok && contentType.includes('application/json')) {
+    if (!startPredictionResponse.ok && contentType.includes('application/json') && responseMode === 'blob') {
       const fallbackSource = imageInput;
       if (fallbackSource.startsWith('http://') || fallbackSource.startsWith('https://')) {
         const fallbackImageRes = await fetch(fallbackSource);
@@ -200,13 +224,29 @@ export async function POST(req: NextRequest) {
     }
 
     const imageBlob = await imageResponse.blob();
+    const outputContentType = imageResponse.headers.get('content-type') || 'image/png';
 
-    return new NextResponse(imageBlob, {
-      status: 200,
-      headers: {
-        'Content-Type': 'image/png',
-        'x-processing-mode': requestedProcessingMode,
-      },
+    if (responseMode === 'blob') {
+      return new NextResponse(imageBlob, {
+        status: 200,
+        headers: {
+          'Content-Type': outputContentType,
+          'x-processing-mode': requestedProcessingMode,
+        },
+      });
+    }
+
+    const uploaded = await uploadProcessedImage({
+      pathname: buildProcessedUploadPath('remove-bg', sourceFileName, outputContentType),
+      body: imageBlob,
+      contentType: outputContentType,
+    });
+
+    return buildImageSuccessResponse({
+      ok: true,
+      outputUrl: uploaded.url,
+      contentType: outputContentType,
+      processingMode: requestedProcessingMode,
     });
 
   } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
