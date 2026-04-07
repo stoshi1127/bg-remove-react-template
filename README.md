@@ -97,7 +97,7 @@ pnpm install
   - `NEXT_PUBLIC_AD_PLACEMENT`（`after_cta` または `bottom`、未指定時は `after_cta`）
   - `NEXT_PUBLIC_AD_RESULT_URL`（広告リンク先URL）
   - `NEXT_PUBLIC_AD_RESULT_TITLE` / `NEXT_PUBLIC_AD_RESULT_DESCRIPTION` / `NEXT_PUBLIC_AD_RESULT_CTA_LABEL`（広告枠文言の上書き）
-  - 注意: 本リポジトリは `Cross-Origin-Embedder-Policy: require-corp` を有効化しています。第三者広告スクリプトを導入する場合は配信可否を事前検証してください。
+  - 注意: 広告や外部スクリプトを導入する場合は、配信元ドメインとブラウザの埋め込み制約を事前検証してください。
 - **任意（Cron保護）**:
   - `CRON_SECRET`（`/api/blob/cleanup` を Vercel Cron から安全に呼ぶための共有シークレット）
 
