@@ -57,6 +57,7 @@ import { trackAnalyticsEvent } from '@/lib/analytics/events';
 import { normalizeClientImageMime } from '@/lib/upload/limits';
 import { buildInputUploadPath } from '@/lib/blob/imageStorage';
 import { IMAGE_RESPONSE_MODE_HEADER, type ImageSuccessResponse } from '@/lib/imageApi';
+import { toCanvasSafeImageUrl } from '@/lib/client/canvasImage';
 
 type AdUserPlan = 'pro' | 'free' | 'guest';
 type AdPlacement = 'after_cta' | 'bottom';
@@ -152,7 +153,7 @@ async function parseImageApiSuccess(response: Response): Promise<{
 /** blob: または data: を Replicate が受け付ける data URI に変換 */
 async function urlToDataUrl(url: string): Promise<string> {
   if (url.startsWith('data:')) return url;
-  const res = await fetch(url);
+  const res = await fetch(toCanvasSafeImageUrl(url));
   const blob = await res.blob();
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
@@ -947,6 +948,7 @@ export default function BgRemoverMulti({
 
       const originalImg = new Image();
       originalImg.crossOrigin = "anonymous";
+      const safeOriginalImageUrl = toCanvasSafeImageUrl(originalImageUrl);
       originalImg.onload = () => {
         const baseWidth = 1200;
         let targetWidth = baseWidth;
@@ -1025,6 +1027,7 @@ export default function BgRemoverMulti({
         } else {
           const templateImg = new Image();
           templateImg.crossOrigin = "anonymous";
+          const safeTemplateUrl = toCanvasSafeImageUrl(templateUrl);
           templateImg.onload = () => {
             // テンプレート画像を中央に描画（アスペクト比を維持して全体をカバー）
             const templateAspectRatio = templateImg.width / templateImg.height;
@@ -1046,11 +1049,11 @@ export default function BgRemoverMulti({
             drawFinalImage();
           };
           templateImg.onerror = () => reject(new Error("Template image loading failed"));
-          templateImg.src = templateUrl;
+          templateImg.src = safeTemplateUrl;
         }
       }
       originalImg.onerror = () => reject(new Error("Original image loading failed"));
-      originalImg.src = originalImageUrl;
+      originalImg.src = safeOriginalImageUrl;
     });
   };
 
@@ -1062,6 +1065,7 @@ export default function BgRemoverMulti({
   ): Promise<{ x: number; y: number; width: number; height: number } | undefined> => {
     return new Promise((resolve, reject) => {
       const img = new Image();
+      const safeImageUrl = toCanvasSafeImageUrl(imageUrl);
       img.onload = () => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
@@ -1165,7 +1169,7 @@ export default function BgRemoverMulti({
       };
 
       img.onerror = (e) => reject('Image loading error for bounding box calculation' + e);
-      img.src = imageUrl;
+      img.src = safeImageUrl;
     });
   };
 

@@ -9,6 +9,7 @@ import PrimaryButton from "../../components/PrimaryButton";
 import RatioButton from "../../components/RatioButton";
 import GuideCard from "../../components/GuideCard";
 import Link from "next/link";
+import { toCanvasSafeImageUrl } from "@/lib/client/canvasImage";
 
 const aspectRatios = [
   { label: "1:1（メルカリ/汎用/SNSアイコン）", value: 1 },
@@ -62,7 +63,7 @@ const TrimPage = () => {
     const storedBoundingBox = localStorage.getItem('trimBoundingBox');
 
     if (storedImage) {
-      setImageSrc(storedImage);
+      setImageSrc(toCanvasSafeImageUrl(storedImage));
 
       if (storedBoundingBox) {
         try {
