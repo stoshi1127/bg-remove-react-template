@@ -1458,7 +1458,7 @@ export default function BgRemoverMulti({
         const requestedProcessingMode: ProcessingMode = isPro
           ? selectedProcessingMode
           : 'standard';
-        const imageMeta = await getImageDimensions(blobForRequest);
+        let imageMeta = await getImageDimensions(blobForRequest);
 
         if (!isPro) {
           if (blobForRequest.size > MAX_UPLOAD_BYTES || imageMeta.mp > FREE_MAX_MP) {
@@ -1466,6 +1466,7 @@ export default function BgRemoverMulti({
             blobForRequest = compressed.blob;
             nameForRequest = compressed.name;
             wasCompressedForFree = compressed.changed;
+            imageMeta = await getImageDimensions(blobForRequest);
           }
           if (blobForRequest.size > MAX_UPLOAD_BYTES) {
             throw new Error(`無料プランの送信上限 ${MAX_UPLOAD_MB}MB を超えています。別の画像でお試しください。`);
@@ -1569,7 +1570,8 @@ export default function BgRemoverMulti({
               }
 
               if (!phase1Res.ok) throw new Error('背景除去（フェーズ1）に失敗しました');
-              const transparentBlob = await phase1Res.blob();
+              const phase1Image = await parseImageApiSuccess(phase1Res);
+              const transparentBlob = await fetch(phase1Image.outputUrl).then((res) => res.blob());
 
               // Phase 2: アスペクト比に合わせてパディング
               blobForRequest = await padImageToRatio(transparentBlob, selectedRatio);
