@@ -82,6 +82,11 @@ def main():
     create_metric.add_argument('--display-name', required=True)
     create_metric.add_argument('--measurement-unit', default='STANDARD')
     create_metric.add_argument('--apply', action='store_true', help='Without this flag, only show the proposed create.')
+    update_metric = sub.add_parser('update-metric-display')
+    update_metric.add_argument('--property', required=True)
+    update_metric.add_argument('--parameter', required=True)
+    update_metric.add_argument('--display-name', required=True)
+    update_metric.add_argument('--apply', action='store_true', help='Without this flag, only show the proposed update.')
     args = parser.parse_args()
     if args.command == 'login':
         login(args)
@@ -111,7 +116,7 @@ def main():
                 if args.profile != 'edit':
                     parser.error('Creation requires --profile edit.')
                 result = request(session, 'POST', parent, json=body)
-        else:
+        elif args.command == 'create-metric':
             parent = f'properties/{args.property}/customMetrics'
             body = {
                 'parameterName': args.parameter,
@@ -129,6 +134,31 @@ def main():
                 if args.profile != 'edit':
                     parser.error('Creation requires --profile edit.')
                 result = request(session, 'POST', parent, json=body)
+        else:
+            parent = f'properties/{args.property}/customMetrics'
+            existing = list_all(session, parent, 'customMetrics')
+            matches = [item for item in existing if item.get('parameterName') == args.parameter and item.get('scope') == 'EVENT']
+            if not matches:
+                parser.error('No event-scoped custom metric matches --parameter.')
+            metric = matches[0]
+            if metric.get('displayName') == args.display_name:
+                result = {'action': 'already_current', 'metric': metric}
+            elif not args.apply:
+                result = {
+                    'action': 'preview_update',
+                    'name': metric['name'],
+                    'displayName': args.display_name,
+                }
+            else:
+                if args.profile != 'edit':
+                    parser.error('Update requires --profile edit.')
+                result = request(
+                    session,
+                    'PATCH',
+                    metric['name'],
+                    params={'updateMask': 'display_name'},
+                    json={'name': metric['name'], 'displayName': args.display_name},
+                )
         print(json.dumps(result, ensure_ascii=False, indent=2))
 
 

@@ -65,6 +65,34 @@ class AdminHelperTests(unittest.TestCase):
         self.assertEqual(calls[0].kwargs['json']['scope'], 'EVENT')
         self.assertEqual(calls[0].kwargs['json']['measurementUnit'], 'STANDARD')
 
+    def test_metric_display_update_requires_apply(self):
+        existing = [{
+            'name': 'properties/489868388/customMetrics/1',
+            'parameterName': 'image_count',
+            'displayName': 'Survey image count',
+            'scope': 'EVENT',
+        }]
+        result, calls = self.run_command([
+            '--profile', 'edit', 'update-metric-display', '--property', '489868388',
+            '--parameter', 'image_count', '--display-name', 'Image count',
+        ], existing)
+        self.assertEqual(result['action'], 'preview_update')
+        self.assertEqual(calls, [])
+
+    def test_metric_display_update_patches_only_display_name(self):
+        existing = [{
+            'name': 'properties/489868388/customMetrics/1',
+            'parameterName': 'image_count',
+            'displayName': 'Survey image count',
+            'scope': 'EVENT',
+        }]
+        _, calls = self.run_command([
+            '--profile', 'edit', 'update-metric-display', '--property', '489868388',
+            '--parameter', 'image_count', '--display-name', 'Image count', '--apply',
+        ], existing)
+        self.assertEqual(calls[0].args[1:3], ('PATCH', 'properties/489868388/customMetrics/1'))
+        self.assertEqual(calls[0].kwargs['params']['updateMask'], 'display_name')
+
 
 if __name__ == '__main__':
     unittest.main()

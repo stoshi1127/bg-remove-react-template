@@ -35,7 +35,7 @@
 | ディメンション | `user_plan` | User plan |
 | ディメンション | `processing_mode` | Processing mode |
 | ディメンション | `purpose` | Survey purpose |
-| 指標 | `image_count` | Survey image count |
+| 指標 | `image_count` | Image count |
 
 全てイベント範囲。`image_count` の単位は標準（STANDARD）。定義の登録確認と、サイトからの実イベント受信確認は別であり、DebugViewでの受信確認は引き続き必要。
 
