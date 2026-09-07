@@ -88,7 +88,7 @@ export default function HeaderClient({ isLoggedIn, isPro = false, billingEnabled
                 {billingEnabled ? (
                   <Link
                     href="/?buyPro=1#pro"
-                    onClick={() => trackAnalyticsEvent('pro_purchase_click', { source: 'header' })}
+                    onClick={() => trackAnalyticsEvent('pro_purchase_click', { event_source: 'header' })}
                     className="bg-pro-orange hover:bg-orange-600 text-white px-5 xl:px-6 py-2.5 rounded-full text-sm font-extrabold transition-all shadow-md shadow-orange-200 whitespace-nowrap"
                   >
                     Proを購入する
@@ -180,7 +180,7 @@ export default function HeaderClient({ isLoggedIn, isPro = false, billingEnabled
                     href="/?buyPro=1#pro"
                     className="block px-4 py-2 rounded-lg font-semibold text-white bg-pro-orange hover:bg-orange-600"
                     onClick={() => {
-                      trackAnalyticsEvent('pro_purchase_click', { source: 'header_mobile' });
+                      trackAnalyticsEvent('pro_purchase_click', { event_source: 'header_mobile' });
                       closeMenu();
                     }}
                   >

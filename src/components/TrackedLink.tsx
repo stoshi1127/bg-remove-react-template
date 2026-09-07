@@ -18,7 +18,7 @@ export default function TrackedLink({
 }: TrackedLinkProps) {
   const handleClick = (event: MouseEvent<HTMLAnchorElement>) => {
     if (eventName) {
-      trackAnalyticsEvent(eventName, { source });
+      trackAnalyticsEvent(eventName, { event_source: source });
     }
 
     onClick?.(event);

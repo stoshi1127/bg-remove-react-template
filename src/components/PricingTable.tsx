@@ -31,17 +31,40 @@ export default function PricingTable({
   currentPlan = 'guest',
 }: PricingTableProps) {
   const viewedRef = useRef(false);
+  const tableRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (viewedRef.current) return;
-    viewedRef.current = true;
-    trackAnalyticsEvent('pricing_table_view', { source });
+    const element = tableRef.current;
+    if (!element || viewedRef.current) return;
+
+    const recordView = () => {
+      if (viewedRef.current) return;
+      viewedRef.current = true;
+      trackAnalyticsEvent('pricing_table_view', { event_source: source });
+    };
+
+    if (typeof IntersectionObserver === 'undefined') {
+      recordView();
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting && entry.intersectionRatio >= 0.5)) {
+          recordView();
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.5 },
+    );
+    observer.observe(element);
+    return () => observer.disconnect();
   }, [source]);
 
   const features = variant === 'compact' ? FEATURES.slice(0, 4) : FEATURES;
 
   return (
-    <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 items-stretch ${className}`} role="region" aria-label="FreeとProの比較">
+    <div ref={tableRef} className={`grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 items-stretch ${className}`} role="region" aria-label="FreeとProの比較">
       {/* Free Plan Card */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 md:p-8 flex flex-col h-full">
         <div className="mb-6 md:mb-8">

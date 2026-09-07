@@ -73,7 +73,7 @@ export default function PricingModal({
                   <button
                     type="button"
                     onClick={() => {
-                      trackAnalyticsEvent('pro_purchase_click', { source });
+                      trackAnalyticsEvent('pro_purchase_click', { event_source: source });
                       onPurchaseClick();
                     }}
                     className="w-full py-4 bg-pro-orange text-white rounded-xl font-bold shadow-lg shadow-orange-500/30 hover:bg-orange-600 transition-all transform active:scale-95 text-base"

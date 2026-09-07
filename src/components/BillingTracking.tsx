@@ -4,18 +4,41 @@ import { useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { trackAnalyticsEvent } from '@/lib/analytics/events';
 
-export default function BillingTracking() {
+type BillingTrackingProps = {
+  showStatus?: boolean;
+};
+
+export default function BillingTracking({ showStatus = true }: BillingTrackingProps) {
   const searchParams = useSearchParams();
   const billing = searchParams.get('billing');
+  const billingRef = searchParams.get('billing_ref');
+  const billingFlow = searchParams.get('billing_flow');
 
   useEffect(() => {
-    if (billing === 'success') {
-      trackAnalyticsEvent('checkout_completed', { source: 'account_return' });
+    const eventName = billing === 'success'
+      ? 'checkout_completed'
+      : billing === 'cancel'
+        ? 'checkout_canceled'
+        : null;
+    if (!eventName) return;
+
+    const dedupeKey = billingRef
+      ? `ga4:${eventName}:${billingRef}`
+      : `ga4:${eventName}:${window.location.pathname}:${window.location.search}`;
+    try {
+      if (window.sessionStorage.getItem(dedupeKey)) return;
+      window.sessionStorage.setItem(dedupeKey, '1');
+    } catch {
+      // Storage unavailable: React's mounted instance still sends only once.
     }
-    if (billing === 'cancel') {
-      trackAnalyticsEvent('checkout_canceled', { source: 'account_return' });
-    }
-  }, [billing]);
+
+    trackAnalyticsEvent(eventName, {
+      event_source: billing === 'success' ? 'verified_billing_return' : 'account_return',
+      ...(billingFlow ? { billing_flow: billingFlow } : {}),
+    });
+  }, [billing, billingFlow, billingRef]);
+
+  if (!showStatus) return null;
 
   if (billing === 'success') {
     return (

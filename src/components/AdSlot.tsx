@@ -75,7 +75,7 @@ function SponsorBanner({
         rel="nofollow sponsored noopener noreferrer"
         className="inline-block"
         onClick={() => {
-          sendAdEvent('ad_click', {
+          sendAdEvent('sponsor_click', {
             ad_slot: slotId,
             variant,
             user_plan: userPlan,
@@ -150,7 +150,7 @@ export default function AdSlot({
           setIsNearViewport(true);
           if (!sentLoadedRef.current) {
             sentLoadedRef.current = true;
-            sendAdEvent('ad_loaded', {
+            sendAdEvent('sponsor_loaded', {
               ad_slot: slotId,
               variant,
               user_plan: userPlan,
@@ -158,7 +158,7 @@ export default function AdSlot({
           }
           if (!sentImpressionRef.current && entry.intersectionRatio >= 0.5) {
             sentImpressionRef.current = true;
-            sendAdEvent('ad_impression', {
+            sendAdEvent('sponsor_impression', {
               ad_slot: slotId,
               variant,
               user_plan: userPlan,
@@ -211,7 +211,7 @@ export default function AdSlot({
               rel="noopener noreferrer"
               className={cardClassName}
               onClick={() => {
-                sendAdEvent('ad_click', {
+                sendAdEvent('sponsor_click', {
                   ad_slot: slotId,
                   variant,
                   user_plan: userPlan,

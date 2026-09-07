@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { Suspense } from 'react';
 
 import { isBillingEnabled } from '@/lib/billing/config';
+import BillingTracking from '@/components/BillingTracking';
 import LoginForm from './ui/LoginForm';
 
 export const metadata: Metadata = {
@@ -32,6 +34,9 @@ export default async function LoginPage({
 
   return (
     <div className="container mx-auto px-4 py-12 max-w-lg">
+      <Suspense fallback={null}>
+        <BillingTracking />
+      </Suspense>
       <h1 className="text-2xl font-bold text-gray-900 mb-2">ログイン</h1>
       <p className="text-gray-600 mb-8">
         登録済みアカウント専用のログインページです。Googleアカウントでログインするか、

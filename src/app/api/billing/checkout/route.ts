@@ -157,7 +157,7 @@ export async function POST() {
       return res;
     }
 
-    const successUrl = `${siteUrl}/account?billing=success`;
+    const successUrl = `${siteUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`;
     const cancelUrl = `${siteUrl}/account?billing=cancel`;
 
     const session = await stripe.checkout.sessions.create({
@@ -242,7 +242,7 @@ export async function GET(req: Request) {
     const siteUrl = getSiteUrl();
     const priceId = getProPriceId();
 
-    const successUrl = `${siteUrl}/account?billing=success`;
+    const successUrl = `${siteUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`;
     const cancelUrl = `${siteUrl}/?buyPro=1&billing=cancel`;
 
     const stripeSession = await stripe.checkout.sessions.create({

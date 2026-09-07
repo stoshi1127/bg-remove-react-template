@@ -30,6 +30,7 @@ export default function GuestProPurchase({
   const searchParams = useSearchParams();
   const autoOpenedRef = useRef(false);
   const noticeShownRef = useRef(false);
+  const wasOpenRef = useRef(false);
 
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : internalOpen;
@@ -46,6 +47,13 @@ export default function GuestProPurchase({
       setOpen(true);
     }
   }, [searchParams, setOpen]);
+
+  useEffect(() => {
+    if (open && !wasOpenRef.current) {
+      trackAnalyticsEvent('purchase_modal_view', { event_source: 'guest_modal' });
+    }
+    wasOpenRef.current = open;
+  }, [open]);
 
   useEffect(() => {
     if (noticeShownRef.current) return;
@@ -65,6 +73,9 @@ export default function GuestProPurchase({
     if (!nextMessage) return;
 
     noticeShownRef.current = true;
+    if (billing === 'cancel') {
+      trackAnalyticsEvent('checkout_canceled', { event_source: 'guest_return' });
+    }
     setMessage(nextMessage);
     setOpen(true);
   }, [searchParams, setOpen]);
@@ -77,6 +88,10 @@ export default function GuestProPurchase({
 
   const submit = async () => {
     if (loading) return;
+    trackAnalyticsEvent('purchase_method_selected', {
+      event_source: 'guest_modal',
+      purchase_method: 'email',
+    });
     setLoading(true);
     setMessage(null);
     try {
@@ -91,7 +106,10 @@ export default function GuestProPurchase({
         return;
       }
       if ('url' in data && typeof data.url === 'string') {
-        trackAnalyticsEvent('checkout_started', { source: 'guest_modal' });
+        trackAnalyticsEvent('checkout_started', {
+          event_source: 'guest_modal',
+          purchase_method: 'email',
+        });
         window.location.href = data.url;
         return;
       }
@@ -103,7 +121,7 @@ export default function GuestProPurchase({
   };
 
   const handleOpenClick = () => {
-    trackAnalyticsEvent('pro_purchase_click', { source: 'guest_cta' });
+    trackAnalyticsEvent('pro_purchase_click', { event_source: 'guest_cta' });
     setOpen(true);
   };
 
@@ -154,6 +172,14 @@ export default function GuestProPurchase({
                 <button
                   type="button"
                   onClick={() => {
+                    trackAnalyticsEvent('purchase_method_selected', {
+                      event_source: 'guest_modal',
+                      purchase_method: 'google',
+                    });
+                    trackAnalyticsEvent('checkout_started', {
+                      event_source: 'guest_modal',
+                      purchase_method: 'google',
+                    });
                     setLoading(true);
                     window.location.href = '/api/billing/google-purchase/start';
                   }}

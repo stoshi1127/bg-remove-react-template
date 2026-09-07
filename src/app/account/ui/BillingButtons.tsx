@@ -22,7 +22,7 @@ export default function BillingButtons({ isPro }: { isPro: boolean }) {
   };
 
   const goCheckout = async () => {
-    trackAnalyticsEvent('pro_purchase_click', { source: 'account_page' });
+    trackAnalyticsEvent('pro_purchase_click', { event_source: 'account_page' });
     setLoading('checkout');
     setError(null);
     try {
@@ -34,7 +34,7 @@ export default function BillingButtons({ isPro }: { isPro: boolean }) {
       }
 
       if ('url' in data && typeof data.url === 'string') {
-        trackAnalyticsEvent('checkout_started', { source: 'account_page' });
+        trackAnalyticsEvent('checkout_started', { event_source: 'account_page' });
         window.location.href = data.url;
         return;
       }

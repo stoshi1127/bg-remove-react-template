@@ -40,6 +40,9 @@ const customJestConfig = {
       displayName: 'unit',
       testEnvironment: 'jest-environment-jsdom',
       setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+      moduleNameMapper: {
+        '^@/(.*)$': '<rootDir>/src/$1',
+      },
       transform: {
         '^.+\\.(ts|tsx|js|jsx)$': ['babel-jest', {
           presets: [
@@ -58,6 +61,9 @@ const customJestConfig = {
       displayName: 'integration',
       testEnvironment: 'jest-environment-jsdom',
       setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+      moduleNameMapper: {
+        '^@/(.*)$': '<rootDir>/src/$1',
+      },
       transform: {
         '^.+\\.(ts|tsx|js|jsx)$': ['babel-jest', {
           presets: [

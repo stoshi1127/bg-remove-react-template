@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { createHash } from 'node:crypto';
 
 import { prisma } from '@/lib/db';
 import { normalizeEmail } from '@/lib/auth/email';
@@ -7,8 +8,21 @@ import { getStripeMode } from '@/lib/billing/stripeMode';
 import { decryptEmail } from '@/lib/billing/pendingCheckoutEmail';
 import { attachDatabaseSessionCookie, createDatabaseSessionForUser } from '@/lib/auth/sessionCookie';
 import { upsertGooglePurchaseUser } from '@/lib/billing/googlePurchase';
+import { getCurrentUser } from '@/lib/auth/session';
 
 export const runtime = 'nodejs';
+
+function billingReference(sessionId: string): string {
+  return createHash('sha256').update(sessionId).digest('hex').slice(0, 20);
+}
+
+function completedUrl(url: URL, destination: '/account' | '/login', flow: string, sessionId: string): URL {
+  const redirectUrl = new URL(destination, url);
+  redirectUrl.searchParams.set('billing', 'success');
+  redirectUrl.searchParams.set('billing_flow', flow);
+  redirectUrl.searchParams.set('billing_ref', billingReference(sessionId));
+  return redirectUrl;
+}
 
 // Removed manual session cookie setting as NextAuth handles it.
 
@@ -43,11 +57,26 @@ export async function GET(req: Request) {
       typeof session.metadata?.pendingGooglePurchaseId === 'string'
         ? session.metadata.pendingGooglePurchaseId
         : null;
+    const checkoutUserId =
+      typeof session.metadata?.userId === 'string'
+        ? session.metadata.userId
+        : null;
     const pendingCheckoutId =
       (typeof session.metadata?.pendingCheckoutId === 'string' ? session.metadata.pendingCheckoutId : null) ??
-      (!pendingGooglePurchaseId && typeof session.client_reference_id === 'string'
+      (!pendingGooglePurchaseId && !checkoutUserId && typeof session.client_reference_id === 'string'
         ? session.client_reference_id
         : null);
+
+    if (checkoutUserId) {
+      const currentUser = await getCurrentUser();
+      if (!currentUser || currentUser.id !== checkoutUserId) {
+        return NextResponse.redirect(new URL('/login?error=checkout_requires_login', url));
+      }
+
+      const res = NextResponse.redirect(completedUrl(url, '/account', 'account', sessionId));
+      res.headers.set('Cache-Control', 'no-store');
+      return res;
+    }
 
     if (pendingGooglePurchaseId) {
       const now = new Date();
@@ -95,7 +124,7 @@ export async function GET(req: Request) {
         data: { usedAt: now },
       });
 
-      const res = NextResponse.redirect(new URL('/account?billing=success', url));
+      const res = NextResponse.redirect(completedUrl(url, '/account', 'google', sessionId));
       const { sessionToken, expires } = await createDatabaseSessionForUser(prisma, userId);
       attachDatabaseSessionCookie(res, req.url, sessionToken, expires);
       res.headers.set('Cache-Control', 'no-store');
@@ -147,7 +176,7 @@ export async function GET(req: Request) {
     // Under NextAuth, we cannot manually create session tokens easily in this API route.
     // Instead, we redirect the user to the login page so they can receive a magic link
     // to their newly created Pro account.
-    const res = NextResponse.redirect(new URL('/login?billing=success', url));
+    const res = NextResponse.redirect(completedUrl(url, '/login', 'email', sessionId));
     res.headers.set('Cache-Control', 'no-store');
     return res;
   } catch (error) {

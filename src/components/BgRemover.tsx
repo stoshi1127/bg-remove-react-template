@@ -846,10 +846,9 @@ export default function BgRemoverMulti({
       setMsg('現在、Proプランの新規お申し込みは一時停止しています。');
       return;
     }
-    trackAnalyticsEvent('pro_purchase_click', { source: reason });
-    trackAnalyticsEvent('pro_high_precision_click', { reason, isPro });
+    trackAnalyticsEvent('pro_purchase_click', { event_source: reason });
     window.location.href = '/?buyPro=1#pro';
-  }, [billingEnabled, isPro]);
+  }, [billingEnabled]);
 
   // --- プレミアムAI残回数の取得 ---
   const fetchPremiumRemaining = useCallback(async () => {
@@ -902,6 +901,7 @@ export default function BgRemoverMulti({
 
   const handleSelectProcessingMode = useCallback((nextMode: ProcessingMode) => {
     if (nextMode === 'pro_high_precision' && !isPro) {
+      trackAnalyticsEvent('pro_high_precision_click', { reason: 'pre_mode_selector', isPro });
       goToProPurchase('pre_mode_selector');
       return;
     }

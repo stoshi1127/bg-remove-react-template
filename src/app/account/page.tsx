@@ -8,7 +8,7 @@ import { getStripeMode } from '@/lib/billing/stripeMode';
 import { isBillingEnabled } from '@/lib/billing/config';
 import LogoutButton from './ui/LogoutButton';
 import BillingButtons from './ui/BillingButtons';
-import BillingTracking from './ui/BillingTracking';
+import BillingTracking from '@/components/BillingTracking';
 import AccountPremiumUsage from './ui/AccountPremiumUsage';
 
 export const metadata: Metadata = {
