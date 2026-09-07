@@ -42,3 +42,7 @@ next-env.d.ts
 
 #cursor
 .cursor
+
+# Local GA4 tools and OAuth credentials (never deploy)
+/.local/ga4/
+/scripts/analytics/__pycache__/

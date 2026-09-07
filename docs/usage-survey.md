@@ -24,7 +24,22 @@
 
 画像、ファイル名、メールアドレスはアンケートのパラメータに含めない。DBへの保存はない。GA4未読込・広告ブロックなどでは回答が計測されない場合があり、再送しない。画面の完了表示はGA4への到達保証ではない。
 
-## 公開時のGA4設定（管理画面で別途実施）
+## GA4設定（登録済み）
+
+`bg.quicktools.jp` のプロパティ `489868388` にAdmin APIで以下の6件を登録し、再取得してパラメータ・範囲・指標の単位が一致することを確認済み。
+
+| 種別 | パラメータ | GA4表示名 |
+| --- | --- | --- |
+| ディメンション | `survey_version` | Survey version |
+| ディメンション | `placement` | Survey placement |
+| ディメンション | `user_plan` | User plan |
+| ディメンション | `processing_mode` | Processing mode |
+| ディメンション | `purpose` | Survey purpose |
+| 指標 | `image_count` | Survey image count |
+
+全てイベント範囲。`image_count` の単位は標準（STANDARD）。定義の登録確認と、サイトからの実イベント受信確認は別であり、DebugViewでの受信確認は引き続き必要。
+
+### 設定の再現と公開後の確認
 
 1. 対象サイトのGA4プロパティを開き、管理 → カスタム定義 → カスタムディメンションを作成する。編集者以上の権限が必要。
 2. 範囲を「イベント」にし、`survey_version`、`placement`、`user_plan`、`processing_mode`、`purpose` をそれぞれイベントパラメータとして登録する。同名の既存定義があれば再利用する。
