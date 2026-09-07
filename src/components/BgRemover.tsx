@@ -54,6 +54,7 @@ import {
   computeUpscaledDimensions,
 } from '@/lib/image/enhance';
 import { trackAnalyticsEvent } from '@/lib/analytics/events';
+import UsageSurvey, { useUsageSurvey } from './UsageSurvey';
 import { normalizeClientImageMime } from '@/lib/upload/limits';
 import { buildInputUploadPath } from '@/lib/blob/imageStorage';
 import { IMAGE_RESPONSE_MODE_HEADER, type ImageSuccessResponse } from '@/lib/imageApi';
@@ -279,6 +280,12 @@ export default function BgRemoverMulti({
   const [blendEnabled, setBlendEnabled] = useState(false);
 
   const [busy, setBusy] = useState(false);
+  const survey = useUsageSurvey();
+  const finishSurvey = survey.finish;
+  const surveyBatchIds = useRef<string[]>([]);
+  const [imageProcessing, setImageProcessing] = useState(false);
+  const processingModalRef = useRef<HTMLDivElement>(null);
+  const resultsFocusRef = useRef<HTMLDivElement>(null);
   const [msg, setMsg] = useState<string | null>(null);
   const [progress, setProgress] = useState<number>(0);
   const [processedCount, setProcessedCount] = useState<number>(0);
@@ -370,6 +377,43 @@ export default function BgRemoverMulti({
     trackAnalyticsEvent('pro_high_precision_impression', { section: 'result' });
     proOfferImpressionTrackedRef.current = true;
   }, [hasCompletedResults, isPro]);
+
+  useEffect(() => {
+    if (busy || !imageProcessing) return;
+    const ids = surveyBatchIds.current;
+    finishSurvey(inputs.some(input => ids.includes(input.id) && input.status === 'completed'));
+    surveyBatchIds.current = [];
+    setImageProcessing(false);
+  }, [busy, imageProcessing, inputs, finishSurvey]);
+
+  const focusResults = useCallback(() => resultsFocusRef.current?.focus({ preventScroll: true }), []);
+  const processingModalOpen = busy || !!enhancingFileId || batchEnhanceState.inProgress;
+  useEffect(() => {
+    if (!processingModalOpen) return;
+    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const modal = processingModalRef.current;
+    modal?.focus();
+    const trapFocus = (event: KeyboardEvent) => {
+      if (event.key !== 'Tab' || !modal) return;
+      const targets = Array.from(modal.querySelectorAll<HTMLElement>('button:not(:disabled), a[href], input:not(:disabled), [tabindex="0"]'));
+      const first = targets[0];
+      const last = targets[targets.length - 1];
+      if (!first) { event.preventDefault(); modal.focus(); return; }
+      if (!modal.contains(document.activeElement) || document.activeElement === modal) {
+        event.preventDefault(); (event.shiftKey ? last : first).focus();
+      } else if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault(); last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault(); first.focus();
+      }
+    };
+    document.addEventListener('keydown', trapFocus);
+    return () => {
+      document.removeEventListener('keydown', trapFocus);
+      if (previous?.isConnected && !previous.matches(':disabled')) previous.focus({ preventScroll: true });
+      else focusResults();
+    };
+  }, [processingModalOpen, focusResults]);
 
   // 隠し機能：デバッグモード切り替え（Ctrl+Shift+D）
   useEffect(() => {
@@ -513,6 +557,9 @@ export default function BgRemoverMulti({
 
   // キャンセル機能
   const handleCancel = useCallback(() => {
+    finishSurvey(false);
+    surveyBatchIds.current = [];
+    setImageProcessing(false);
     cancelRequestedRef.current = true;
     if (abortControllerRef.current) {
       abortControllerRef.current.abort('User cancelled');
@@ -541,7 +588,7 @@ export default function BgRemoverMulti({
       event: 'error',
       details: 'ユーザーによるキャンセル'
     });
-  }, [addLog]);
+  }, [addLog, finishSurvey]);
 
   // オブジェクトURLを管理するためのRef
   const objectUrlsRef = useRef<string[]>([]);
@@ -1389,6 +1436,9 @@ export default function BgRemoverMulti({
       setMsg("ファイルが多いため、処理速度を自動で調整しています。");
     }
 
+    surveyBatchIds.current = filesToProcess.map(input => input.id);
+    survey.begin({ user_plan: adUserPlan, processing_mode: selectedProcessingMode, image_count: filesToProcess.length });
+    setImageProcessing(true);
     setBusy(true);
     setMsg(null);
     setAiBgError(null);
@@ -2271,7 +2321,7 @@ export default function BgRemoverMulti({
         }
       }
 
-      zip.generateAsync({ type: "blob" })
+      await zip.generateAsync({ type: "blob" })
         .then(content => {
           saveAs(content, "processed_images.zip");
           setMsg("ZIPファイルのダウンロードが開始されました。");
@@ -3363,6 +3413,9 @@ export default function BgRemoverMulti({
 
         {hasCompletedResults && (
           <>
+            <div ref={resultsFocusRef} tabIndex={-1} aria-label="処理結果">
+              {!busy && !imageProcessing && !enhancingFileId && !batchEnhanceState.inProgress && <UsageSurvey survey={survey} placement="result" />}
+            </div>
             {inputs.filter(input => input.status === 'completed').length > 1 && (
               <>
                 {isPro && !batchEnhanceState.inProgress && (
@@ -3485,15 +3538,15 @@ export default function BgRemoverMulti({
               className="fixed inset-0 bg-black/40"
               aria-hidden="true"
             />
-            <div className="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl border border-gray-100 p-8 z-10 overflow-hidden">
+            <div ref={processingModalRef} tabIndex={-1} className="relative w-full max-w-sm max-h-[90dvh] overflow-y-auto bg-white rounded-3xl shadow-2xl border border-gray-100 p-4 sm:p-8 z-10">
 
               {busy ? (
                 <div className="flex flex-col items-center">
                   <h2 id="processing-modal-title" className="text-xl font-bold text-gray-900 mb-2 text-center">
-                    画像を処理しています
+                    {imageProcessing ? '画像を処理しています' : 'ZIPファイルを準備しています'}
                   </h2>
                   <p className="text-sm text-slate-500 mb-8 text-center">
-                    AIが最適な結果を生成中です。少々お待ちください。
+                    {imageProcessing ? 'AIが最適な結果を生成中です。少々お待ちください。' : 'ダウンロードの準備中です。少々お待ちください。'}
                   </p>
 
                   {(() => {
@@ -3542,7 +3595,8 @@ export default function BgRemoverMulti({
                     );
                   })()}
 
-                  <button
+                  {imageProcessing && <UsageSurvey survey={survey} placement="processing" />}
+                  {imageProcessing && <button
                     onClick={handleCancel}
                     className="w-full py-3 px-4 rounded-xl border border-slate-200 text-slate-500 font-bold hover:bg-slate-50 hover:text-red-500 transition-all flex items-center justify-center gap-2 group text-sm"
                   >
@@ -3550,7 +3604,7 @@ export default function BgRemoverMulti({
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                     処理をキャンセル
-                  </button>
+                  </button>}
                 </div>
               ) : batchEnhanceState.inProgress ? (
                 <div className="flex flex-col items-center">
