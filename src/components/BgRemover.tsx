@@ -54,6 +54,11 @@ import {
   computeUpscaledDimensions,
 } from '@/lib/image/enhance';
 import { trackAnalyticsEvent } from '@/lib/analytics/events';
+import {
+  getProcessingResultStatus,
+  getProcessingType,
+  type ProcessingType,
+} from '@/lib/analytics/imageProcessing';
 import UsageSurvey, { useUsageSurvey } from './UsageSurvey';
 import { normalizeClientImageMime } from '@/lib/upload/limits';
 import { buildInputUploadPath } from '@/lib/blob/imageStorage';
@@ -68,6 +73,16 @@ type OversizedPromptItem = {
   id: string;
   name: string;
   issues: string[];
+};
+type ProcessingAnalyticsRun = {
+  userPlan: AdUserPlan;
+  processingMode: ProcessingMode;
+  processingType: ProcessingType;
+  imageCount: number;
+  startedAt: number;
+  successCount: number;
+  failureCount: number;
+  terminalTracked: boolean;
 };
 
 // 背景テンプレートの定義
@@ -502,6 +517,29 @@ export default function BgRemoverMulti({
   // AbortController for canceling requests
   const abortControllerRef = useRef<AbortController | null>(null);
   const cancelRequestedRef = useRef(false);
+  const processingAnalyticsRef = useRef<ProcessingAnalyticsRun | null>(null);
+
+  const trackProcessingTerminal = useCallback((eventName: 'image_processing_completed' | 'image_processing_canceled') => {
+    const run = processingAnalyticsRef.current;
+    if (!run || run.terminalTracked) return;
+    run.terminalTracked = true;
+    if (eventName === 'image_processing_completed') {
+      const unaccountedCount = run.imageCount - run.successCount - run.failureCount;
+      if (unaccountedCount > 0) run.failureCount += unaccountedCount;
+    }
+    trackAnalyticsEvent(eventName, {
+      user_plan: run.userPlan,
+      processing_mode: run.processingMode,
+      processing_type: run.processingType,
+      image_count: run.imageCount,
+      success_count: run.successCount,
+      failure_count: run.failureCount,
+      duration_ms: Math.max(0, Date.now() - run.startedAt),
+      ...(eventName === 'image_processing_completed'
+        ? { result_status: getProcessingResultStatus(run.successCount, run.failureCount) }
+        : {}),
+    });
+  }, []);
 
   // 並行数を動的に調整する関数
   const adjustConcurrency = useCallback((responseTime: number, success: boolean) => {
@@ -557,6 +595,7 @@ export default function BgRemoverMulti({
 
   // キャンセル機能
   const handleCancel = useCallback(() => {
+    trackProcessingTerminal('image_processing_canceled');
     finishSurvey(false);
     surveyBatchIds.current = [];
     setImageProcessing(false);
@@ -588,7 +627,7 @@ export default function BgRemoverMulti({
       event: 'error',
       details: 'ユーザーによるキャンセル'
     });
-  }, [addLog, finishSurvey]);
+  }, [addLog, finishSurvey, trackProcessingTerminal]);
 
   // オブジェクトURLを管理するためのRef
   const objectUrlsRef = useRef<string[]>([]);
@@ -1438,6 +1477,27 @@ export default function BgRemoverMulti({
 
     surveyBatchIds.current = filesToProcess.map(input => input.id);
     survey.begin({ user_plan: adUserPlan, processing_mode: selectedProcessingMode, image_count: filesToProcess.length });
+    const processingType = getProcessingType({
+      backgroundMode: bgMode,
+      hasSelectedTemplate: !!selectedTemplate,
+      blendEnabled,
+    });
+    processingAnalyticsRef.current = {
+      userPlan: adUserPlan,
+      processingMode: selectedProcessingMode,
+      processingType,
+      imageCount: filesToProcess.length,
+      startedAt: Date.now(),
+      successCount: 0,
+      failureCount: 0,
+      terminalTracked: false,
+    };
+    trackAnalyticsEvent('image_processing_started', {
+      user_plan: adUserPlan,
+      processing_mode: selectedProcessingMode,
+      processing_type: processingType,
+      image_count: filesToProcess.length,
+    });
     setImageProcessing(true);
     setBusy(true);
     setMsg(null);
@@ -1463,6 +1523,7 @@ export default function BgRemoverMulti({
       // 処理開始時刻と順序を記録
       const startTime = Date.now();
       const requestStartTime = Date.now(); // API レスポンス時間測定用
+      let analyticsOutcomeRecorded = false;
       setInputs(prev => prev.map(i =>
         i.id === input.id
           ? { ...i, startTime, processingOrder: index }
@@ -1799,6 +1860,11 @@ export default function BgRemoverMulti({
             totalErrors: stats.totalErrors + 1
           }));
 
+          if (!analyticsOutcomeRecorded && processingAnalyticsRef.current) {
+            analyticsOutcomeRecorded = true;
+            processingAnalyticsRef.current.failureCount += 1;
+          }
+
           return;
         }
 
@@ -1913,6 +1979,10 @@ export default function BgRemoverMulti({
             setProgress(newProgress);
             return newCount;
           });
+          if (!analyticsOutcomeRecorded && processingAnalyticsRef.current) {
+            analyticsOutcomeRecorded = true;
+            processingAnalyticsRef.current.successCount += 1;
+          }
         } catch (e) {
           console.error("Template application failed", e);
           const errorMessage = e instanceof Error ? e.message : "不明なエラー";
@@ -1934,6 +2004,10 @@ export default function BgRemoverMulti({
           }));
 
           adjustConcurrency(responseTime, false);
+          if (!analyticsOutcomeRecorded && processingAnalyticsRef.current) {
+            analyticsOutcomeRecorded = true;
+            processingAnalyticsRef.current.failureCount += 1;
+          }
           throw e;
         }
 
@@ -1974,6 +2048,10 @@ export default function BgRemoverMulti({
         } else {
           updateInputStatus(input.id, "error", errorMessage);
           setMsg(prevMsg => prevMsg ? `${prevMsg}\n${input.name}: ${errorMessage}` : `${input.name}: ${errorMessage}`);
+          if (!analyticsOutcomeRecorded && processingAnalyticsRef.current) {
+            analyticsOutcomeRecorded = true;
+            processingAnalyticsRef.current.failureCount += 1;
+          }
         }
 
         // エラー時は進捗を更新
@@ -2017,6 +2095,9 @@ export default function BgRemoverMulti({
       const rejected = results.filter(result => result.status === 'rejected').length;
 
       console.log(`並行処理完了: 成功=${fulfilled}件, エラー=${rejected}件`);
+      if (!cancelRequestedRef.current) {
+        trackProcessingTerminal('image_processing_completed');
+      }
 
       // バッチ処理完了ログ
       if (debugMode) {
@@ -2033,6 +2114,12 @@ export default function BgRemoverMulti({
       const generalErrorMessage = typeof err === 'object' && err !== null && 'message' in err && typeof err.message === 'string'
         ? err.message : "背景除去中に予期せぬエラーが発生しました。詳細不明。";
       setMsg(generalErrorMessage);
+      if (processingAnalyticsRef.current && processingAnalyticsRef.current.failureCount === 0) {
+        processingAnalyticsRef.current.failureCount = processingAnalyticsRef.current.imageCount;
+      }
+      if (!cancelRequestedRef.current) {
+        trackProcessingTerminal('image_processing_completed');
+      }
 
       if (debugMode) {
         addLog({
@@ -2308,6 +2395,11 @@ export default function BgRemoverMulti({
 
     setMsg("ZIPファイルを準備中です...");
     setBusy(true);
+    trackAnalyticsEvent('image_download_started', {
+      download_type: 'zip',
+      image_count: completedFiles.length,
+      user_plan: adUserPlan,
+    });
 
     try {
       for (const input of completedFiles) {
@@ -2321,18 +2413,22 @@ export default function BgRemoverMulti({
         }
       }
 
-      await zip.generateAsync({ type: "blob" })
-        .then(content => {
-          saveAs(content, "processed_images.zip");
-          setMsg("ZIPファイルのダウンロードが開始されました。");
-        })
-        .catch(err => {
-          console.error("ZIP生成エラー:", err);
-          setMsg(`ZIPファイルの生成に失敗しました: ${err.message}`);
-        });
+      const content = await zip.generateAsync({ type: "blob" });
+      saveAs(content, "processed_images.zip");
+      trackAnalyticsEvent('image_download_completed', {
+        download_type: 'zip',
+        image_count: completedFiles.length,
+        user_plan: adUserPlan,
+      });
+      setMsg("ZIPファイルのダウンロードが開始されました。");
 
     } catch (err) {
       console.error("一括ダウンロード処理エラー:", err);
+      trackAnalyticsEvent('image_download_failed', {
+        download_type: 'zip',
+        image_count: completedFiles.length,
+        user_plan: adUserPlan,
+      });
       const errorMessage = err instanceof Error ? err.message : "不明なエラー";
       setMsg(`エラーが発生しました: ${errorMessage}`);
     } finally {
@@ -2340,7 +2436,19 @@ export default function BgRemoverMulti({
     }
   };
 
-  const handleDownloadSingle = useCallback(async (imageUrl: string, fileName: string) => {
+  const handleDownloadSingle = useCallback(async (
+    imageUrl: string,
+    fileName: string,
+    outputQuality: 'standard' | 'high_quality',
+    processingMode: ProcessingMode,
+  ) => {
+    trackAnalyticsEvent('image_download_started', {
+      download_type: 'single',
+      image_count: 1,
+      user_plan: adUserPlan,
+      processing_mode: processingMode,
+      output_quality: outputQuality,
+    });
     try {
       const response = await fetch(imageUrl);
       if (!response.ok) {
@@ -2349,11 +2457,25 @@ export default function BgRemoverMulti({
 
       const blob = await response.blob();
       saveAs(blob, fileName);
+      trackAnalyticsEvent('image_download_completed', {
+        download_type: 'single',
+        image_count: 1,
+        user_plan: adUserPlan,
+        processing_mode: processingMode,
+        output_quality: outputQuality,
+      });
     } catch (error) {
       console.error('単体ダウンロード処理エラー:', error);
+      trackAnalyticsEvent('image_download_failed', {
+        download_type: 'single',
+        image_count: 1,
+        user_plan: adUserPlan,
+        processing_mode: processingMode,
+        output_quality: outputQuality,
+      });
       setMsg('画像の保存に失敗しました。時間をおいて再度お試しください。');
     }
-  }, []);
+  }, [adUserPlan]);
 
   /* ------------ UI --------------- */
   return (
@@ -3241,6 +3363,8 @@ export default function BgRemoverMulti({
                                 onClick={() => void handleDownloadSingle(
                                   input.outputUrl!,
                                   `processed_${input.name.replace(/\.[^.]+$/, ".png")}`,
+                                  'standard',
+                                  input.lastProcessingMode ?? selectedProcessingMode,
                                 )}
                               >
                                   保存
@@ -3254,6 +3378,8 @@ export default function BgRemoverMulti({
                                 onClick={() => void handleDownloadSingle(
                                   (input.highQualityOutputUrl || input.outputUrl)!,
                                   `processed_hq_${input.name.replace(/\.[^.]+$/, ".png")}`,
+                                  'high_quality',
+                                  input.lastProcessingMode ?? selectedProcessingMode,
                                 )}
                               >
                                   {input.wasEnhanced ? '高画質化して保存' : '保存'}

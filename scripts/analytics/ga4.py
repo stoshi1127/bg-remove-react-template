@@ -71,11 +71,17 @@ def main():
     sub.add_parser('accounts')
     definitions = sub.add_parser('definitions')
     definitions.add_argument('--property', required=True)
-    create = sub.add_parser('create-dimension')
-    create.add_argument('--property', required=True)
-    create.add_argument('--parameter', required=True)
-    create.add_argument('--display-name', required=True)
-    create.add_argument('--apply', action='store_true', help='Without this flag, only show the proposed create.')
+    create_dimension = sub.add_parser('create-dimension')
+    create_dimension.add_argument('--property', required=True)
+    create_dimension.add_argument('--parameter', required=True)
+    create_dimension.add_argument('--display-name', required=True)
+    create_dimension.add_argument('--apply', action='store_true', help='Without this flag, only show the proposed create.')
+    create_metric = sub.add_parser('create-metric')
+    create_metric.add_argument('--property', required=True)
+    create_metric.add_argument('--parameter', required=True)
+    create_metric.add_argument('--display-name', required=True)
+    create_metric.add_argument('--measurement-unit', default='STANDARD')
+    create_metric.add_argument('--apply', action='store_true', help='Without this flag, only show the proposed create.')
     args = parser.parse_args()
     if args.command == 'login':
         login(args)
@@ -92,7 +98,7 @@ def main():
                 'dimensions': list_all(session, f'{parent}/customDimensions', 'customDimensions'),
                 'metrics': list_all(session, f'{parent}/customMetrics', 'customMetrics'),
             }
-        else:
+        elif args.command == 'create-dimension':
             parent = f'properties/{args.property}/customDimensions'
             body = {'parameterName': args.parameter, 'displayName': args.display_name, 'scope': 'EVENT'}
             existing = list_all(session, parent, 'customDimensions')
@@ -101,6 +107,24 @@ def main():
                 result = {'action': 'already_exists', 'dimension': matches[0]}
             elif not args.apply:
                 result = {'action': 'preview_create', 'property': args.property, 'dimension': body}
+            else:
+                if args.profile != 'edit':
+                    parser.error('Creation requires --profile edit.')
+                result = request(session, 'POST', parent, json=body)
+        else:
+            parent = f'properties/{args.property}/customMetrics'
+            body = {
+                'parameterName': args.parameter,
+                'displayName': args.display_name,
+                'measurementUnit': args.measurement_unit,
+                'scope': 'EVENT',
+            }
+            existing = list_all(session, parent, 'customMetrics')
+            matches = [item for item in existing if item.get('parameterName') == args.parameter and item.get('scope') == 'EVENT']
+            if matches:
+                result = {'action': 'already_exists', 'metric': matches[0]}
+            elif not args.apply:
+                result = {'action': 'preview_create', 'property': args.property, 'metric': body}
             else:
                 if args.profile != 'edit':
                     parser.error('Creation requires --profile edit.')

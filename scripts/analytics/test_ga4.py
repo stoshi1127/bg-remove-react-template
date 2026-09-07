@@ -44,6 +44,27 @@ class AdminHelperTests(unittest.TestCase):
         with self.assertRaises(SystemExit):
             self.run_command(['definitions', '--property', 'G-YT0ZDBKL81'])
 
+    def test_metric_preview_does_not_write(self):
+        result, calls = self.run_command([
+            '--profile', 'edit', 'create-metric', '--property', '489868388',
+            '--parameter', 'duration_ms', '--display-name', 'Processing duration',
+            '--measurement-unit', 'MILLISECONDS',
+        ])
+        self.assertEqual(result['action'], 'preview_create')
+        self.assertEqual(result['metric']['measurementUnit'], 'MILLISECONDS')
+        self.assertEqual(calls, [])
+
+    def test_explicit_edit_apply_creates_event_metric(self):
+        _, calls = self.run_command([
+            '--profile', 'edit', 'create-metric', '--property', '489868388',
+            '--parameter', 'success_count', '--display-name', 'Processing success count',
+            '--apply',
+        ])
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0].args[1:3], ('POST', 'properties/489868388/customMetrics'))
+        self.assertEqual(calls[0].kwargs['json']['scope'], 'EVENT')
+        self.assertEqual(calls[0].kwargs['json']['measurementUnit'], 'STANDARD')
+
 
 if __name__ == '__main__':
     unittest.main()

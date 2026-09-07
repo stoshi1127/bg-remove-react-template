@@ -30,6 +30,23 @@
 
 スポンサー枠はGA4の予約イベント名との衝突を避け、`sponsor_loaded`、`sponsor_impression`、`sponsor_click`を使う。`sponsor_impression`は枠の50%以上が画面内に入った時点で送信する。
 
+## 画像処理ファネル
+
+| イベント | タイミング |
+| --- | --- |
+| `image_processing_started` | 入力検証が終わり、画像処理を実際に開始したとき |
+| `image_processing_completed` | バッチが終了したとき。`result_status`は`success` / `partial_success` / `failure` |
+| `image_processing_canceled` | 利用者が処理中のキャンセルを押したとき |
+| `image_download_started` | 単体画像の取得またはZIP生成を開始したとき |
+| `image_download_completed` | ブラウザの保存処理を呼び出せたとき |
+| `image_download_failed` | 画像取得またはZIP生成に失敗したとき |
+
+処理イベントには`user_plan`、`processing_mode`、`processing_type`、`image_count`を付ける。終了時には`success_count`、`failure_count`、`duration_ms`も付ける。キャンセルと完了は同一バッチで両方送信しない。
+
+ダウンロードイベントには`download_type`（`single` / `zip`）と`image_count`を付ける。単体保存には`processing_mode`と`output_quality`（`standard` / `high_quality`）も付ける。ファイル名、画像URL、画像データは送信しない。
+
+`processing_type`、`result_status`、`download_type`、`output_quality`はイベント範囲のカスタムディメンション、`success_count`、`failure_count`、`duration_ms`はカスタム指標として登録する。`duration_ms`の測定単位はミリ秒、その他は標準とする。既存の`image_count`も処理・保存枚数の集計に使う。
+
 ## 公開後の確認
 
 - DebugViewで各イベントと`event_source`を確認する。
