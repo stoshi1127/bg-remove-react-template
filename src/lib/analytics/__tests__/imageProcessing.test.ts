@@ -1,4 +1,5 @@
 import {
+  getProcessingFailureReason,
   getProcessingResultStatus,
   getProcessingType,
 } from '../imageProcessing';
@@ -19,5 +20,15 @@ describe('image processing analytics', () => {
     [0, 2, 'failure'],
   ] as const)('classifies the batch result', (successCount, failureCount, expected) => {
     expect(getProcessingResultStatus(successCount, failureCount)).toBe(expected);
+  });
+
+  test.each([
+    [new Error('処理タイムアウト'), 'api_request', undefined, 'timeout'],
+    [new Error('無料プランの送信上限 4MB を超えています。'), 'client_preparation', undefined, 'input_limit'],
+    [new TypeError('Failed to fetch'), 'api_request', undefined, 'network_error'],
+    [new Error('upstream failed'), 'api_response', 504, 'http_error'],
+    [new Error('画像を読み込めません'), 'post_processing', undefined, 'processing_error'],
+  ] as const)('classifies a safe failure reason', (error, stage, status, expected) => {
+    expect(getProcessingFailureReason(error, stage, status)).toBe(expected);
   });
 });

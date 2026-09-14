@@ -55,10 +55,13 @@ import {
 } from '@/lib/image/enhance';
 import { trackAnalyticsEvent } from '@/lib/analytics/events';
 import {
+  getProcessingFailureReason,
   getProcessingResultStatus,
   getProcessingType,
+  type ProcessingFailureStage,
   type ProcessingType,
 } from '@/lib/analytics/imageProcessing';
+import { getProcessingConcurrencyLimit } from '@/lib/processing/concurrency';
 import UsageSurvey, { useUsageSurvey } from './UsageSurvey';
 import { normalizeClientImageMime } from '@/lib/upload/limits';
 import { buildInputUploadPath } from '@/lib/blob/imageStorage';
@@ -82,6 +85,8 @@ type ProcessingAnalyticsRun = {
   startedAt: number;
   successCount: number;
   failureCount: number;
+  isRetry: boolean;
+  concurrencyLimit: number;
   terminalTracked: boolean;
 };
 
@@ -534,6 +539,8 @@ export default function BgRemoverMulti({
       image_count: run.imageCount,
       success_count: run.successCount,
       failure_count: run.failureCount,
+      is_retry: run.isRetry,
+      concurrency_limit: run.concurrencyLimit,
       duration_ms: Math.max(0, Date.now() - run.startedAt),
       ...(eventName === 'image_processing_completed'
         ? { result_status: getProcessingResultStatus(run.successCount, run.failureCount) }
@@ -571,9 +578,9 @@ export default function BgRemoverMulti({
   const processingQueue = useRef<(() => void)[]>([]);
   const processingSlots = useRef<number>(0);
 
-  const acquireSlot = useCallback((): Promise<void> => {
+  const acquireSlot = useCallback((concurrencyLimit = maxConcurrentProcesses): Promise<void> => {
     return new Promise((resolve) => {
-      if (processingSlots.current < maxConcurrentProcesses) {
+      if (processingSlots.current < concurrencyLimit) {
         processingSlots.current++;
         resolve();
       } else {
@@ -1397,6 +1404,11 @@ export default function BgRemoverMulti({
     setOversizedPromptItems([]);
     cancelRequestedRef.current = false;
     const filesToProcess = candidates;
+    const isRetryRun = candidates.some(input => input.status === 'error');
+    const runConcurrencyLimit = getProcessingConcurrencyLimit(
+      filesToProcess.length,
+      maxConcurrentProcesses,
+    );
 
     // --- AI処理モードの事前チェック ---
     const useAiApi = bgMode === 'ai_generate' || (bgMode === 'normal' && blendEnabled && selectedTemplate);
@@ -1471,7 +1483,7 @@ export default function BgRemoverMulti({
 
     // 大量ファイル処理時の自動調整
     if (filesToProcess.length > 20 && adaptiveConcurrency) {
-      setMaxConcurrentProcesses(Math.min(3, maxConcurrentProcesses)); // 大量処理時は保守的に開始
+      setMaxConcurrentProcesses(runConcurrencyLimit);
       setMsg("ファイルが多いため、処理速度を自動で調整しています。");
     }
 
@@ -1490,6 +1502,8 @@ export default function BgRemoverMulti({
       startedAt: Date.now(),
       successCount: 0,
       failureCount: 0,
+      isRetry: isRetryRun,
+      concurrencyLimit: runConcurrencyLimit,
       terminalTracked: false,
     };
     trackAnalyticsEvent('image_processing_started', {
@@ -1497,6 +1511,8 @@ export default function BgRemoverMulti({
       processing_mode: selectedProcessingMode,
       processing_type: processingType,
       image_count: filesToProcess.length,
+      is_retry: isRetryRun,
+      concurrency_limit: runConcurrencyLimit,
     });
     setImageProcessing(true);
     setBusy(true);
@@ -1518,12 +1534,29 @@ export default function BgRemoverMulti({
     // 個別ファイルの処理を行う関数
     const processSingleFile = async (input: InFile, index: number): Promise<void> => {
       // 並行スロットを取得（キューで待機）
-      await acquireSlot();
+      await acquireSlot(runConcurrencyLimit);
 
       // 処理開始時刻と順序を記録
       const startTime = Date.now();
       const requestStartTime = Date.now(); // API レスポンス時間測定用
       let analyticsOutcomeRecorded = false;
+      let failureStage: ProcessingFailureStage = 'client_preparation';
+      const recordAnalyticsFailure = (error: unknown, httpStatus?: number) => {
+        const run = processingAnalyticsRef.current;
+        if (analyticsOutcomeRecorded || !run) return;
+        analyticsOutcomeRecorded = true;
+        run.failureCount += 1;
+        trackAnalyticsEvent('image_processing_failed', {
+          user_plan: run.userPlan,
+          processing_mode: run.processingMode,
+          processing_type: run.processingType,
+          failure_stage: failureStage,
+          failure_reason: getProcessingFailureReason(error, failureStage, httpStatus),
+          http_status_code: httpStatus,
+          is_retry: run.isRetry,
+          concurrency_limit: run.concurrencyLimit,
+        });
+      };
       setInputs(prev => prev.map(i =>
         i.id === input.id
           ? { ...i, startTime, processingOrder: index }
@@ -1645,6 +1678,7 @@ export default function BgRemoverMulti({
               const phase1UseBlobUrl = USE_DIRECT_UPLOAD;
               let phase1Res: Response;
               if (phase1UseBlobUrl) {
+                failureStage = 'input_upload';
                 const uploadFile = new File([blobForRequest], nameForRequest, {
                   type: normalizeClientImageMime(blobForRequest, nameForRequest),
                 });
@@ -1658,6 +1692,7 @@ export default function BgRemoverMulti({
                     height: imageMeta.height,
                   }),
                 });
+                failureStage = 'api_request';
                 phase1Res = await fetch("/api/remove-bg", {
                   method: "POST",
                   headers: withImageResponseMode({ "Content-Type": "application/json" }),
@@ -1672,6 +1707,7 @@ export default function BgRemoverMulti({
                 const phase1FormData = new FormData();
                 phase1FormData.append("file", blobForRequest, nameForRequest);
                 phase1FormData.append("processingMode", requestedProcessingMode);
+                failureStage = 'api_request';
                 phase1Res = await fetch("/api/remove-bg", {
                   method: "POST",
                   headers: withImageResponseMode(),
@@ -1680,7 +1716,13 @@ export default function BgRemoverMulti({
                 });
               }
 
-              if (!phase1Res.ok) throw new Error('背景除去（フェーズ1）に失敗しました');
+              if (!phase1Res.ok) {
+                failureStage = 'api_response';
+                const phase1Error = new Error('背景除去（フェーズ1）に失敗しました');
+                recordAnalyticsFailure(phase1Error, phase1Res.status);
+                throw phase1Error;
+              }
+              failureStage = 'response_parse';
               const phase1Image = await parseImageApiSuccess(phase1Res);
               const transparentBlob = await fetch(phase1Image.outputUrl).then((res) => res.blob());
 
@@ -1691,6 +1733,7 @@ export default function BgRemoverMulti({
               updateInputStatus(input.id, "processing", "AI背景を生成中...");
 
               // Phase 3: AI合成（パディング済みの透明PNGを送信）
+              failureStage = 'input_upload';
               const uploadFile = blobForRequest instanceof File
                 ? blobForRequest
                 : new File([blobForRequest], nameForRequest, { type: 'image/png' });
@@ -1727,6 +1770,7 @@ export default function BgRemoverMulti({
                 else aiBody.refImageDataUrl = blendRefImageDataUrl;
               }
 
+              failureStage = 'api_request';
               response = await fetch('/api/ai/generate-background', {
                 method: 'POST',
                 headers: withImageResponseMode({ 'Content-Type': 'application/json' }),
@@ -1739,6 +1783,7 @@ export default function BgRemoverMulti({
             }
           } else {
             // 元の比率のままの場合は、briaのセグメンテーション（影の描画等）を活かすため1段階で処理
+            failureStage = 'input_upload';
             const uploadFile = new File([blobForRequest], nameForRequest, {
               type: normalizeClientImageMime(blobForRequest, nameForRequest),
             });
@@ -1775,6 +1820,7 @@ export default function BgRemoverMulti({
               else aiBody.refImageDataUrl = blendRefImageDataUrl;
             }
 
+            failureStage = 'api_request';
             response = await fetch('/api/ai/generate-background', {
               method: 'POST',
               headers: withImageResponseMode({ 'Content-Type': 'application/json' }),
@@ -1784,6 +1830,7 @@ export default function BgRemoverMulti({
           }
 
         } else if (USE_DIRECT_UPLOAD) {
+          failureStage = 'input_upload';
           const uploadFile = new File([blobForRequest], nameForRequest, {
             type: normalizeClientImageMime(blobForRequest, nameForRequest),
           });
@@ -1798,6 +1845,7 @@ export default function BgRemoverMulti({
             }),
           });
 
+          failureStage = 'api_request';
           response = await fetch("/api/remove-bg", {
             method: "POST",
             headers: withImageResponseMode({ 'Content-Type': 'application/json' }),
@@ -1812,6 +1860,7 @@ export default function BgRemoverMulti({
           const formData = new FormData();
           formData.append("file", blobForRequest, nameForRequest);
           formData.append("processingMode", requestedProcessingMode);
+          failureStage = 'api_request';
           response = await fetch("/api/remove-bg", {
             method: "POST",
             headers: withImageResponseMode(),
@@ -1838,6 +1887,7 @@ export default function BgRemoverMulti({
 
         // レスポンスチェック
         if (!response.ok) {
+          failureStage = 'api_response';
           const errorData = await response.json().catch(() => ({ error: "不明なサーバーエラー" }));
           const errorLabel = useAiApi ? 'AI背景エラー' : '背景除去エラー';
           const errorMessage = `${errorLabel}: ${errorData.error || response.statusText}`;
@@ -1860,10 +1910,7 @@ export default function BgRemoverMulti({
             totalErrors: stats.totalErrors + 1
           }));
 
-          if (!analyticsOutcomeRecorded && processingAnalyticsRef.current) {
-            analyticsOutcomeRecorded = true;
-            processingAnalyticsRef.current.failureCount += 1;
-          }
+          recordAnalyticsFailure(errorMessage, response.status);
 
           return;
         }
@@ -1875,6 +1922,7 @@ export default function BgRemoverMulti({
           });
         }
 
+        failureStage = 'response_parse';
         const imageResult = await parseImageApiSuccess(response);
         if (useAiApi && imageResult.premiumRemaining !== undefined) {
           setPremiumRemaining(imageResult.premiumRemaining);
@@ -1893,6 +1941,7 @@ export default function BgRemoverMulti({
 
         let finalUrl = imageResult.outputUrl;
 
+        failureStage = 'post_processing';
         try {
           if (useAiApi) {
             // AI処理時: 既に完成画像なのでテンプレート適用不要
@@ -2004,10 +2053,6 @@ export default function BgRemoverMulti({
           }));
 
           adjustConcurrency(responseTime, false);
-          if (!analyticsOutcomeRecorded && processingAnalyticsRef.current) {
-            analyticsOutcomeRecorded = true;
-            processingAnalyticsRef.current.failureCount += 1;
-          }
           throw e;
         }
 
@@ -2048,10 +2093,7 @@ export default function BgRemoverMulti({
         } else {
           updateInputStatus(input.id, "error", errorMessage);
           setMsg(prevMsg => prevMsg ? `${prevMsg}\n${input.name}: ${errorMessage}` : `${input.name}: ${errorMessage}`);
-          if (!analyticsOutcomeRecorded && processingAnalyticsRef.current) {
-            analyticsOutcomeRecorded = true;
-            processingAnalyticsRef.current.failureCount += 1;
-          }
+          recordAnalyticsFailure(error);
         }
 
         // エラー時は進捗を更新

@@ -39,12 +39,15 @@
 | --- | --- |
 | `image_processing_started` | 入力検証が終わり、画像処理を実際に開始したとき |
 | `image_processing_completed` | バッチが終了したとき。`result_status`は`success` / `partial_success` / `failure` |
+| `image_processing_failed` | 個別画像が失敗したとき。安全なカテゴリ値だけを送り、ファイル名や画像URLは送らない |
 | `image_processing_canceled` | 利用者が処理中のキャンセルを押したとき |
 | `image_download_started` | 単体画像の取得またはZIP生成を開始したとき |
 | `image_download_completed` | ブラウザの保存処理を呼び出せたとき |
 | `image_download_failed` | 画像取得またはZIP生成に失敗したとき |
 
 処理イベントには`user_plan`、`processing_mode`、`processing_type`、`image_count`を付ける。終了時には`success_count`、`failure_count`、`duration_ms`も付ける。キャンセルと完了は同一バッチで両方送信しない。
+
+`image_processing_failed`には`failure_stage`、`failure_reason`、`http_status_code`、`is_retry`、`concurrency_limit`を付ける。`failure_stage`はクライアント準備、Blobアップロード、API要求・応答、応答解析、後処理などの固定カテゴリとし、例外本文は送らない。バッチの開始・完了にも`is_retry`と`concurrency_limit`を付け、再処理による失敗件数の重複と大量処理時の並行数を切り分ける。
 
 ダウンロードイベントには`download_type`（`single` / `zip`）と`image_count`を付ける。単体保存には`processing_mode`と`output_quality`（`standard` / `high_quality`）も付ける。ファイル名、画像URL、画像データは送信しない。
 
