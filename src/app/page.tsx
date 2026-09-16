@@ -196,7 +196,7 @@ export default async function Home() {
     browserRequirements: 'Chrome, Firefox, Safari, Edge対応',
     softwareVersion: '1.0',
     dateCreated: '2025-01-01',
-    dateModified: '2026-03-25',
+    dateModified: '2026-09-16',
     inLanguage: 'ja',
     offers: {
       '@type': 'Offer',
@@ -221,14 +221,6 @@ export default async function Home() {
       '@type': 'Organization',
       name: 'QuickTools',
       url: 'https://bg.quicktools.jp',
-    },
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: '4.8',
-      bestRating: '5',
-      worstRating: '1',
-      reviewCount: '1250',
-      ratingCount: '1250',
     },
     sameAs: ['https://bg.quicktools.jp'],
   };

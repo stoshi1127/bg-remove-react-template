@@ -18,10 +18,15 @@ export function trackPageView(path: string, title?: string) {
   if (typeof window === 'undefined') return;
   if (typeof window.gtag !== 'function') return;
 
+  const url = new URL(path, window.location.origin);
+
   window.gtag('event', 'page_view', {
-    page_path: path,
+    // GA4's Landing page + query string dimension appends the query from
+    // page_location. Keeping it out of page_path avoids duplicated values such
+    // as /?buyPro=1?buyPro=1 while preserving the full URL for analysis.
+    page_path: url.pathname,
     page_title: title,
-    page_location: new URL(path, window.location.origin).toString(),
+    page_location: url.toString(),
     send_to: GA_MEASUREMENT_ID,
   });
 }
