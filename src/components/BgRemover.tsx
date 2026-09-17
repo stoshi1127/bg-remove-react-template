@@ -40,6 +40,13 @@ type InFile = {
   outputLongSide?: number;
   outputWidth?: number;
   outputHeight?: number;
+  processedSourceUrl?: string; // 背景除去へ実際に渡した画像（復元ブラシ用）
+  transparentOutputUrl?: string; // 背景合成前の透過画像
+  refinedTransparentOutputUrl?: string; // 手動修正後の透過画像
+  refinementAvailable?: boolean;
+  hasRefinement?: boolean;
+  appliedRatio?: string;
+  appliedTemplate?: string | null;
 };
 
 import UploadArea from "./UploadArea";
@@ -63,6 +70,7 @@ import {
 } from '@/lib/analytics/imageProcessing';
 import { getProcessingConcurrencyLimit } from '@/lib/processing/concurrency';
 import UsageSurvey, { useUsageSurvey } from './UsageSurvey';
+import CutoutRefinementEditor, { type RefinementTool } from './CutoutRefinementEditor';
 import { normalizeClientImageMime } from '@/lib/upload/limits';
 import { buildInputUploadPath } from '@/lib/blob/imageStorage';
 import { IMAGE_RESPONSE_MODE_HEADER, type ImageSuccessResponse } from '@/lib/imageApi';
@@ -121,8 +129,14 @@ const PRO_MAX_MP = Number(process.env.NEXT_PUBLIC_PRO_MAX_MP || '90');
 const PRO_MAX_SIDE = Number(process.env.NEXT_PUBLIC_PRO_MAX_SIDE_PX || '10000');
 const FREE_OUTPUT_MAX_SIDE = Number(process.env.NEXT_PUBLIC_FREE_OUTPUT_MAX_SIDE_PX || '3200');
 const PRO_OUTPUT_MAX_SIDE = Number(process.env.NEXT_PUBLIC_PRO_OUTPUT_MAX_SIDE_PX || '7000');
-const USE_DIRECT_UPLOAD = process.env.NEXT_PUBLIC_UPLOAD_DIRECT_ENABLED !== 'false';
-const IMAGE_API_MODE = process.env.NEXT_PUBLIC_IMAGE_API_MODE === 'blob' ? 'blob' : 'url';
+const IS_LOCAL_DEVELOPMENT = process.env.NODE_ENV === 'development';
+const USE_DIRECT_UPLOAD = process.env.NEXT_PUBLIC_UPLOAD_DIRECT_ENABLED === 'true'
+  || (process.env.NEXT_PUBLIC_UPLOAD_DIRECT_ENABLED !== 'false' && !IS_LOCAL_DEVELOPMENT);
+const IMAGE_API_MODE = process.env.NEXT_PUBLIC_IMAGE_API_MODE === 'url'
+  ? 'url'
+  : process.env.NEXT_PUBLIC_IMAGE_API_MODE === 'blob' || IS_LOCAL_DEVELOPMENT
+    ? 'blob'
+    : 'url';
 const PROCESSING_MODE_SESSION_KEY = 'bgremover_processing_mode';
 
 function isDataUrl(value: string): boolean {
@@ -328,6 +342,7 @@ export default function BgRemoverMulti({
   });
   const [pendingEnhance, setPendingEnhance] = useState<{ fileId: string; target: EnhanceTarget } | null>(null);
   const [pendingBatchTarget, setPendingBatchTarget] = useState<EnhanceTarget | null>(null);
+  const [refinementFileId, setRefinementFileId] = useState<string | null>(null);
   const proOfferImpressionTrackedRef = useRef(false);
   const sectionModeRef = useRef<HTMLDivElement>(null);
   const sectionAiPromptRef = useRef<HTMLDivElement>(null);
@@ -1541,6 +1556,7 @@ export default function BgRemoverMulti({
       const requestStartTime = Date.now(); // API レスポンス時間測定用
       let analyticsOutcomeRecorded = false;
       let failureStage: ProcessingFailureStage = 'client_preparation';
+      let processedSourceUrlForRefinement: string | undefined;
       const recordAnalyticsFailure = (error: unknown, httpStatus?: number) => {
         const run = processingAnalyticsRef.current;
         if (analyticsOutcomeRecorded || !run) return;
@@ -1622,6 +1638,20 @@ export default function BgRemoverMulti({
           if (imageMeta.mp > PRO_MAX_MP || imageMeta.width > PRO_MAX_SIDE || imageMeta.height > PRO_MAX_SIDE) {
             throw new Error('この写真は大きすぎるため、Proプランでも処理できません。もう少し小さい写真をお試しください。');
           }
+        }
+
+        // 復元ブラシでは、APIへ実際に渡した画像と透過結果の座標を一致させる必要がある。
+        // HEIC変換後・Free圧縮後のBlobをセッション中だけ保持する。
+        if (!useAiApi) {
+          const processedSourceUrl = URL.createObjectURL(blobForRequest);
+          processedSourceUrlForRefinement = processedSourceUrl;
+          registerObjectUrl(processedSourceUrl);
+          setInputs(current => current.map(item => item.id === input.id ? {
+            ...item,
+            processedSourceUrl,
+            refinementAvailable: false,
+            hasRefinement: false,
+          } : item));
         }
 
         // ログ記録：API リクエスト開始
@@ -1924,6 +1954,7 @@ export default function BgRemoverMulti({
 
         failureStage = 'response_parse';
         const imageResult = await parseImageApiSuccess(response);
+        const transparentOutputUrl = useAiApi ? undefined : imageResult.outputUrl;
         if (useAiApi && imageResult.premiumRemaining !== undefined) {
           setPremiumRemaining(imageResult.premiumRemaining);
         }
@@ -1989,6 +2020,13 @@ export default function BgRemoverMulti({
             next.highQualityOutputUrl = finalUrl;
             next.standardOutputUrl = finalUrl;
             next.wasEnhanced = false;
+            next.processedSourceUrl = processedSourceUrlForRefinement ?? next.processedSourceUrl;
+            next.transparentOutputUrl = transparentOutputUrl;
+            next.refinedTransparentOutputUrl = undefined;
+            next.refinementAvailable = !useAiApi && !!transparentOutputUrl && !!next.processedSourceUrl;
+            next.hasRefinement = false;
+            next.appliedRatio = selectedRatio;
+            next.appliedTemplate = selectedTemplate;
             return next;
           }));
 
@@ -2219,6 +2257,56 @@ export default function BgRemoverMulti({
     }
   };
 
+  const handleApplyRefinement = async (
+    input: InFile,
+    refinedBlob: Blob,
+    toolUsed: 'erase' | 'restore' | 'both',
+  ) => {
+    const refinedTransparentUrl = URL.createObjectURL(refinedBlob);
+    registerObjectUrl(refinedTransparentUrl);
+    setMsg('切り抜きの修正を適用しています…');
+    try {
+      const bbox = await calculateBoundingBox(refinedTransparentUrl);
+      const ratio = input.appliedRatio ?? selectedRatio;
+      const template = input.appliedTemplate ?? null;
+      let refinedFinalUrl = refinedTransparentUrl;
+      if (ratio !== '1:1' || template) {
+        refinedFinalUrl = await applyTemplate(
+          refinedTransparentUrl,
+          template ?? 'transparent',
+          ratio,
+          bbox,
+        );
+      }
+      updateInputStatus(input.id, 'completed', undefined, refinedFinalUrl);
+      const standardUrl = isPro
+        ? await createStandardOutputUrl(refinedFinalUrl).catch(() => refinedFinalUrl)
+        : refinedFinalUrl;
+      setInputs(current => current.map(item => item.id === input.id ? {
+        ...item,
+        outputUrl: refinedFinalUrl,
+        transparentOutputUrl: refinedTransparentUrl,
+        refinedTransparentOutputUrl: refinedTransparentUrl,
+        boundingBox: bbox,
+        highQualityOutputUrl: refinedFinalUrl,
+        standardOutputUrl: standardUrl,
+        wasEnhanced: false,
+        hasRefinement: true,
+      } : item));
+      trackAnalyticsEvent('refinement_editor_applied', {
+        user_plan: adUserPlan,
+        processing_mode: input.lastProcessingMode ?? selectedProcessingMode,
+        tool_used: toolUsed,
+      });
+      setRefinementFileId(null);
+      setMsg('切り抜きの修正を適用しました。');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '切り抜きの修正に失敗しました。';
+      setMsg(message);
+      throw error;
+    }
+  };
+
   const handleRemakeWithOriginal = async (input: InFile, reason: 'result_remake' | 'edge_cleanup') => {
     if (!isPro) {
       goToProPurchase(reason);
@@ -2230,12 +2318,20 @@ export default function BgRemoverMulti({
     updateInputStatus(input.id, 'processing', undefined);
 
     try {
-      const imageMeta = await getImageDimensions(input.originalFile);
+      // HEICは選択時にJPEGへ変換されているため、再処理でも実際の処理用Blobを使う。
+      // 復元ブラシの参照元も同じBlobに揃え、透過結果との座標ずれを防ぐ。
+      const remakeBlob = input.blob;
+      const remakeFile = remakeBlob instanceof File
+        ? remakeBlob
+        : new File([remakeBlob], input.name, {
+          type: normalizeClientImageMime(remakeBlob, input.name),
+        });
+      const imageMeta = await getImageDimensions(remakeBlob);
       const processingMode: ProcessingMode = reason === 'edge_cleanup' ? 'pro_high_precision' : selectedProcessingMode;
       let response: Response;
 
       if (USE_DIRECT_UPLOAD) {
-        const uploadFile = input.originalFile;
+        const uploadFile = remakeFile;
         const blobResult = await uploadToBlob(buildInputUploadPath(uploadFile.name), uploadFile, {
           access: 'public',
           handleUploadUrl: '/api/upload/blob',
@@ -2258,7 +2354,7 @@ export default function BgRemoverMulti({
         });
       } else {
         const formData = new FormData();
-        formData.append('file', input.originalFile, input.name);
+        formData.append('file', remakeFile, input.name);
         formData.append('processingMode', processingMode);
         response = await fetch('/api/remove-bg', {
           method: 'POST',
@@ -2274,6 +2370,8 @@ export default function BgRemoverMulti({
 
       const remadeImage = await parseImageApiSuccess(response);
       const remadeDataUrl = remadeImage.outputUrl;
+      const remadeSourceUrl = URL.createObjectURL(remakeBlob);
+      registerObjectUrl(remadeSourceUrl);
 
       updateInputStatus(input.id, 'completed', undefined, remadeDataUrl);
       trackAnalyticsEvent('post_upgrade_remake_succeeded', {
@@ -2290,6 +2388,13 @@ export default function BgRemoverMulti({
         highQualityOutputUrl: remadeDataUrl,
         standardOutputUrl: standardUrl,
         wasEnhanced: false,
+        processedSourceUrl: remadeSourceUrl,
+        transparentOutputUrl: remadeDataUrl,
+        refinedTransparentOutputUrl: undefined,
+        refinementAvailable: true,
+        hasRefinement: false,
+        appliedRatio: 'original',
+        appliedTemplate: null,
       } : item));
     } catch (error) {
       const message = error instanceof Error ? error.message : '作り直しに失敗しました。';
@@ -2462,6 +2567,14 @@ export default function BgRemoverMulti({
         image_count: completedFiles.length,
         user_plan: adUserPlan,
       });
+      const refinedCount = completedFiles.filter(input => input.hasRefinement).length;
+      if (refinedCount > 0) {
+        trackAnalyticsEvent('refinement_export_completed', {
+          user_plan: adUserPlan,
+          download_type: 'zip',
+          image_count: refinedCount,
+        });
+      }
       setMsg("ZIPファイルのダウンロードが開始されました。");
 
     } catch (err) {
@@ -2483,6 +2596,7 @@ export default function BgRemoverMulti({
     fileName: string,
     outputQuality: 'standard' | 'high_quality',
     processingMode: ProcessingMode,
+    hasRefinement: boolean,
   ) => {
     trackAnalyticsEvent('image_download_started', {
       download_type: 'single',
@@ -2506,6 +2620,13 @@ export default function BgRemoverMulti({
         processing_mode: processingMode,
         output_quality: outputQuality,
       });
+      if (hasRefinement) {
+        trackAnalyticsEvent('refinement_export_completed', {
+          user_plan: adUserPlan,
+          download_type: 'single',
+          image_count: 1,
+        });
+      }
     } catch (error) {
       console.error('単体ダウンロード処理エラー:', error);
       trackAnalyticsEvent('image_download_failed', {
@@ -2520,8 +2641,34 @@ export default function BgRemoverMulti({
   }, [adUserPlan]);
 
   /* ------------ UI --------------- */
+  const refinementInput = refinementFileId
+    ? inputs.find(input => input.id === refinementFileId) ?? null
+    : null;
+
   return (
     <div className="w-full max-w-3xl mx-auto px-3 py-4 sm:p-6 space-y-5 sm:space-y-6 bg-white rounded-lg sm:rounded-xl">
+      {refinementInput?.transparentOutputUrl && (refinementInput.processedSourceUrl || refinementInput.previewUrl) && (
+        <CutoutRefinementEditor
+          sourceImageUrl={refinementInput.processedSourceUrl || refinementInput.previewUrl!}
+          transparentImageUrl={refinementInput.refinedTransparentOutputUrl || refinementInput.transparentOutputUrl}
+          imageName={refinementInput.name}
+          onFirstEdit={(usedTool: RefinementTool) => {
+            trackAnalyticsEvent('refinement_editor_started', {
+              user_plan: adUserPlan,
+              processing_mode: refinementInput.lastProcessingMode ?? selectedProcessingMode,
+              tool_used: usedTool,
+            });
+          }}
+          onApply={(blob, toolUsed) => handleApplyRefinement(refinementInput, blob, toolUsed)}
+          onCancel={() => {
+            trackAnalyticsEvent('refinement_editor_canceled', {
+              user_plan: adUserPlan,
+              processing_mode: refinementInput.lastProcessingMode ?? selectedProcessingMode,
+            });
+            setRefinementFileId(null);
+          }}
+        />
+      )}
       {oversizedPromptItems.length > 0 && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
           <div className="absolute inset-0 bg-black/40" onClick={() => setOversizedPromptItems([])} aria-hidden="true" />
@@ -3402,12 +3549,15 @@ export default function BgRemoverMulti({
                                 variant="primary"
                                 size="sm"
                                 className="w-full sm:w-auto flex-1 sm:flex-none"
-                                onClick={() => void handleDownloadSingle(
-                                  input.outputUrl!,
-                                  `processed_${input.name.replace(/\.[^.]+$/, ".png")}`,
-                                  'standard',
-                                  input.lastProcessingMode ?? selectedProcessingMode,
-                                )}
+                                onClick={() => {
+                                  void handleDownloadSingle(
+                                    input.outputUrl!,
+                                    `processed_${input.name.replace(/\.[^.]+$/, ".png")}`,
+                                    'standard',
+                                    input.lastProcessingMode ?? selectedProcessingMode,
+                                    !!input.hasRefinement,
+                                  );
+                                }}
                               >
                                   保存
                               </PrimaryButton>
@@ -3417,14 +3567,34 @@ export default function BgRemoverMulti({
                                 variant="primary"
                                 size="sm"
                                 className="w-full sm:w-auto flex-1 sm:flex-none"
-                                onClick={() => void handleDownloadSingle(
-                                  (input.highQualityOutputUrl || input.outputUrl)!,
-                                  `processed_hq_${input.name.replace(/\.[^.]+$/, ".png")}`,
-                                  'high_quality',
-                                  input.lastProcessingMode ?? selectedProcessingMode,
-                                )}
+                                onClick={() => {
+                                  void handleDownloadSingle(
+                                    (input.highQualityOutputUrl || input.outputUrl)!,
+                                    `processed_hq_${input.name.replace(/\.[^.]+$/, ".png")}`,
+                                    'high_quality',
+                                    input.lastProcessingMode ?? selectedProcessingMode,
+                                    !!input.hasRefinement,
+                                  );
+                                }}
                               >
                                   {input.wasEnhanced ? '高画質化して保存' : '保存'}
+                              </PrimaryButton>
+                            )}
+                            {input.refinementAvailable && input.transparentOutputUrl && (input.processedSourceUrl || input.previewUrl) && (
+                              <PrimaryButton
+                                variant="outline"
+                                size="sm"
+                                className="w-full sm:w-auto flex-1 sm:flex-none bg-white text-blue-700 hover:bg-blue-50 border-blue-300"
+                                onClick={() => {
+                                  trackAnalyticsEvent('refinement_editor_view', {
+                                    user_plan: adUserPlan,
+                                    processing_mode: input.lastProcessingMode ?? selectedProcessingMode,
+                                    placement: 'result_card',
+                                  });
+                                  setRefinementFileId(input.id);
+                                }}
+                              >
+                                {input.hasRefinement ? '切り抜きを再修正' : '切り抜きを修正'}
                               </PrimaryButton>
                             )}
                             {/* イージートリミングで編集ボタン - Linkを使用 */}

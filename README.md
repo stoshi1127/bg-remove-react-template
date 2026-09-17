@@ -130,6 +130,24 @@ pnpm dev
 
 ブラウザで `http://localhost:3000` を開きます。
 
+### ローカルで画像処理を確認する場合
+
+`npm run dev` / `pnpm dev` では、アップロード関連の環境変数を指定しない限り、Vercel Blobを経由せずにローカルAPIへ画像を送信し、画像バイナリを受け取る。背景透過には`REPLICATE_API_TOKEN`だけ設定する。
+
+```env
+REPLICATE_API_TOKEN=...
+```
+
+ローカルでもVercel Blob経路そのものを確認する場合は、`BLOB_READ_WRITE_TOKEN`を設定したうえで明示的に有効化する。
+
+```env
+BLOB_READ_WRITE_TOKEN=...
+NEXT_PUBLIC_UPLOAD_DIRECT_ENABLED=true
+NEXT_PUBLIC_IMAGE_API_MODE=url
+```
+
+環境変数を変更した後は、開発サーバーを再起動する。
+
 ## ビルド（本番）
 
 ```bash
