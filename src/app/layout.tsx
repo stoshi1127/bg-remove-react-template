@@ -12,6 +12,7 @@ import { GA_MEASUREMENT_ID } from '@/lib/analytics/events';
 
 const inter = Inter({ subsets: ['latin'] });
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bg.quicktools.jp';
+const adsenseClientId = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID;
 
 export const metadata: Metadata = {
   title: 'イージーカット | 無料AI背景透過・画像編集ツール',
@@ -54,6 +55,15 @@ export default function RootLayout({
           gtag('config', '${GA_MEASUREMENT_ID}', { send_page_view: false });
         `}
       </Script>
+      {adsenseClientId && (
+        <Script
+          id="google-adsense"
+          strategy="afterInteractive"
+          async
+          crossOrigin="anonymous"
+          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${encodeURIComponent(adsenseClientId)}`}
+        />
+      )}
 
       {/* 構造化データ: Organization */}
       <Script id="organization-structured-data" type="application/ld+json" strategy="afterInteractive">

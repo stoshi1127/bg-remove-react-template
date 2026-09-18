@@ -75,6 +75,19 @@ import { normalizeClientImageMime } from '@/lib/upload/limits';
 import { buildInputUploadPath } from '@/lib/blob/imageStorage';
 import { IMAGE_RESPONSE_MODE_HEADER, type ImageSuccessResponse } from '@/lib/imageApi';
 import { toCanvasSafeImageUrl } from '@/lib/client/canvasImage';
+import {
+  getRefinementAccess,
+  readRefinementTrialUsed,
+  writeRefinementTrialUsed,
+  type RefinementAccess,
+} from '@/lib/refinement/entitlement';
+import {
+  clearOfferwallAccess,
+  deleteRefinementDraft,
+  hasOfferwallAccess,
+  readRefinementDraft,
+  saveRefinementDraft,
+} from '@/lib/refinement/draftStorage';
 
 type AdUserPlan = 'pro' | 'free' | 'guest';
 type AdPlacement = 'after_cta' | 'bottom';
@@ -138,7 +151,6 @@ const IMAGE_API_MODE = process.env.NEXT_PUBLIC_IMAGE_API_MODE === 'url'
     ? 'blob'
     : 'url';
 const PROCESSING_MODE_SESSION_KEY = 'bgremover_processing_mode';
-
 function isDataUrl(value: string): boolean {
   return value.startsWith('data:');
 }
@@ -196,6 +208,12 @@ async function urlToDataUrl(url: string): Promise<string> {
     reader.onerror = () => reject(new Error('read failed'));
     reader.readAsDataURL(blob);
   });
+}
+
+async function imageUrlToBlob(url: string): Promise<Blob> {
+  const response = await fetch(toCanvasSafeImageUrl(url));
+  if (!response.ok) throw new Error('編集画像の一時保存に失敗しました。');
+  return response.blob();
 }
 
 /** アスペクト比に合わせてカンバス中心に画像を配置（パディング）する前処理 */
@@ -343,6 +361,11 @@ export default function BgRemoverMulti({
   const [pendingEnhance, setPendingEnhance] = useState<{ fileId: string; target: EnhanceTarget } | null>(null);
   const [pendingBatchTarget, setPendingBatchTarget] = useState<EnhanceTarget | null>(null);
   const [refinementFileId, setRefinementFileId] = useState<string | null>(null);
+  const [refinementAccess, setRefinementAccess] = useState<RefinementAccess | null>(null);
+  const [refinementTrialUsed, setRefinementTrialUsed] = useState(false);
+  const [offerwallRefinementImageIds, setOfferwallRefinementImageIds] = useState<Set<string>>(() => new Set());
+  const [refinementRedirectingFileId, setRefinementRedirectingFileId] = useState<string | null>(null);
+  const restoredDraftIdRef = useRef<string | null>(null);
   const proOfferImpressionTrackedRef = useRef(false);
   const sectionModeRef = useRef<HTMLDivElement>(null);
   const sectionAiPromptRef = useRef<HTMLDivElement>(null);
@@ -462,6 +485,10 @@ export default function BgRemoverMulti({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [debugMode]);
+
+  useEffect(() => {
+    setRefinementTrialUsed(readRefinementTrialUsed(window.localStorage));
+  }, []);
 
   useEffect(() => {
     try {
@@ -672,6 +699,72 @@ export default function BgRemoverMulti({
       objectUrlsRef.current.push(url);
     }
   };
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const draftId = params.get('refineDraft');
+    if (!draftId) return;
+
+    window.history.replaceState({}, '', `${window.location.pathname}${window.location.hash}`);
+    if (!hasOfferwallAccess(window.sessionStorage, draftId)) {
+      setMsg('仕上げ修正のアクセス情報を確認できませんでした。もう一度お試しください。');
+      return;
+    }
+
+    let active = true;
+    readRefinementDraft(draftId)
+      .then(draft => {
+        if (!active || !draft) {
+          if (active) setMsg('一時保存した編集画像を復元できませんでした。もう一度お試しください。');
+          return;
+        }
+
+        const sourceUrl = URL.createObjectURL(draft.sourceBlob);
+        const transparentUrl = URL.createObjectURL(draft.transparentBlob);
+        const outputUrl = URL.createObjectURL(draft.outputBlob);
+        objectUrlsRef.current.push(sourceUrl, transparentUrl, outputUrl);
+        const restoredFile = new File([draft.sourceBlob], draft.imageName, {
+          type: draft.sourceBlob.type || 'image/png',
+        });
+        const restoredInput: InFile = {
+          id: draft.fileId,
+          originalFile: restoredFile,
+          blob: restoredFile,
+          name: draft.imageName,
+          status: 'completed',
+          previewUrl: sourceUrl,
+          processedSourceUrl: sourceUrl,
+          transparentOutputUrl: transparentUrl,
+          outputUrl,
+          standardOutputUrl: outputUrl,
+          highQualityOutputUrl: outputUrl,
+          refinementAvailable: true,
+          hasRefinement: false,
+          appliedRatio: draft.appliedRatio,
+          appliedTemplate: draft.appliedTemplate,
+          lastProcessingMode: draft.processingMode,
+          sourceQualityMode: draft.processingMode,
+        };
+
+        restoredDraftIdRef.current = draft.id;
+        setInputs(current => current.some(item => item.id === draft.fileId)
+          ? current
+          : [...current, restoredInput]);
+        setOfferwallRefinementImageIds(current => new Set(current).add(draft.fileId));
+        setRefinementAccess('offerwall');
+        setRefinementFileId(draft.fileId);
+        trackAnalyticsEvent('refinement_draft_restored', {
+          user_plan: adUserPlan,
+          processing_mode: draft.processingMode,
+          access_method: 'adsense_offerwall',
+        });
+      })
+      .catch(() => {
+        if (active) setMsg('一時保存した編集画像を復元できませんでした。もう一度お試しください。');
+      });
+
+    return () => { active = false; };
+  }, [adUserPlan]);
 
   // コンポーネントのアンマウント時にクリーンアップ
   useEffect(() => {
@@ -2298,7 +2391,22 @@ export default function BgRemoverMulti({
         processing_mode: input.lastProcessingMode ?? selectedProcessingMode,
         tool_used: toolUsed,
       });
+      if (!isPro && refinementAccess === 'trial' && !refinementTrialUsed) {
+        writeRefinementTrialUsed(window.localStorage);
+        setRefinementTrialUsed(true);
+        trackAnalyticsEvent('refinement_trial_used', {
+          user_plan: adUserPlan,
+          processing_mode: input.lastProcessingMode ?? selectedProcessingMode,
+        });
+      }
+      if (restoredDraftIdRef.current) {
+        const restoredDraftId = restoredDraftIdRef.current;
+        restoredDraftIdRef.current = null;
+        clearOfferwallAccess(window.sessionStorage, restoredDraftId);
+        void deleteRefinementDraft(restoredDraftId);
+      }
       setRefinementFileId(null);
+      setRefinementAccess(null);
       setMsg('切り抜きの修正を適用しました。');
     } catch (error) {
       const message = error instanceof Error ? error.message : '切り抜きの修正に失敗しました。';
@@ -2306,6 +2414,77 @@ export default function BgRemoverMulti({
       throw error;
     }
   };
+
+  const openRefinementEditor = useCallback((input: InFile, access: RefinementAccess) => {
+    trackAnalyticsEvent('refinement_editor_view', {
+      user_plan: adUserPlan,
+      processing_mode: input.lastProcessingMode ?? selectedProcessingMode,
+      placement: 'result_card',
+      access_type: access,
+    });
+    setRefinementAccess(access);
+    setRefinementFileId(input.id);
+  }, [adUserPlan, selectedProcessingMode]);
+
+  const handleRefinementRequest = useCallback(async (input: InFile) => {
+    const access = getRefinementAccess({
+      isPro,
+      hasRefinement: !!input.hasRefinement,
+      trialUsed: refinementTrialUsed,
+      rewardedForImage: offerwallRefinementImageIds.has(input.id),
+    });
+
+    if (access !== 'reward_required') {
+      openRefinementEditor(input, access);
+      return;
+    }
+
+    trackAnalyticsEvent('refinement_reward_offer_view', {
+      user_plan: adUserPlan,
+      processing_mode: input.lastProcessingMode ?? selectedProcessingMode,
+      placement: 'result_card',
+      reward_ad_mode: 'adsense_offerwall',
+    });
+    setRefinementRedirectingFileId(input.id);
+    setMsg('仕上げ修正の準備をしています…');
+    try {
+      const sourceUrl = input.processedSourceUrl || input.previewUrl;
+      const transparentUrl = input.refinedTransparentOutputUrl || input.transparentOutputUrl;
+      if (!sourceUrl || !transparentUrl || !input.outputUrl) {
+        throw new Error('仕上げ修正に必要な画像を確認できませんでした。');
+      }
+
+      const [sourceBlob, transparentBlob, outputBlob] = await Promise.all([
+        imageUrlToBlob(sourceUrl),
+        imageUrlToBlob(transparentUrl),
+        imageUrlToBlob(input.outputUrl),
+      ]);
+      const draftId = typeof crypto.randomUUID === 'function'
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      await saveRefinementDraft({
+        id: draftId,
+        fileId: input.id,
+        imageName: input.name,
+        sourceBlob,
+        transparentBlob,
+        outputBlob,
+        appliedRatio: input.appliedRatio ?? selectedRatio,
+        appliedTemplate: input.appliedTemplate ?? null,
+        processingMode: input.lastProcessingMode ?? selectedProcessingMode,
+        createdAt: Date.now(),
+      });
+      trackAnalyticsEvent('refinement_draft_saved', {
+        user_plan: adUserPlan,
+        processing_mode: input.lastProcessingMode ?? selectedProcessingMode,
+        access_method: 'adsense_offerwall',
+      });
+      window.location.assign(`/refine/access?draft=${encodeURIComponent(draftId)}`);
+    } catch (error) {
+      setRefinementRedirectingFileId(null);
+      setMsg(error instanceof Error ? error.message : '仕上げ修正の準備に失敗しました。');
+    }
+  }, [adUserPlan, isPro, offerwallRefinementImageIds, openRefinementEditor, refinementTrialUsed, selectedProcessingMode, selectedRatio]);
 
   const handleRemakeWithOriginal = async (input: InFile, reason: 'result_remake' | 'edge_cleanup') => {
     if (!isPro) {
@@ -2666,6 +2845,7 @@ export default function BgRemoverMulti({
               processing_mode: refinementInput.lastProcessingMode ?? selectedProcessingMode,
             });
             setRefinementFileId(null);
+            setRefinementAccess(null);
           }}
         />
       )}
@@ -3585,16 +3765,12 @@ export default function BgRemoverMulti({
                                 variant="outline"
                                 size="sm"
                                 className="w-full sm:w-auto flex-1 sm:flex-none bg-white text-blue-700 hover:bg-blue-50 border-blue-300"
-                                onClick={() => {
-                                  trackAnalyticsEvent('refinement_editor_view', {
-                                    user_plan: adUserPlan,
-                                    processing_mode: input.lastProcessingMode ?? selectedProcessingMode,
-                                    placement: 'result_card',
-                                  });
-                                  setRefinementFileId(input.id);
-                                }}
+                                disabled={refinementRedirectingFileId === input.id}
+                                onClick={() => { void handleRefinementRequest(input); }}
                               >
-                                {input.hasRefinement ? '切り抜きを再修正' : '切り抜きを修正'}
+                                {refinementRedirectingFileId === input.id
+                                  ? '修正を準備中…'
+                                  : input.hasRefinement ? '切り抜きを再修正' : '切り抜きを修正'}
                               </PrimaryButton>
                             )}
                             {/* イージートリミングで編集ボタン - Linkを使用 */}

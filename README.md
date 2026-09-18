@@ -98,6 +98,10 @@ pnpm install
   - `NEXT_PUBLIC_AD_RESULT_URL`（広告リンク先URL）
   - `NEXT_PUBLIC_AD_RESULT_TITLE` / `NEXT_PUBLIC_AD_RESULT_DESCRIPTION` / `NEXT_PUBLIC_AD_RESULT_CTA_LABEL`（広告枠文言の上書き）
   - 注意: 広告や外部スクリプトを導入する場合は、配信元ドメインとブラウザの埋め込み制約を事前検証してください。
+- **任意（仕上げ修正のAdSense Offerwall）**:
+  - `NEXT_PUBLIC_ADSENSE_CLIENT_ID`（AdSenseのサイト運営者ID。`ca-pub-...`形式。設定時にAdSenseサイトコードを全ページで読み込む）
+  - AdSense管理画面ではOfferwallの対象URLを`/refine/access`だけに限定し、リワード広告の利用資格を`1ページビュー`に設定してください。
+  - 初回の仕上げ修正は広告なし、以降は判定ページを経由します。広告在庫がなくOfferwallが表示されない場合は手動修正を無料で通過させます。
 - **任意（Cron保護）**:
   - `CRON_SECRET`（`/api/blob/cleanup` を Vercel Cron から安全に呼ぶための共有シークレット）
 
