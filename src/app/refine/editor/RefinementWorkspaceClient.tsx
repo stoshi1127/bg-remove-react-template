@@ -20,7 +20,7 @@ import type {
   RefinementWorkspaceMode,
 } from '@/lib/refinement/workspace';
 
-type LoadedAssets = { sourceUrl: string; transparentUrl: string; backgroundUrl: string | null };
+type LoadedAssets = { sourceUrl: string; transparentUrl: string };
 
 function safeFileName(name: string): string {
   return `refined_${name.replace(/\.[^.]+$/, '')}.png`;
@@ -54,6 +54,8 @@ export default function RefinementWorkspaceClient({
     [currentId, items],
   );
   currentItemRef.current = currentItem;
+  const sourceAsset = currentItem?.source ?? null;
+  const transparentAsset = currentItem?.refined ?? currentItem?.transparent ?? null;
 
   const isLocked = useCallback((item: RefinementWorkspaceItem) => {
     if (!item.eligible) return true;
@@ -111,33 +113,33 @@ export default function RefinementWorkspaceClient({
     objectUrlsRef.current.forEach(url => URL.revokeObjectURL(url));
     objectUrlsRef.current = [];
     setAssets(null);
-    if (!currentItem?.source || !(currentItem.refined ?? currentItem.transparent)) return;
+    if (!sourceAsset || !transparentAsset) return;
     Promise.all([
-      readRefinementAsset(currentItem.source),
-      readRefinementAsset(currentItem.refined ?? currentItem.transparent),
-      readRefinementAsset(currentItem.background),
-    ]).then(([source, transparent, background]) => {
+      readRefinementAsset(sourceAsset),
+      readRefinementAsset(transparentAsset),
+    ]).then(([source, transparent]) => {
       if (!active || !source || !transparent) return;
       const sourceValue = assetValueToUrl(source);
       const transparentValue = assetValueToUrl(transparent);
-      const backgroundValue = background ? assetValueToUrl(background) : null;
-      const created = [sourceValue, transparentValue, backgroundValue]
+      const created = [sourceValue, transparentValue]
         .filter((value): value is { url: string; revoke: boolean } => !!value && value.revoke)
         .map(value => value.url);
       objectUrlsRef.current.push(...created);
       setAssets({
         sourceUrl: sourceValue.url,
         transparentUrl: transparentValue.url,
-        backgroundUrl: backgroundValue?.url ?? currentItem.backgroundValue,
       });
-      currentDraftRef.current = currentItem.draftStrokes;
     }).catch(error => {
       if (active) setMessage(error instanceof Error ? error.message : '画像を読み込めませんでした。');
     });
     return () => {
       active = false;
     };
-  }, [currentItem]);
+  }, [sourceAsset, transparentAsset]);
+
+  useEffect(() => {
+    currentDraftRef.current = currentItemRef.current?.draftStrokes ?? [];
+  }, [currentId]);
 
   useEffect(() => () => {
     if (draftTimerRef.current) clearTimeout(draftTimerRef.current);
