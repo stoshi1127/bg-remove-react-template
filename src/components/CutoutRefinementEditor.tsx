@@ -252,15 +252,25 @@ export default function CutoutRefinementEditor({
   useEffect(() => {
     const viewport = viewportRef.current;
     if (!viewport) return;
-    const updateSize = () => setViewportSize({
-      width: Math.max(1, viewport.clientWidth),
-      height: Math.max(1, viewport.clientHeight),
-    });
+    let frameId: number | null = null;
+    const updateSize = () => {
+      if (frameId != null) cancelAnimationFrame(frameId);
+      frameId = requestAnimationFrame(() => {
+        const width = Math.max(1, viewport.clientWidth);
+        const height = Math.max(1, viewport.clientHeight);
+        setViewportSize(current => current.width === width && current.height === height
+          ? current
+          : { width, height });
+      });
+    };
     updateSize();
     if (typeof ResizeObserver === 'undefined') return;
     const observer = new ResizeObserver(updateSize);
     observer.observe(viewport);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      if (frameId != null) cancelAnimationFrame(frameId);
+    };
   }, []);
 
   useEffect(() => {
@@ -505,14 +515,14 @@ export default function CutoutRefinementEditor({
     <div
       className={presentation === 'modal'
         ? 'fixed inset-0 z-[160] flex items-center justify-center bg-slate-950/70 sm:p-5'
-        : 'flex min-h-0 flex-1 bg-slate-100'}
+        : 'flex h-full min-h-0 flex-1 overflow-hidden bg-slate-100'}
       role={presentation === 'modal' ? 'dialog' : 'region'}
       aria-modal={presentation === 'modal' ? 'true' : undefined}
       aria-labelledby="refinement-title"
     >
       <div className={presentation === 'modal'
         ? 'flex h-[100dvh] max-h-[100dvh] w-full max-w-6xl flex-col overflow-hidden bg-white shadow-2xl sm:h-[92dvh] sm:max-h-[900px] sm:rounded-2xl'
-        : 'flex min-h-[70dvh] w-full flex-1 flex-col overflow-hidden bg-white lg:min-h-[calc(100dvh-12rem)]'}>
+        : 'flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden bg-white'}>
         <header className="flex items-center justify-between border-b border-slate-200 px-4 py-3 sm:px-6">
           <div className="min-w-0">
             <h2 id="refinement-title" className="text-base font-black text-slate-900 sm:text-lg">切り抜きを修正</h2>
@@ -532,7 +542,7 @@ export default function CutoutRefinementEditor({
         <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
           <div
             ref={viewportRef}
-            className="relative min-h-0 flex-1 overflow-auto overscroll-contain bg-[linear-gradient(45deg,#e2e8f0_25%,transparent_25%),linear-gradient(-45deg,#e2e8f0_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#e2e8f0_75%),linear-gradient(-45deg,transparent_75%,#e2e8f0_75%)] bg-[length:20px_20px] bg-[position:0_0,0_10px,10px_-10px,-10px_0px]"
+            className="relative min-h-[40dvh] flex-1 overflow-auto overscroll-contain [scrollbar-gutter:stable_both-edges] lg:min-h-0 bg-[linear-gradient(45deg,#e2e8f0_25%,transparent_25%),linear-gradient(-45deg,#e2e8f0_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#e2e8f0_75%),linear-gradient(-45deg,transparent_75%,#e2e8f0_75%)] bg-[length:20px_20px] bg-[position:0_0,0_10px,10px_-10px,-10px_0px]"
           >
             <div
               className="grid place-items-center p-3 sm:p-4"

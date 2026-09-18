@@ -312,7 +312,7 @@ export default function RefinementWorkspaceClient({
   const refinedCount = items.filter(item => item.status === 'refined').length;
 
   return (
-    <main className="mx-auto flex min-h-[calc(100dvh-5rem)] max-w-[1600px] flex-col bg-slate-50">
+    <main className="mx-auto flex h-[calc(100dvh-5rem)] min-h-0 max-w-[1600px] flex-col overflow-hidden bg-slate-50">
       <header className="border-b border-slate-200 bg-white px-4 py-3 sm:px-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -336,7 +336,7 @@ export default function RefinementWorkspaceClient({
         </div>
       ) : null}
 
-      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
         <aside className="order-2 flex w-full gap-2 overflow-x-auto border-t border-slate-200 bg-white p-3 lg:order-1 lg:w-64 lg:flex-col lg:overflow-y-auto lg:border-r lg:border-t-0">
           {items.map(item => {
             const locked = isLocked(item);
@@ -364,7 +364,7 @@ export default function RefinementWorkspaceClient({
           })}
         </aside>
 
-        <section className="order-1 flex min-h-0 flex-1 flex-col lg:order-2">
+        <section className="order-1 flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden lg:order-2">
           {isLocked(currentItem) ? (
             <div className="grid min-h-[60dvh] place-items-center p-6 text-center">
               <div>
