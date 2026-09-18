@@ -1,10 +1,12 @@
 # 仕上げ修正エディタ 方針・進行状況
 
 最終更新: 2026-09-18
-現在の状態: **Phase 2再設計 / 一括仕上げ修正ページの実装前**
-実装状況: **現行の単画像`/refine/access`方式はPreview検証で複数画像が失われる問題を確認したため、本番採用せず、一括編集workspace方式へ改修する**
+現在の状態: **Phase 2実装完了 / Preview外部検証待ち**
+実装状況: **単画像`/refine/access`方式を撤去し、一括編集workspace方式へ改修済み。実Offerwall、実機、大容量バッチをPreviewで検証する**
 
 次期実装の確定計画は[`batch-refinement-editor-plan.md`](./batch-refinement-editor-plan.md)を参照する。
+
+> 注記: 本文中の`/refine/access`、単画像draft、画像単位アクセス権に関する記述は旧Preview実装の検証記録であり、現在の仕様ではない。現行仕様と受け入れ条件は上記の一括編集計画を正とする。
 
 ## 1. この文書の目的
 

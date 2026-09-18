@@ -8,7 +8,7 @@ export type RefinementTool = 'erase' | 'restore';
 type EditorTool = RefinementTool | 'pan';
 
 type Point = { x: number; y: number };
-type Stroke = {
+export type RefinementStroke = {
   tool: RefinementTool;
   size: number;
   points: Point[];
@@ -21,6 +21,10 @@ type CutoutRefinementEditorProps = {
   onApply: (blob: Blob, toolUsed: 'erase' | 'restore' | 'both') => Promise<void> | void;
   onCancel: () => void;
   onFirstEdit?: (tool: RefinementTool) => void;
+  initialStrokes?: RefinementStroke[];
+  onDraftChange?: (strokes: RefinementStroke[]) => void;
+  presentation?: 'modal' | 'inline';
+  applyLabel?: string;
 };
 
 const PREVIEW_MAX_SIDE = 1400;
@@ -38,7 +42,7 @@ function loadImage(url: string): Promise<HTMLImageElement> {
 
 function drawStroke(
   ctx: CanvasRenderingContext2D,
-  stroke: Stroke,
+  stroke: RefinementStroke,
   width: number,
   height: number,
   source: CanvasImageSource,
@@ -110,13 +114,17 @@ export default function CutoutRefinementEditor({
   onApply,
   onCancel,
   onFirstEdit,
+  initialStrokes = [],
+  onDraftChange,
+  presentation = 'modal',
+  applyLabel = '修正を適用',
 }: CutoutRefinementEditorProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
   const sourcePreviewRef = useRef<HTMLCanvasElement | null>(null);
   const sourceImageRef = useRef<HTMLImageElement | null>(null);
   const transparentImageRef = useRef<HTMLImageElement | null>(null);
-  const activeStrokeRef = useRef<Stroke | null>(null);
+  const activeStrokeRef = useRef<RefinementStroke | null>(null);
   const activeStrokePointerIdRef = useRef<number | null>(null);
   const pointersRef = useRef(new Map<number, { x: number; y: number }>());
   const gestureRef = useRef<
@@ -125,8 +133,8 @@ export default function CutoutRefinementEditor({
     | null
   >(null);
   const firstEditTrackedRef = useRef(false);
-  const [strokes, setStrokes] = useState<Stroke[]>([]);
-  const [redoStrokes, setRedoStrokes] = useState<Stroke[]>([]);
+  const [strokes, setStrokes] = useState<RefinementStroke[]>(() => initialStrokes);
+  const [redoStrokes, setRedoStrokes] = useState<RefinementStroke[]>([]);
   const [tool, setTool] = useState<EditorTool>('erase');
   const [brushSize, setBrushSize] = useState(32);
   const [zoom, setZoom] = useState(1);
@@ -158,7 +166,7 @@ export default function CutoutRefinementEditor({
     return 'erase' as const;
   }, [strokes]);
 
-  const renderPreview = useCallback((nextStrokes = strokes, active?: Stroke | null) => {
+  const renderPreview = useCallback((nextStrokes = strokes, active?: RefinementStroke | null) => {
     const canvas = canvasRef.current;
     const transparentImage = transparentImageRef.current;
     const sourcePreview = sourcePreviewRef.current;
@@ -227,6 +235,10 @@ export default function CutoutRefinementEditor({
   useEffect(() => {
     renderPreview();
   }, [renderPreview, loading]);
+
+  useEffect(() => {
+    onDraftChange?.(strokes);
+  }, [onDraftChange, strokes]);
 
   useEffect(() => {
     if (typeof window.matchMedia !== 'function') return;
@@ -343,7 +355,7 @@ export default function CutoutRefinementEditor({
     updateBrushCursor(event);
     const rect = event.currentTarget.getBoundingClientRect();
     const normalizedBrushSize = brushSize / Math.max(1, Math.min(rect.width, rect.height));
-    const stroke: Stroke = { tool, size: normalizedBrushSize, points: [pointFromEvent(event)] };
+    const stroke: RefinementStroke = { tool, size: normalizedBrushSize, points: [pointFromEvent(event)] };
     activeStrokeRef.current = stroke;
     activeStrokePointerIdRef.current = event.pointerId;
     renderPreview(strokes, stroke);
@@ -489,9 +501,18 @@ export default function CutoutRefinementEditor({
     }
   };
 
-  return createPortal(
-    <div className="fixed inset-0 z-[160] flex items-center justify-center bg-slate-950/70 sm:p-5" role="dialog" aria-modal="true" aria-labelledby="refinement-title">
-      <div className="flex h-[100dvh] max-h-[100dvh] w-full max-w-6xl flex-col overflow-hidden bg-white shadow-2xl sm:h-[92dvh] sm:max-h-[900px] sm:rounded-2xl">
+  const editor = (
+    <div
+      className={presentation === 'modal'
+        ? 'fixed inset-0 z-[160] flex items-center justify-center bg-slate-950/70 sm:p-5'
+        : 'flex min-h-0 flex-1 bg-slate-100'}
+      role={presentation === 'modal' ? 'dialog' : 'region'}
+      aria-modal={presentation === 'modal' ? 'true' : undefined}
+      aria-labelledby="refinement-title"
+    >
+      <div className={presentation === 'modal'
+        ? 'flex h-[100dvh] max-h-[100dvh] w-full max-w-6xl flex-col overflow-hidden bg-white shadow-2xl sm:h-[92dvh] sm:max-h-[900px] sm:rounded-2xl'
+        : 'flex min-h-[70dvh] w-full flex-1 flex-col overflow-hidden bg-white lg:min-h-[calc(100dvh-12rem)]'}>
         <header className="flex items-center justify-between border-b border-slate-200 px-4 py-3 sm:px-6">
           <div className="min-w-0">
             <h2 id="refinement-title" className="text-base font-black text-slate-900 sm:text-lg">切り抜きを修正</h2>
@@ -604,12 +625,13 @@ export default function CutoutRefinementEditor({
 
             <div className="mt-3 grid grid-cols-[0.8fr_1.2fr] gap-2 lg:mt-0 lg:flex lg:flex-col lg:pt-2">
               <button type="button" onClick={onCancel} disabled={applying} className="min-h-11 rounded-xl border border-slate-300 px-4 font-bold text-slate-700">キャンセル</button>
-              <button type="button" onClick={() => void apply()} disabled={loading || applying || strokes.length === 0} className="min-h-11 rounded-xl bg-blue-600 px-4 font-bold text-white disabled:opacity-50 lg:order-first lg:min-h-12">{applying ? '適用中…' : '修正を適用'}</button>
+              <button type="button" onClick={() => void apply()} disabled={loading || applying || strokes.length === 0} className="min-h-11 rounded-xl bg-blue-600 px-4 font-bold text-white disabled:opacity-50 lg:order-first lg:min-h-12">{applying ? '適用中…' : applyLabel}</button>
             </div>
           </aside>
         </div>
       </div>
-    </div>,
-    document.body,
+    </div>
   );
+
+  return presentation === 'inline' ? editor : createPortal(editor, document.body);
 }

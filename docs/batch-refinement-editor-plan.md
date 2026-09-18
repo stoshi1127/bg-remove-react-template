@@ -1,7 +1,17 @@
 # 一括仕上げ修正ページ 改修計画
 
 最終更新: 2026-09-18
-状態: **方針確定・実装前**
+状態: **実装完了・Preview外部検証待ち**
+
+## 実装結果（2026-09-18）
+
+- IndexedDB v2へ`workspaces`、`items`、`assets`を追加し、全件を単一トランザクションで保存する。
+- `/refine/editor/trial`、`/refine/editor/rewarded`、`/refine/editor/pro`を実装した。
+- 画像切替、下書き復元、初回1画像無料、残りロック、rewarded解放、Pro認可を実装した。
+- 現在画像、選択画像ZIP、修正済み画像ZIPの保存を実装した。
+- 容量事前判定、容量不足時の画像選択、IndexedDB失敗時の単画像フォールバックを実装した。
+- 旧`/refine/access`と単画像draft保存を撤去した。
+- 自動テスト45件と本番ビルドが成功した。実Offerwall、30枚、HEIC、実機モバイルはPreviewでの確認待ち。
 
 ## 1. 目的
 
