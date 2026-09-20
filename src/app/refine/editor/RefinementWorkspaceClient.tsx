@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { saveAs } from 'file-saver';
 import CutoutRefinementEditor, { type RefinementStroke, type RefinementTool } from '@/components/CutoutRefinementEditor';
+import RefinementThumbnail, { createThumbnailCache } from './RefinementThumbnail';
 import { trackAnalyticsEvent } from '@/lib/analytics/events';
 import { calculateAlphaBoundingBox, composeRefinementOutput } from '@/lib/refinement/imageComposition';
 import { writeRefinementTrialUsed } from '@/lib/refinement/entitlement';
@@ -40,6 +41,7 @@ export default function RefinementWorkspaceClient({
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [assets, setAssets] = useState<LoadedAssets | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
+  const [exportMode, setExportMode] = useState(false);
   const [message, setMessage] = useState('編集workspaceを読み込んでいます…');
   const [fatalError, setFatalError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
@@ -48,6 +50,7 @@ export default function RefinementWorkspaceClient({
   const draftTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const currentDraftRef = useRef<RefinementStroke[]>([]);
   const currentItemRef = useRef<RefinementWorkspaceItem | null>(null);
+  const thumbnailCache = useMemo(() => createThumbnailCache(), []);
 
   const currentItem = useMemo(
     () => items.find(item => item.id === currentId) ?? null,
@@ -141,10 +144,14 @@ export default function RefinementWorkspaceClient({
     currentDraftRef.current = currentItemRef.current?.draftStrokes ?? [];
   }, [currentId]);
 
-  useEffect(() => () => {
-    if (draftTimerRef.current) clearTimeout(draftTimerRef.current);
-    objectUrlsRef.current.forEach(url => URL.revokeObjectURL(url));
-  }, []);
+  useEffect(() => {
+    thumbnailCache.revive();
+    return () => {
+      if (draftTimerRef.current) clearTimeout(draftTimerRef.current);
+      objectUrlsRef.current.forEach(url => URL.revokeObjectURL(url));
+      thumbnailCache.dispose();
+    };
+  }, [thumbnailCache]);
 
   const saveDraft = useCallback((strokes: RefinementStroke[]) => {
     if (!currentItemRef.current) return;
@@ -312,6 +319,9 @@ export default function RefinementWorkspaceClient({
   }
 
   const refinedCount = items.filter(item => item.status === 'refined').length;
+  const eligibleIds = items.filter(item => item.eligible).map(item => item.id);
+  const selectedCount = eligibleIds.filter(id => selectedIds.has(id)).length;
+  const selectedRefinedCount = items.filter(item => item.eligible && selectedIds.has(item.id) && item.status === 'refined').length;
 
   return (
     <main className="mx-auto flex h-[calc(100dvh-5rem)] min-h-0 max-w-[1600px] flex-col overflow-hidden bg-slate-50">
@@ -322,13 +332,19 @@ export default function RefinementWorkspaceClient({
             <p className="text-xs text-slate-500">{items.findIndex(item => item.id === currentId) + 1} / {items.length}・修正済み {refinedCount}枚</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <button type="button" onClick={() => void saveCurrent()} disabled={exporting || !currentItem.eligible} className="rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm font-bold text-blue-700 disabled:opacity-40">現在画像を保存</button>
-            <button type="button" onClick={() => void saveZip(false)} disabled={exporting} className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-bold text-white disabled:opacity-40">選択画像をZIP保存</button>
-            <button type="button" onClick={() => void saveZip(true)} disabled={exporting || refinedCount === 0} className="rounded-lg border border-emerald-300 bg-white px-3 py-2 text-sm font-bold text-emerald-700 disabled:opacity-40">修正済みだけ保存</button>
-            <Link href="/" className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-700">新しい画像を処理</Link>
+            {!exportMode && <button type="button" onClick={() => void saveCurrent()} disabled={exporting || !currentItem.eligible} className="rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm font-bold text-blue-700 hover:bg-blue-50 focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-40">現在画像を保存</button>}
+            <button type="button" onClick={() => setExportMode(value => !value)} disabled={exporting} aria-pressed={exportMode} className={`rounded-lg px-3 py-2 text-sm font-bold focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-40 ${exportMode ? 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-100' : 'bg-blue-600 text-white hover:bg-blue-700'}`}>{exportMode ? '編集に戻る' : 'ZIPを書き出す'}</button>
+            {!exportMode && <Link href="/" className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-500">新しい画像を処理</Link>}
           </div>
         </div>
-        {message ? <p className="mt-2 text-sm text-blue-700" role="status">{message}</p> : null}
+        {exportMode && <div className="mt-3 flex flex-wrap items-center gap-2 rounded-xl bg-blue-50 p-2 text-sm" aria-label="ZIP書き出し選択">
+          <span className="mr-1 font-bold text-blue-950" role="status" aria-live="polite">{selectedCount}枚を選択中</span>
+          <button type="button" onClick={() => setSelectedIds(new Set(eligibleIds))} className="rounded-lg border border-blue-200 bg-white px-3 py-2 font-bold text-blue-800 hover:bg-blue-100 focus-visible:ring-2 focus-visible:ring-blue-500">全選択</button>
+          <button type="button" onClick={() => setSelectedIds(new Set())} className="rounded-lg border border-blue-200 bg-white px-3 py-2 font-bold text-blue-800 hover:bg-blue-100 focus-visible:ring-2 focus-visible:ring-blue-500">選択解除</button>
+          <button type="button" onClick={() => void saveZip(false)} disabled={exporting || selectedCount === 0} className="rounded-lg bg-blue-600 px-3 py-2 font-bold text-white hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-40">{selectedCount}枚をZIP保存</button>
+          <button type="button" onClick={() => void saveZip(true)} disabled={exporting || selectedRefinedCount === 0} className="rounded-lg border border-emerald-300 bg-white px-3 py-2 font-bold text-emerald-700 hover:bg-emerald-50 focus-visible:ring-2 focus-visible:ring-emerald-500 disabled:opacity-40">修正済み {selectedRefinedCount}枚だけ保存</button>
+        </div>}
+        {message ? <p className="mt-2 text-sm text-blue-700" role="status" aria-live="polite">{message}</p> : null}
       </header>
 
       {routeMode === 'trial' && workspace.trialItemId && !workspace.batchUnlocked ? (
@@ -339,28 +355,24 @@ export default function RefinementWorkspaceClient({
       ) : null}
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
-        <aside className="order-2 flex w-full gap-2 overflow-x-auto border-t border-slate-200 bg-white p-3 lg:order-1 lg:w-64 lg:flex-col lg:overflow-y-auto lg:border-r lg:border-t-0">
+        <aside aria-label={exportMode ? 'ZIP書き出し画像の選択' : '編集画像の選択'} className="order-2 flex w-full shrink-0 gap-2 overflow-x-auto border-t border-slate-200 bg-white p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] lg:order-1 lg:w-48 lg:flex-col lg:overflow-y-auto lg:border-r lg:border-t-0 lg:pb-3 xl:w-52">
           {items.map(item => {
             const locked = isLocked(item);
             return (
-              <div key={item.id} className={`w-36 shrink-0 rounded-xl border p-2 lg:w-full ${item.id === currentId ? 'border-blue-500 bg-blue-50' : 'border-slate-200'}`}>
-                <button type="button" onClick={() => !locked && moveToItem(item.id)} disabled={locked} className="w-full text-left disabled:cursor-not-allowed disabled:opacity-55">
-                  <span className="block truncate text-sm font-bold text-slate-800">{item.name}</span>
-                  <span className="mt-1 block text-xs text-slate-500">{!item.eligible ? '編集対象外' : locked ? 'ロック中' : item.status === 'refined' ? '修正済み' : item.status === 'editing' ? '編集中' : '未修正'}</span>
-                </button>
-                <label className="mt-2 flex items-center gap-2 text-xs text-slate-600">
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.has(item.id)}
-                    disabled={!item.eligible}
-                    onChange={() => setSelectedIds(current => {
-                      const next = new Set(current);
-                      if (next.has(item.id)) next.delete(item.id); else next.add(item.id);
-                      return next;
-                    })}
-                  />
-                  ZIP対象
-                </label>
+              <div key={item.id} className={`w-32 shrink-0 rounded-xl border p-1.5 lg:w-full ${!exportMode && item.id === currentId ? 'border-blue-500 bg-blue-50' : 'border-slate-200 bg-white'}`}>
+                {exportMode ? <label className="block cursor-pointer rounded-lg p-1 hover:bg-blue-50 focus-within:ring-2 focus-within:ring-blue-500">
+                  <RefinementThumbnail item={item} cache={thumbnailCache} />
+                  <span className="mt-1 flex items-start gap-1.5 text-xs font-bold text-slate-800"><input type="checkbox" checked={selectedIds.has(item.id)} disabled={!item.eligible} onChange={() => setSelectedIds(current => {
+                    const next = new Set(current);
+                    if (next.has(item.id)) next.delete(item.id); else next.add(item.id);
+                    return next;
+                  })} className="mt-0.5 accent-blue-600" /><span className="min-w-0 break-all">{item.name}</span></span>
+                  <span className="mt-1 block text-[11px] text-slate-500">{!item.eligible ? '書き出し対象外' : locked ? '編集ロック中' : item.status === 'refined' ? '修正済み' : item.status === 'editing' ? '編集中' : '未修正'}</span>
+                </label> : <button type="button" onClick={() => !locked && moveToItem(item.id)} disabled={locked} aria-current={item.id === currentId ? 'true' : undefined} aria-label={`${item.name}を編集・${!item.eligible ? '編集対象外' : locked ? 'ロック中' : item.status === 'refined' ? '修正済み' : item.status === 'editing' ? '編集中' : '未修正'}`} className="w-full rounded-lg p-1 text-left hover:bg-blue-50 focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-55">
+                  <RefinementThumbnail item={item} cache={thumbnailCache} />
+                  <span className="mt-1 block truncate text-xs font-bold text-slate-800">{item.name}</span>
+                  <span className="mt-1 block text-[11px] text-slate-500">{!item.eligible ? '編集対象外' : locked ? 'ロック中' : item.status === 'refined' ? '修正済み' : item.status === 'editing' ? '編集中' : '未修正'}</span>
+                </button>}
               </div>
             );
           })}

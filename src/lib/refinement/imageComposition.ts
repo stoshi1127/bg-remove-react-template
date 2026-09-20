@@ -110,7 +110,7 @@ export async function composeRefinementOutput({
   if (ratio === 'fit-subject' && boundingBox) {
     context.drawImage(foreground, boundingBox.x, boundingBox.y, boundingBox.width, boundingBox.height, 0, 0, width, height);
   } else {
-    const padding = ratio === 'original' ? 0 : 100;
+    const padding = ratio === 'original' ? 0 : Math.min(100, Math.floor(Math.min(width, height) * 0.2));
     const scale = Math.min((width - padding) / foreground.naturalWidth, (height - padding) / foreground.naturalHeight);
     const drawWidth = foreground.naturalWidth * scale;
     const drawHeight = foreground.naturalHeight * scale;

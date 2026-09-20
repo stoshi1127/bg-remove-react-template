@@ -148,6 +148,8 @@ export default function CutoutRefinementEditor({
   const [viewportSize, setViewportSize] = useState({ width: 1, height: 1 });
   const [brushCursor, setBrushCursor] = useState({ x: 0, y: 0, visible: false });
   const [hasFinePointer, setHasFinePointer] = useState(false);
+  const [toolsOpen, setToolsOpen] = useState(true);
+  const [viewOpen, setViewOpen] = useState(false);
 
   const fitScale = useMemo(() => Math.min(
     1,
@@ -529,20 +531,22 @@ export default function CutoutRefinementEditor({
             <p className="truncate text-xs text-slate-500">{imageName}・{imageSize.width}×{imageSize.height}px</p>
           </div>
           <div className="flex items-center gap-1">
-            <button type="button" onClick={undo} disabled={strokes.length === 0} className="flex min-h-11 min-w-11 items-center justify-center rounded-full text-slate-600 hover:bg-slate-100 disabled:opacity-30" aria-label="元に戻す" title="元に戻す">
+            <button type="button" onClick={undo} disabled={strokes.length === 0} className="flex min-h-11 min-w-11 items-center justify-center rounded-full text-slate-600 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-30" aria-label="元に戻す" title="元に戻す">
               <span className="material-symbols-outlined" aria-hidden="true">undo</span>
             </button>
-            <button type="button" onClick={redo} disabled={redoStrokes.length === 0} className="flex min-h-11 min-w-11 items-center justify-center rounded-full text-slate-600 hover:bg-slate-100 disabled:opacity-30" aria-label="やり直す" title="やり直す">
+            <button type="button" onClick={redo} disabled={redoStrokes.length === 0} className="flex min-h-11 min-w-11 items-center justify-center rounded-full text-slate-600 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-30" aria-label="やり直す" title="やり直す">
               <span className="material-symbols-outlined" aria-hidden="true">redo</span>
             </button>
-            <button type="button" onClick={onCancel} disabled={applying} className="min-h-11 min-w-11 rounded-full text-2xl text-slate-500 hover:bg-slate-100" aria-label="修正画面を閉じる">×</button>
+            {presentation === 'inline' && <button type="button" onClick={() => void apply()} disabled={loading || applying || strokes.length === 0} className="min-h-11 rounded-xl bg-blue-600 px-3 text-xs font-bold text-white hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-400 disabled:opacity-50 sm:px-4 sm:text-sm">{applying ? '適用中…' : applyLabel}</button>}
+            {presentation === 'modal' && <button type="button" onClick={onCancel} disabled={applying} className="min-h-11 min-w-11 rounded-full text-2xl text-slate-500 hover:bg-slate-100" aria-label="修正画面を閉じる">×</button>}
           </div>
         </header>
 
         <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+          <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
           <div
             ref={viewportRef}
-            className="relative min-h-[40dvh] flex-1 overflow-auto overscroll-contain [scrollbar-gutter:stable_both-edges] lg:min-h-0 bg-[linear-gradient(45deg,#e2e8f0_25%,transparent_25%),linear-gradient(-45deg,#e2e8f0_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#e2e8f0_75%),linear-gradient(-45deg,transparent_75%,#e2e8f0_75%)] bg-[length:20px_20px] bg-[position:0_0,0_10px,10px_-10px,-10px_0px]"
+            className={`relative flex-1 overflow-auto overscroll-contain [scrollbar-gutter:stable_both-edges] bg-[linear-gradient(45deg,#e2e8f0_25%,transparent_25%),linear-gradient(-45deg,#e2e8f0_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#e2e8f0_75%),linear-gradient(-45deg,transparent_75%,#e2e8f0_75%)] bg-[length:20px_20px] bg-[position:0_0,0_10px,10px_-10px,-10px_0px] ${presentation === 'modal' ? 'min-h-[40dvh] lg:min-h-0' : 'min-h-0'}`}
           >
             <div
               className="grid place-items-center p-3 sm:p-4"
@@ -583,14 +587,35 @@ export default function CutoutRefinementEditor({
                 )}
               </div>
             </div>
-            <div className="pointer-events-none sticky bottom-2 flex justify-center px-2">
-              <span className="rounded-full bg-slate-950/70 px-3 py-1 text-[11px] font-bold text-white">
-                {Math.round(zoom * 100)}%・{hasFinePointer ? '移動ツールでドラッグ' : '2本指で移動/拡大'}
-              </span>
+          </div>
+          {presentation === 'inline' && <div className="pointer-events-none absolute inset-x-2 top-2 z-10 flex items-start justify-between gap-2 sm:inset-x-4 sm:top-4">
+            <div className="pointer-events-auto max-w-[min(19rem,calc(100vw-5rem))] rounded-xl border border-slate-200 bg-white/95 p-1.5 shadow-lg backdrop-blur-sm">
+              <button type="button" aria-expanded={toolsOpen} aria-controls="inline-refinement-tools" onClick={() => setToolsOpen(value => !value)} className="min-h-10 rounded-lg px-3 text-sm font-bold text-slate-800 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-500">ツール {toolsOpen ? '−' : '＋'}</button>
+              <div id="inline-refinement-tools" hidden={!toolsOpen} className={toolsOpen ? 'space-y-2 p-1' : 'hidden'}>
+                <div className="flex gap-1" role="group" aria-label="修正ツール">
+                  {(['erase', 'restore', 'pan'] as const).map(nextTool => <button key={nextTool} type="button" onClick={() => { setTool(nextTool); setShowOriginal(false); setShowBefore(false); }} aria-pressed={tool === nextTool} className={`min-h-10 flex-1 rounded-lg border px-2 text-xs font-bold hover:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500 ${tool === nextTool ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-200 bg-white text-slate-700'}`}>{nextTool === 'erase' ? '透過' : nextTool === 'restore' ? '復元' : '移動'}</button>)}
+                </div>
+                <label className="flex items-center gap-2 text-xs font-bold text-slate-700">ブラシ <span className="tabular-nums">{brushSize}px</span><input type="range" min="8" max="120" step="2" value={brushSize} onChange={event => setBrushSize(Number(event.target.value))} disabled={tool === 'pan'} className="min-w-0 flex-1 accent-blue-600 focus-visible:ring-2 focus-visible:ring-blue-500" /></label>
+              </div>
             </div>
+            <div className="pointer-events-auto rounded-xl border border-slate-200 bg-white/95 p-1.5 shadow-lg backdrop-blur-sm">
+              <button type="button" aria-expanded={viewOpen} aria-controls="inline-refinement-view" onClick={() => setViewOpen(value => !value)} className="min-h-10 rounded-lg px-3 text-sm font-bold text-slate-800 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-500">表示 {viewOpen ? '−' : '＋'}</button>
+              <div id="inline-refinement-view" hidden={!viewOpen} className={viewOpen ? 'grid w-40 grid-cols-3 gap-1 p-1' : 'hidden'}>
+                <button type="button" onClick={() => changeZoom(zoom - 0.25)} aria-label="縮小" className="min-h-10 rounded-lg border border-slate-200 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-500">−</button>
+                <button type="button" onClick={() => changeZoom(1)} aria-label="全体表示" className="min-h-10 rounded-lg border border-slate-200 text-xs hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-500">全体</button>
+                <button type="button" onClick={() => changeZoom(zoom + 0.25)} aria-label="拡大" className="min-h-10 rounded-lg border border-slate-200 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-500">＋</button>
+                <button type="button" onClick={() => { setShowBefore(value => !value); setShowOriginal(false); }} aria-pressed={showBefore} className={`col-span-3 min-h-10 rounded-lg border text-xs font-bold focus-visible:ring-2 focus-visible:ring-blue-500 ${showBefore ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-100'}`}>修正前と比較</button>
+                <button type="button" onClick={() => { setShowOriginal(value => !value); setShowBefore(false); }} aria-pressed={showOriginal} className={`col-span-3 min-h-10 rounded-lg border text-xs font-bold focus-visible:ring-2 focus-visible:ring-blue-500 ${showOriginal ? 'border-amber-600 bg-amber-500 text-white' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-100'}`}>元画像と比較</button>
+              </div>
+            </div>
+          </div>}
+          <div className="pointer-events-none absolute bottom-[calc(0.5rem+env(safe-area-inset-bottom))] right-[calc(0.5rem+env(safe-area-inset-right))] z-10 sm:bottom-4 sm:right-4">
+            <span className="rounded-full bg-slate-950/80 px-3 py-1 text-[11px] font-bold text-white shadow-sm tabular-nums">{Math.round(zoom * 100)}%・{hasFinePointer ? '移動ツールでドラッグ' : '2本指で移動/拡大'}</span>
+          </div>
+          {presentation === 'inline' && (loading || error) && <div className="pointer-events-none absolute bottom-12 left-2 z-10 max-w-xs rounded-lg bg-white/95 p-2 text-sm shadow-lg" role={error ? 'alert' : 'status'}>{error ?? '編集画面を準備しています…'}</div>}
           </div>
 
-          <aside className="w-full shrink-0 overflow-y-auto border-t border-slate-200 bg-white p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] lg:w-80 lg:space-y-5 lg:border-l lg:border-t-0 lg:p-5">
+          {presentation === 'modal' && <aside className="w-full shrink-0 overflow-y-auto border-t border-slate-200 bg-white p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] lg:w-80 lg:space-y-5 lg:border-l lg:border-t-0 lg:p-5">
             <div>
               <p className="mb-2 hidden text-xs font-bold uppercase tracking-wide text-slate-500 lg:block">ツール</p>
               <div className="grid grid-cols-3 gap-2">
@@ -637,7 +662,7 @@ export default function CutoutRefinementEditor({
               <button type="button" onClick={onCancel} disabled={applying} className="min-h-11 rounded-xl border border-slate-300 px-4 font-bold text-slate-700">キャンセル</button>
               <button type="button" onClick={() => void apply()} disabled={loading || applying || strokes.length === 0} className="min-h-11 rounded-xl bg-blue-600 px-4 font-bold text-white disabled:opacity-50 lg:order-first lg:min-h-12">{applying ? '適用中…' : applyLabel}</button>
             </div>
-          </aside>
+          </aside>}
         </div>
       </div>
     </div>

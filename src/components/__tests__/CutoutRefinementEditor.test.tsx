@@ -44,6 +44,20 @@ describe('CutoutRefinementEditor', () => {
     expect(props.onCancel).toHaveBeenCalledTimes(1);
   });
 
+  test('keeps inline actions visible while tools and view controls can collapse', () => {
+    render(<CutoutRefinementEditor {...props} presentation="inline" applyLabel="適用して次へ" />);
+
+    expect(screen.getByRole('button', { name: '適用して次へ' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'ツール −' })).toHaveAttribute('aria-expanded', 'true');
+    fireEvent.click(screen.getByRole('button', { name: 'ツール −' }));
+    expect(screen.queryByRole('button', { name: '透過' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '元に戻す' })).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: '表示 ＋' }));
+    expect(screen.getByRole('button', { name: '修正前と比較' })).toHaveAttribute('aria-pressed', 'false');
+    fireEvent.click(screen.getByRole('button', { name: '修正前と比較' }));
+    expect(screen.getByRole('button', { name: '修正前と比較' })).toHaveAttribute('aria-pressed', 'true');
+  });
+
   test('closes with Escape', () => {
     render(<CutoutRefinementEditor {...props} />);
     fireEvent.keyDown(window, { key: 'Escape' });
