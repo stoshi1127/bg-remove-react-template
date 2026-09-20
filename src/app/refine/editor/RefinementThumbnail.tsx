@@ -27,6 +27,7 @@ async function makeThumbnail(item: RefinementWorkspaceItem): Promise<string> {
       background: backdrop?.url ?? item.backgroundValue,
       ratio: item.ratio,
       boundingBox: item.boundingBox,
+      recalculateBoundingBox: item.refined === null,
       maxSide: 160,
     });
     return URL.createObjectURL(blob);

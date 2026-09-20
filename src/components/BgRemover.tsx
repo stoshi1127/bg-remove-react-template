@@ -738,7 +738,7 @@ export default function BgRemoverMulti({
   }, [processingLogs.length]);
 
   // 特定の入力ファイルのステータスを更新するヘルパー関数
-  const updateInputStatus = useCallback((id: string, newStatus: FileStatus, newMessage?: string, newOutputUrl?: string) => {
+  const updateInputStatus = useCallback((id: string, newStatus: FileStatus, newMessage?: string, newOutputUrl?: string, transparentBoundingBox?: { x: number; y: number; width: number; height: number }) => {
     setInputs(prevInputs =>
       prevInputs.map(input => {
         if (input.id === id) {
@@ -751,15 +751,18 @@ export default function BgRemoverMulti({
           if (newStatus === 'completed') {
             updates.endTime = Date.now();
           }
+          if (transparentBoundingBox) updates.boundingBox = transparentBoundingBox;
 
           if (newOutputUrl && newOutputUrl !== input.outputUrl) {
             registerObjectUrl(newOutputUrl);
             updates.outputUrl = newOutputUrl;
-            calculateBoundingBox(newOutputUrl).then(bbox => {
-              setInputs(prev => prev.map(i => i.id === id ? { ...i, boundingBox: bbox } : i));
-            }).catch(err => {
-              console.error("Bounding box calculation failed:", err);
-            });
+            if (!transparentBoundingBox) {
+              calculateBoundingBox(newOutputUrl).then(bbox => {
+                setInputs(prev => prev.map(i => i.id === id ? { ...i, boundingBox: bbox } : i));
+              }).catch(err => {
+                console.error("Bounding box calculation failed:", err);
+              });
+            }
             const img = new Image();
             if (!isDataUrl(newOutputUrl)) {
               img.crossOrigin = 'anonymous';
@@ -2008,6 +2011,7 @@ export default function BgRemoverMulti({
         });
 
         let finalUrl = imageResult.outputUrl;
+        let transparentBoundingBox: { x: number; y: number; width: number; height: number } | undefined;
 
         failureStage = 'post_processing';
         try {
@@ -2029,7 +2033,7 @@ export default function BgRemoverMulti({
             }
           } else {
             // 通常処理: 背景除去後の画像からバウンディングボックスを計算してテンプレ適用
-            const subjectBbox = await Promise.race([
+            transparentBoundingBox = await Promise.race([
               calculateBoundingBox(finalUrl),
               new Promise<undefined>((_, reject) =>
                 setTimeout(() => reject(new Error('バウンディングボックス計算タイムアウト')), 15000)
@@ -2039,7 +2043,7 @@ export default function BgRemoverMulti({
             if (selectedRatio !== '1:1' || selectedTemplate) {
               const templateUrl = selectedTemplate ?? 'transparent';
               finalUrl = await Promise.race([
-                applyTemplate(finalUrl, templateUrl, selectedRatio, subjectBbox),
+                applyTemplate(finalUrl, templateUrl, selectedRatio, transparentBoundingBox),
                 new Promise<string>((_, reject) =>
                   setTimeout(() => reject(new Error('テンプレート適用タイムアウト')), 30000)
                 )
@@ -2047,7 +2051,7 @@ export default function BgRemoverMulti({
             }
           }
 
-          updateInputStatus(input.id, "completed", undefined, finalUrl);
+          updateInputStatus(input.id, "completed", undefined, finalUrl, transparentBoundingBox);
           setInputs(prev => prev.map(i => {
             if (i.id !== input.id) return i;
             const next = { ...i } as InFile;
@@ -2315,7 +2319,7 @@ export default function BgRemoverMulti({
           bbox,
         );
       }
-      updateInputStatus(input.id, 'completed', undefined, refinedFinalUrl);
+      updateInputStatus(input.id, 'completed', undefined, refinedFinalUrl, bbox);
       const standardUrl = isPro
         ? await createStandardOutputUrl(refinedFinalUrl).catch(() => refinedFinalUrl)
         : refinedFinalUrl;

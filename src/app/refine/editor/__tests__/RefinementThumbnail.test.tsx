@@ -26,13 +26,14 @@ test('uses the current finished asset and a small output size', async () => {
   const cache = createThumbnailCache();
   const refined = { ...item, refined: { kind: 'url' as const, url: 'refined' }, status: 'refined' as const };
   await cache.get(refined);
-  expect(composeRefinementOutput).toHaveBeenCalledWith(expect.objectContaining({ transparentUrl: 'refined', maxSide: 160 }));
+  expect(composeRefinementOutput).toHaveBeenCalledWith(expect.objectContaining({ transparentUrl: 'refined', recalculateBoundingBox: false, maxSide: 160 }));
   cache.dispose();
 });
 
 test('caches the same image across draft changes and refreshes only a changed finish', async () => {
   const cache = createThumbnailCache();
   await cache.get(item);
+  expect(composeRefinementOutput).toHaveBeenCalledWith(expect.objectContaining({ recalculateBoundingBox: true }));
   await cache.get({ ...item, status: 'editing', draftStrokes: [{ tool: 'erase', size: 0.1, points: [{ x: 0, y: 0 }] }] });
   expect(composeRefinementOutput).toHaveBeenCalledTimes(1);
   const refined = { ...item, refined: { kind: 'url' as const, url: 'refined' }, status: 'refined' as const };

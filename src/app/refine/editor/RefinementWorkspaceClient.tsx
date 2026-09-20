@@ -364,6 +364,7 @@ export default function RefinementWorkspaceClient({
         background: backgroundValue?.url ?? item.backgroundValue,
         ratio: item.ratio,
         boundingBox: item.boundingBox,
+        recalculateBoundingBox: item.refined === null,
         maxSide: routeMode === 'pro' ? 7000 : 3200,
       });
     } finally {
