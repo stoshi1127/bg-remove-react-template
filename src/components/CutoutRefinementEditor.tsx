@@ -277,7 +277,7 @@ export default function CutoutRefinementEditor({
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && !applying) onCancel();
+      if (event.key === 'Escape' && !applying && presentation === 'modal') onCancel();
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') {
         event.preventDefault();
         if (event.shiftKey) {
@@ -299,7 +299,7 @@ export default function CutoutRefinementEditor({
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [applying, onCancel]);
+  }, [applying, onCancel, presentation]);
 
   const pointFromEvent = (event: React.PointerEvent<HTMLCanvasElement>): Point => {
     const canvas = event.currentTarget;

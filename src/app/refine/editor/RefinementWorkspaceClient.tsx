@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { saveAs } from 'file-saver';
 import CutoutRefinementEditor, { type RefinementStroke, type RefinementTool } from '@/components/CutoutRefinementEditor';
@@ -27,6 +28,54 @@ function safeFileName(name: string): string {
   return `refined_${name.replace(/\.[^.]+$/, '')}.png`;
 }
 
+function WorkspaceDialog({
+  titleId,
+  title,
+  description,
+  onDismiss,
+  children,
+}: {
+  titleId: string;
+  title: string;
+  description: string;
+  onDismiss: () => void;
+  children: React.ReactNode;
+}) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    dialogRef.current?.querySelector<HTMLButtonElement>('button')?.focus();
+    return () => previousFocus?.focus();
+  }, []);
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      onDismiss();
+      return;
+    }
+    if (event.key !== 'Tab') return;
+    const buttons = Array.from(dialogRef.current?.querySelectorAll<HTMLElement>('button:not([disabled]), a[href]') ?? []);
+    if (buttons.length === 0) return;
+    if (event.shiftKey && document.activeElement === buttons[0]) {
+      event.preventDefault();
+      buttons[buttons.length - 1].focus();
+    } else if (!event.shiftKey && document.activeElement === buttons[buttons.length - 1]) {
+      event.preventDefault();
+      buttons[0].focus();
+    }
+  };
+
+  return <div className="fixed inset-0 z-[200] grid place-items-center bg-slate-950/60 p-4" role="presentation">
+    <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby={titleId} aria-describedby={`${titleId}-description`} onKeyDown={handleKeyDown} className="max-h-[calc(100dvh-2rem)] w-full max-w-2xl overflow-y-auto overscroll-contain rounded-2xl bg-white p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] shadow-2xl sm:p-8">
+      <h2 id={titleId} className="text-balance text-lg font-black text-slate-900 sm:text-xl">{title}</h2>
+      <p id={`${titleId}-description`} className="mt-2 text-pretty text-sm leading-6 text-slate-600">{description}</p>
+      <div className="mt-6">{children}</div>
+    </div>
+  </div>;
+}
+
 export default function RefinementWorkspaceClient({
   workspaceId,
   routeMode,
@@ -36,6 +85,7 @@ export default function RefinementWorkspaceClient({
   routeMode: RefinementWorkspaceMode;
   isPro: boolean;
 }) {
+  const router = useRouter();
   const [workspace, setWorkspace] = useState<RefinementWorkspace | null>(null);
   const [items, setItems] = useState<RefinementWorkspaceItem[]>([]);
   const [currentId, setCurrentId] = useState<string | null>(null);
@@ -46,11 +96,40 @@ export default function RefinementWorkspaceClient({
   const [fatalError, setFatalError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const [pendingMoveId, setPendingMoveId] = useState<string | null>(null);
+  const [showUnlockPrompt, setShowUnlockPrompt] = useState(false);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [leaving, setLeaving] = useState(false);
+  const [exitError, setExitError] = useState<string | null>(null);
+  const allowExitRef = useRef(false);
   const objectUrlsRef = useRef<string[]>([]);
   const draftTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const draftWriteRef = useRef<Promise<RefinementWorkspaceItem> | null>(null);
   const currentDraftRef = useRef<RefinementStroke[]>([]);
   const currentItemRef = useRef<RefinementWorkspaceItem | null>(null);
   const thumbnailCache = useMemo(() => createThumbnailCache(), []);
+
+  useEffect(() => {
+    if (!workspace) return;
+    const confirmExit = (event: BeforeUnloadEvent) => {
+      if (allowExitRef.current) return;
+      event.preventDefault();
+      event.returnValue = true;
+    };
+    window.addEventListener('beforeunload', confirmExit);
+    return () => window.removeEventListener('beforeunload', confirmExit);
+  }, [workspace]);
+
+  useEffect(() => {
+    if (routeMode !== 'trial' || !workspace?.trialItemId || workspace.batchUnlocked) return;
+    const key = `refinement-unlock-prompt:${workspace.id}`;
+    try {
+      if (window.sessionStorage.getItem(key)) return;
+      window.sessionStorage.setItem(key, 'shown');
+    } catch {
+      // The prompt still works when session storage is unavailable.
+    }
+    setShowUnlockPrompt(true);
+  }, [routeMode, workspace]);
 
   const currentItem = useMemo(
     () => items.find(item => item.id === currentId) ?? null,
@@ -158,13 +237,45 @@ export default function RefinementWorkspaceClient({
     currentDraftRef.current = strokes;
     if (draftTimerRef.current) clearTimeout(draftTimerRef.current);
     draftTimerRef.current = setTimeout(() => {
+      draftTimerRef.current = null;
       const latestItem = currentItemRef.current;
       if (!latestItem || latestItem.id !== currentId) return;
-      const next = { ...latestItem, status: strokes.length > 0 ? 'editing' as const : latestItem.status, draftStrokes: strokes };
+      const next = { ...latestItem, status: strokes.length > 0 ? 'editing' as const : latestItem.refined ? 'refined' as const : 'unmodified' as const, draftStrokes: strokes };
       setItems(existing => existing.map(item => item.id === next.id ? next : item));
-      void updateRefinementItem(next).catch(() => setMessage('下書きを保存できませんでした。'));
+      const write = updateRefinementItem(next);
+      draftWriteRef.current = write;
+      void write.catch(() => setMessage('下書きを保存できませんでした。')).finally(() => {
+        if (draftWriteRef.current === write) draftWriteRef.current = null;
+      });
     }, 250);
   }, [currentId]);
+
+  const leaveWorkspace = async () => {
+    setLeaving(true);
+    setExitError(null);
+    try {
+      while (draftWriteRef.current) await draftWriteRef.current;
+      if (draftTimerRef.current) {
+        clearTimeout(draftTimerRef.current);
+        draftTimerRef.current = null;
+        const item = currentItemRef.current;
+        if (item) {
+          const strokes = currentDraftRef.current;
+          await updateRefinementItem({
+            ...item,
+            status: strokes.length > 0 ? 'editing' : item.refined ? 'refined' : 'unmodified',
+            draftStrokes: strokes,
+          });
+        }
+      }
+      allowExitRef.current = true;
+      router.push('/');
+    } catch {
+      setExitError('下書きを保存できませんでした。もう一度お試しください。');
+    } finally {
+      setLeaving(false);
+    }
+  };
 
   const moveToItem = (itemId: string) => {
     if (itemId === currentId) return;
@@ -334,7 +445,8 @@ export default function RefinementWorkspaceClient({
           <div className="flex flex-wrap gap-2">
             {!exportMode && <button type="button" onClick={() => void saveCurrent()} disabled={exporting || !currentItem.eligible} className="rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm font-bold text-blue-700 hover:bg-blue-50 focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-40">現在画像を保存</button>}
             <button type="button" onClick={() => setExportMode(value => !value)} disabled={exporting} aria-pressed={exportMode} className={`rounded-lg px-3 py-2 text-sm font-bold focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-40 ${exportMode ? 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-100' : 'bg-blue-600 text-white hover:bg-blue-700'}`}>{exportMode ? '編集に戻る' : 'ZIPを書き出す'}</button>
-            {!exportMode && <Link href="/" className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-500">新しい画像を処理</Link>}
+            {routeMode === 'trial' && workspace.trialItemId && !workspace.batchUnlocked && <button type="button" onClick={() => setShowUnlockPrompt(true)} className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-bold text-amber-900 hover:bg-amber-100 focus-visible:ring-2 focus-visible:ring-amber-500">残りの画像を解放</button>}
+            {!exportMode && <button type="button" onClick={() => setShowExitConfirm(true)} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-500">新しい画像を処理</button>}
           </div>
         </div>
         {exportMode && <div className="mt-3 flex flex-wrap items-center gap-2 rounded-xl bg-blue-50 p-2 text-sm" aria-label="ZIP書き出し選択">
@@ -346,13 +458,6 @@ export default function RefinementWorkspaceClient({
         </div>}
         {message ? <p className="mt-2 text-sm text-blue-700" role="status" aria-live="polite">{message}</p> : null}
       </header>
-
-      {routeMode === 'trial' && workspace.trialItemId && !workspace.batchUnlocked ? (
-        <div className="border-b border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950 sm:px-6">
-          最初の1枚を無料で修正しました。残りも修正する場合は、短い広告を見るとこのバッチを解放できます。
-          <Link href={`/refine/editor/rewarded?workspace=${encodeURIComponent(workspace.id)}`} className="ml-3 inline-flex rounded-lg bg-amber-600 px-3 py-2 font-bold text-white">残りを仕上げ修正</Link>
-        </div>
-      ) : null}
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
         <aside aria-label={exportMode ? 'ZIP書き出し画像の選択' : '編集画像の選択'} className="order-2 flex w-full shrink-0 gap-2 overflow-x-auto border-t border-slate-200 bg-white p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] lg:order-1 lg:w-48 lg:flex-col lg:overflow-y-auto lg:border-r lg:border-t-0 lg:pb-3 xl:w-52">
@@ -383,7 +488,7 @@ export default function RefinementWorkspaceClient({
             <div className="grid min-h-[60dvh] place-items-center p-6 text-center">
               <div>
                 <p className="font-bold text-slate-800">この画像はまだ編集できません</p>
-                <Link href={`/refine/editor/rewarded?workspace=${encodeURIComponent(workspace.id)}`} className="mt-4 inline-flex rounded-xl bg-blue-600 px-5 py-3 font-bold text-white">広告を見てバッチを解放</Link>
+                <button type="button" onClick={() => setShowUnlockPrompt(true)} className="mt-4 inline-flex rounded-xl bg-blue-600 px-5 py-3 font-bold text-white hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500">残りの画像を解放する</button>
               </div>
             </div>
           ) : assets ? (
@@ -396,7 +501,7 @@ export default function RefinementWorkspaceClient({
               onDraftChange={saveDraft}
               onFirstEdit={(tool: RefinementTool) => trackAnalyticsEvent('refinement_editor_started', { tool_used: tool, access_type: routeMode })}
               onApply={handleApply}
-              onCancel={() => { window.location.href = '/'; }}
+              onCancel={() => setShowExitConfirm(true)}
               presentation="inline"
               applyLabel="適用して次へ"
             />
@@ -406,19 +511,28 @@ export default function RefinementWorkspaceClient({
         </section>
       </div>
 
-      {pendingMoveId ? (
-        <div className="fixed inset-0 z-[200] grid place-items-center bg-slate-950/60 p-4" role="dialog" aria-modal="true" aria-labelledby="move-confirm-title">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
-            <h2 id="move-confirm-title" className="text-lg font-black text-slate-900">未適用の修正があります</h2>
-            <p className="mt-2 text-sm text-slate-600">下書きを残して移動するか、破棄して移動してください。</p>
-            <div className="mt-5 flex flex-col gap-2 sm:flex-row">
-              <button type="button" onClick={() => void keepDraftAndMove()} className="rounded-xl bg-blue-600 px-4 py-3 font-bold text-white">下書きを保存して移動</button>
-              <button type="button" onClick={() => void discardAndMove()} className="rounded-xl border border-red-300 px-4 py-3 font-bold text-red-700">破棄して移動</button>
-              <button type="button" onClick={() => setPendingMoveId(null)} className="rounded-xl border border-slate-300 px-4 py-3 font-bold text-slate-700">戻る</button>
-            </div>
-          </div>
+      {showExitConfirm ? <WorkspaceDialog titleId="exit-confirm-title" title="編集画面を離れますか？" description="新しい画像の処理画面に移動します。未適用の修正は書き出し画像に反映されません。" onDismiss={() => { if (!leaving) setShowExitConfirm(false); }}>
+        <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+          <button type="button" onClick={() => setShowExitConfirm(false)} disabled={leaving} className="min-h-11 rounded-xl bg-blue-600 px-5 font-bold text-white hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-50">編集を続ける</button>
+          <button type="button" onClick={() => void leaveWorkspace()} disabled={leaving} className="min-h-11 rounded-xl border border-slate-300 px-5 font-bold text-slate-700 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-50">{leaving ? '下書きを保存中…' : '新しい画像を処理'}</button>
         </div>
-      ) : null}
+        {exitError ? <p role="alert" className="mt-3 text-sm font-bold text-red-700">{exitError}</p> : null}
+      </WorkspaceDialog> : null}
+
+      {pendingMoveId && !showExitConfirm ? <WorkspaceDialog titleId="move-confirm-title" title="未適用の修正があります" description="下書きを残して移動するか、破棄して移動してください。" onDismiss={() => setPendingMoveId(null)}>
+        <div className="grid gap-2 sm:grid-cols-[minmax(0,1.5fr)_minmax(0,1.1fr)_auto]">
+          <button type="button" onClick={() => void keepDraftAndMove()} className="min-h-12 whitespace-nowrap rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500 sm:text-base">下書きを保存して移動</button>
+          <button type="button" onClick={() => void discardAndMove()} className="min-h-12 whitespace-nowrap rounded-xl border border-red-300 px-4 py-3 text-sm font-bold text-red-700 hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-red-500 sm:text-base">破棄して移動</button>
+          <button type="button" onClick={() => setPendingMoveId(null)} className="min-h-12 whitespace-nowrap rounded-xl border border-slate-300 px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-500 sm:text-base">戻る</button>
+        </div>
+      </WorkspaceDialog> : null}
+
+      {showUnlockPrompt && !pendingMoveId && !showExitConfirm ? <WorkspaceDialog titleId="unlock-confirm-title" title="残りの画像も仕上げ修正しますか？" description="最初の1枚は無料で修正できました。短い広告を見ると、このバッチの残りの画像も修正できます。" onDismiss={() => setShowUnlockPrompt(false)}>
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <button type="button" onClick={() => setShowUnlockPrompt(false)} className="min-h-11 rounded-xl border border-slate-300 px-5 font-bold text-slate-700 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-500">後で決める</button>
+          <Link href={`/refine/editor/rewarded?workspace=${encodeURIComponent(workspace.id)}`} className="inline-flex min-h-11 items-center justify-center rounded-xl bg-blue-600 px-5 font-bold text-white hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500">広告を見て残りを解放</Link>
+        </div>
+      </WorkspaceDialog> : null}
     </main>
   );
 }

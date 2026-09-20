@@ -115,8 +115,8 @@ function RefinementThumbnail({ item, cache }: { item: RefinementWorkspaceItem; c
     return () => { active = false; observer.disconnect(); };
   }, [cache, key]);
 
-  return <div ref={containerRef} className="grid h-20 w-full place-items-center overflow-hidden rounded-lg bg-[linear-gradient(45deg,#e2e8f0_25%,transparent_25%),linear-gradient(-45deg,#e2e8f0_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#e2e8f0_75%),linear-gradient(-45deg,transparent_75%,#e2e8f0_75%)] bg-[length:16px_16px]">
-    {url ? <img src={url} width={160} height={160} alt="" loading="lazy" className="h-full w-full object-contain" /> : <span className="text-xs text-slate-500" aria-hidden="true">プレビュー準備中</span>}
+  return <div ref={containerRef} className="flex h-24 w-full items-center justify-center overflow-hidden rounded-lg bg-[linear-gradient(45deg,#e2e8f0_25%,transparent_25%),linear-gradient(-45deg,#e2e8f0_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#e2e8f0_75%),linear-gradient(-45deg,transparent_75%,#e2e8f0_75%)] bg-[length:16px_16px]">
+    {url ? <img src={url} width={160} height={160} alt="" loading="lazy" className="block h-auto max-h-full w-auto max-w-full object-contain object-center" /> : <span className="text-xs text-slate-500" aria-hidden="true">プレビュー準備中</span>}
   </div>;
 }
 
