@@ -142,7 +142,7 @@ export async function createRefinementWorkspace({
     status: 'writing',
     mode,
     trialItemId: null,
-    batchUnlocked: mode !== 'trial',
+    batchUnlocked: mode === 'pro',
     createdAt: now,
     updatedAt: now,
     itemOrder: items.map(item => item.id),

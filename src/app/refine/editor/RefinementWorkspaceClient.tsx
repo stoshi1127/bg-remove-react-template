@@ -80,10 +80,12 @@ export default function RefinementWorkspaceClient({
   workspaceId,
   routeMode,
   isPro,
+  offerwallRequested = false,
 }: {
   workspaceId: string;
   routeMode: RefinementWorkspaceMode;
   isPro: boolean;
+  offerwallRequested?: boolean;
 }) {
   const router = useRouter();
   const [workspace, setWorkspace] = useState<RefinementWorkspace | null>(null);
@@ -97,6 +99,7 @@ export default function RefinementWorkspaceClient({
   const [exporting, setExporting] = useState(false);
   const [pendingMoveId, setPendingMoveId] = useState<string | null>(null);
   const [showUnlockPrompt, setShowUnlockPrompt] = useState(false);
+  const [requiresOfferwallBeforeEdit, setRequiresOfferwallBeforeEdit] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [exitError, setExitError] = useState<string | null>(null);
@@ -107,6 +110,7 @@ export default function RefinementWorkspaceClient({
   const currentDraftRef = useRef<RefinementStroke[]>([]);
   const currentItemRef = useRef<RefinementWorkspaceItem | null>(null);
   const thumbnailCache = useMemo(() => createThumbnailCache(), []);
+  const hasBatchAccess = isPro || routeMode === 'rewarded' && offerwallRequested;
 
   useEffect(() => {
     if (!workspace) return;
@@ -120,7 +124,7 @@ export default function RefinementWorkspaceClient({
   }, [workspace]);
 
   useEffect(() => {
-    if (routeMode !== 'trial' || !workspace?.trialItemId || workspace.batchUnlocked) return;
+    if (!workspace || hasBatchAccess || (!workspace.trialItemId && !requiresOfferwallBeforeEdit)) return;
     const key = `refinement-unlock-prompt:${workspace.id}`;
     try {
       if (window.sessionStorage.getItem(key)) return;
@@ -129,7 +133,7 @@ export default function RefinementWorkspaceClient({
       // The prompt still works when session storage is unavailable.
     }
     setShowUnlockPrompt(true);
-  }, [routeMode, workspace]);
+  }, [hasBatchAccess, requiresOfferwallBeforeEdit, workspace]);
 
   const currentItem = useMemo(
     () => items.find(item => item.id === currentId) ?? null,
@@ -141,9 +145,10 @@ export default function RefinementWorkspaceClient({
 
   const isLocked = useCallback((item: RefinementWorkspaceItem) => {
     if (!item.eligible) return true;
-    if (routeMode !== 'trial' || workspace?.batchUnlocked) return false;
+    if (hasBatchAccess) return false;
+    if (requiresOfferwallBeforeEdit) return item.status !== 'refined';
     return !!workspace?.trialItemId && item.id !== workspace.trialItemId && item.status !== 'refined';
-  }, [routeMode, workspace]);
+  }, [hasBatchAccess, requiresOfferwallBeforeEdit, workspace]);
 
   useEffect(() => {
     let active = true;
@@ -167,12 +172,13 @@ export default function RefinementWorkspaceClient({
           return;
         }
         let nextWorkspace = bundle.workspace;
-        if (routeMode === 'rewarded' && !nextWorkspace.batchUnlocked) {
+        if (routeMode === 'rewarded' && offerwallRequested && !nextWorkspace.batchUnlocked) {
           await updateRefinementWorkspace(workspaceId, { mode: 'rewarded', batchUnlocked: true, status: 'editing' });
           nextWorkspace = { ...nextWorkspace, mode: 'rewarded', batchUnlocked: true, status: 'editing', updatedAt: Date.now() };
           trackAnalyticsEvent('refinement_batch_unlocked', { access_method: 'adsense_offerwall' });
         }
         if (!active) return;
+        setRequiresOfferwallBeforeEdit(routeMode === 'rewarded' && !offerwallRequested && nextWorkspace.mode === 'rewarded');
         setWorkspace(nextWorkspace);
         setItems(bundle.items);
         const first = bundle.items.find(item => item.eligible);
@@ -188,7 +194,7 @@ export default function RefinementWorkspaceClient({
         if (active) setFatalError(error instanceof Error ? error.message : '編集workspaceを読み込めませんでした。');
       });
     return () => { active = false; };
-  }, [isPro, routeMode, workspaceId]);
+  }, [isPro, offerwallRequested, routeMode, workspaceId]);
 
   useEffect(() => {
     let active = true;
@@ -311,6 +317,7 @@ export default function RefinementWorkspaceClient({
 
   const handleApply = async (blob: Blob, toolUsed: 'erase' | 'restore' | 'both') => {
     if (!currentItem || !workspace) return;
+    if (isLocked(currentItem)) throw new Error('残りの画像を編集するには、広告案内から解放してください。');
     if (draftTimerRef.current) {
       clearTimeout(draftTimerRef.current);
       draftTimerRef.current = null;
@@ -326,7 +333,7 @@ export default function RefinementWorkspaceClient({
       };
       const saved = await updateRefinementItem(nextItem, blob);
       let nextWorkspace = workspace;
-      if (routeMode === 'trial' && !workspace.trialItemId) {
+      if (!hasBatchAccess && !workspace.trialItemId && !currentItem.refined) {
         await updateRefinementWorkspace(workspace.id, { trialItemId: currentItem.id, status: 'editing' });
         writeRefinementTrialUsed(window.localStorage);
         nextWorkspace = { ...workspace, trialItemId: currentItem.id, status: 'editing', updatedAt: Date.now() };
@@ -335,7 +342,7 @@ export default function RefinementWorkspaceClient({
       currentDraftRef.current = [];
       setItems(existing => existing.map(item => item.id === saved.id ? saved : item));
       setMessage('修正を適用しました。');
-      if (routeMode !== 'trial' || workspace.batchUnlocked) {
+      if (hasBatchAccess) {
         const currentIndex = items.findIndex(item => item.id === currentItem.id);
         const nextItem = items.slice(currentIndex + 1).find(item => item.eligible)
           ?? items.slice(0, currentIndex).find(item => item.eligible && item.status !== 'refined');
@@ -446,7 +453,7 @@ export default function RefinementWorkspaceClient({
           <div className="flex flex-wrap gap-2">
             {!exportMode && <button type="button" onClick={() => void saveCurrent()} disabled={exporting || !currentItem.eligible} className="rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm font-bold text-blue-700 hover:bg-blue-50 focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-40">現在画像を保存</button>}
             <button type="button" onClick={() => setExportMode(value => !value)} disabled={exporting} aria-pressed={exportMode} className={`rounded-lg px-3 py-2 text-sm font-bold focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-40 ${exportMode ? 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-100' : 'bg-blue-600 text-white hover:bg-blue-700'}`}>{exportMode ? '編集に戻る' : 'ZIPを書き出す'}</button>
-            {routeMode === 'trial' && workspace.trialItemId && !workspace.batchUnlocked && <button type="button" onClick={() => setShowUnlockPrompt(true)} className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-bold text-amber-900 hover:bg-amber-100 focus-visible:ring-2 focus-visible:ring-amber-500">残りの画像を解放</button>}
+            {!hasBatchAccess && (workspace.trialItemId || requiresOfferwallBeforeEdit) && <button type="button" onClick={() => setShowUnlockPrompt(true)} className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-bold text-amber-900 hover:bg-amber-100 focus-visible:ring-2 focus-visible:ring-amber-500">残りの画像を解放</button>}
             {!exportMode && <button type="button" onClick={() => setShowExitConfirm(true)} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-500">新しい画像を処理</button>}
           </div>
         </div>
@@ -504,7 +511,7 @@ export default function RefinementWorkspaceClient({
               onApply={handleApply}
               onCancel={() => setShowExitConfirm(true)}
               presentation="inline"
-              applyLabel="適用して次へ"
+              applyLabel={hasBatchAccess ? '適用して次へ' : 'この画像に適用'}
             />
           ) : (
             <div className="grid min-h-[60dvh] place-items-center text-slate-500" role="status">画像を準備しています…</div>
@@ -528,10 +535,10 @@ export default function RefinementWorkspaceClient({
         </div>
       </WorkspaceDialog> : null}
 
-      {showUnlockPrompt && !pendingMoveId && !showExitConfirm ? <WorkspaceDialog titleId="unlock-confirm-title" title="残りの画像も仕上げ修正しますか？" description="最初の1枚は無料で修正できました。短い広告を見ると、このバッチの残りの画像も修正できます。" onDismiss={() => setShowUnlockPrompt(false)}>
+      {showUnlockPrompt && !pendingMoveId && !showExitConfirm ? <WorkspaceDialog titleId="unlock-confirm-title" title="残りの画像も仕上げ修正しますか？" description={requiresOfferwallBeforeEdit ? '無料の修正枠は利用済みです。広告の対象ページへ移動すると、このバッチを解放できます。' : '最初の1枚は無料で修正できました。広告の対象ページへ移動すると、このバッチの残りを修正できます。'} onDismiss={() => setShowUnlockPrompt(false)}>
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <button type="button" onClick={() => setShowUnlockPrompt(false)} className="min-h-11 rounded-xl border border-slate-300 px-5 font-bold text-slate-700 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-500">後で決める</button>
-          <Link href={`/refine/editor/rewarded?workspace=${encodeURIComponent(workspace.id)}`} className="inline-flex min-h-11 items-center justify-center rounded-xl bg-blue-600 px-5 font-bold text-white hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500">広告を見て残りを解放</Link>
+          <a href={`/refine/editor/rewarded?workspace=${encodeURIComponent(workspace.id)}&from_unlock=1`} onClick={() => { allowExitRef.current = true; }} className="inline-flex min-h-11 items-center justify-center rounded-xl bg-blue-600 px-5 font-bold text-white hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500">広告の対象ページへ進む</a>
         </div>
       </WorkspaceDialog> : null}
     </main>

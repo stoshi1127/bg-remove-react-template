@@ -16,16 +16,16 @@ export default async function RefinementEditorPage({
   searchParams,
 }: {
   params: Promise<{ mode: string }>;
-  searchParams: Promise<{ workspace?: string }>;
+  searchParams: Promise<{ workspace?: string; from_unlock?: string }>;
 }) {
-  const [{ mode }, { workspace = '' }, user] = await Promise.all([params, searchParams, getCurrentUser()]);
+  const [{ mode }, { workspace = '', from_unlock }, user] = await Promise.all([params, searchParams, getCurrentUser()]);
   if (!MODES.has(mode as RefinementWorkspaceMode)) notFound();
   return (
     <RefinementWorkspaceClient
       workspaceId={workspace}
       routeMode={mode as RefinementWorkspaceMode}
       isPro={!!user?.isPro}
+      offerwallRequested={from_unlock === '1'}
     />
   );
 }
-
