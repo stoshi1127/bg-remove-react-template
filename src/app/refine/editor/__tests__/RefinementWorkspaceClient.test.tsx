@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { saveAs } from 'file-saver';
 import RefinementWorkspaceClient from '../RefinementWorkspaceClient';
 import { readRefinementWorkspace, readRefinementAsset, updateRefinementItem } from '@/lib/refinement/workspaceStorage';
 import type { RefinementWorkspaceBundle, RefinementWorkspaceItem } from '@/lib/refinement/workspace';
@@ -23,9 +24,14 @@ jest.mock('@/lib/refinement/workspaceStorage', () => ({
   updateRefinementWorkspace: jest.fn(),
 }));
 jest.mock('@/lib/analytics/events', () => ({ trackAnalyticsEvent: jest.fn() }));
+jest.mock('file-saver', () => ({ saveAs: jest.fn() }));
+jest.mock('jszip', () => ({ __esModule: true, default: jest.fn().mockImplementation(() => ({
+  file: jest.fn(),
+  generateAsync: jest.fn(async () => new Blob(['zip'], { type: 'application/zip' })),
+})) }));
 jest.mock('@/lib/refinement/imageComposition', () => ({
   calculateAlphaBoundingBox: jest.fn(async () => ({ x: 0, y: 0, width: 10, height: 10 })),
-  composeRefinementOutput: jest.fn(),
+  composeRefinementOutput: jest.fn(async () => new Blob(['image'], { type: 'image/png' })),
 }));
 
 const item = (id: string, status: RefinementWorkspaceItem['status'] = 'unmodified'): RefinementWorkspaceItem => ({
@@ -137,4 +143,58 @@ test('advances only after entering the rewarded page through the explicit action
   render(<RefinementWorkspaceClient workspaceId="workspace" routeMode="rewarded" offerwallRequested isPro={false} />);
   fireEvent.click(await screen.findByRole('button', { name: '適用して次へ' }));
   await waitFor(() => expect(screen.getByText('2 / 2・修正済み 1枚')).toBeInTheDocument());
+});
+
+test('confirms before saving an image with an immediate unsaved draft', async () => {
+  (readRefinementWorkspace as jest.Mock).mockResolvedValue(bundle('pro'));
+  render(<RefinementWorkspaceClient workspaceId="workspace" routeMode="pro" isPro />);
+  fireEvent.click(await screen.findByRole('button', { name: 'テスト用の下書き' }));
+  fireEvent.click(screen.getByRole('button', { name: '現在画像を保存' }));
+  const dialog = screen.getByRole('dialog', { name: '下書き中の修正は書き出されません' });
+  expect(within(dialog).getByText(/first.png/)).toBeInTheDocument();
+  expect(saveAs).not.toHaveBeenCalled();
+  fireEvent.click(within(dialog).getByRole('button', { name: '編集に戻る' }));
+  expect(saveAs).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: '現在画像を保存' }));
+  fireEvent.click(within(screen.getByRole('dialog', { name: '下書き中の修正は書き出されません' })).getByRole('button', { name: '下書きを含めず画像を保存' }));
+  await waitFor(() => expect(saveAs).toHaveBeenCalledWith(expect.any(Blob), 'refined_first.png'));
+});
+
+test('confirms before saving an image whose draft was already stored', async () => {
+  const data = bundle('pro');
+  data.items[0] = { ...item('first', 'editing'), draftStrokes: [{ tool: 'erase', size: 0.1, points: [{ x: 0, y: 0 }] }] };
+  (readRefinementWorkspace as jest.Mock).mockResolvedValue(data);
+  render(<RefinementWorkspaceClient workspaceId="workspace" routeMode="pro" isPro />);
+  fireEvent.click(await screen.findByRole('button', { name: '現在画像を保存' }));
+  expect(screen.getByRole('dialog', { name: '下書き中の修正は書き出されません' })).toBeInTheDocument();
+  expect(saveAs).not.toHaveBeenCalled();
+});
+
+test('confirms saved drafts before entering ZIP mode without asking twice for the same drafts', async () => {
+  const data = bundle('pro');
+  data.items[1] = { ...item('second', 'editing'), draftStrokes: [{ tool: 'erase', size: 0.1, points: [{ x: 0, y: 0 }] }] };
+  (readRefinementWorkspace as jest.Mock).mockResolvedValue(data);
+  render(<RefinementWorkspaceClient workspaceId="workspace" routeMode="pro" isPro />);
+  fireEvent.click(await screen.findByRole('button', { name: 'ZIPを書き出す' }));
+  const dialog = screen.getByRole('dialog', { name: '下書き中の修正は書き出されません' });
+  expect(within(dialog).getByText(/second.png/)).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: '2枚をZIP保存' })).not.toBeInTheDocument();
+  fireEvent.click(within(dialog).getByRole('button', { name: '編集に戻る' }));
+  expect(screen.queryByRole('button', { name: '2枚をZIP保存' })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'ZIPを書き出す' }));
+  fireEvent.click(within(screen.getByRole('dialog', { name: '下書き中の修正は書き出されません' })).getByRole('button', { name: 'ZIP選択へ進む' }));
+  fireEvent.click(screen.getByRole('button', { name: '2枚をZIP保存' }));
+  expect(screen.queryByRole('dialog', { name: '下書き中の修正は書き出されません' })).not.toBeInTheDocument();
+  await waitFor(() => expect(saveAs).toHaveBeenCalledWith(expect.any(Blob), 'refined_images.zip'));
+});
+
+test('confirms a draft created after entering ZIP mode before saving', async () => {
+  (readRefinementWorkspace as jest.Mock).mockResolvedValue(bundle('pro'));
+  render(<RefinementWorkspaceClient workspaceId="workspace" routeMode="pro" isPro />);
+  fireEvent.click(await screen.findByRole('button', { name: 'ZIPを書き出す' }));
+  expect(screen.queryByRole('dialog', { name: '下書き中の修正は書き出されません' })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'テスト用の下書き' }));
+  fireEvent.click(screen.getByRole('button', { name: '2枚をZIP保存' }));
+  expect(screen.getByRole('dialog', { name: '下書き中の修正は書き出されません' })).toBeInTheDocument();
+  expect(saveAs).not.toHaveBeenCalled();
 });

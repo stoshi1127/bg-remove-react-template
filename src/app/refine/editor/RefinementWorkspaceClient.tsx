@@ -23,6 +23,10 @@ import type {
 } from '@/lib/refinement/workspace';
 
 type LoadedAssets = { sourceUrl: string; transparentUrl: string };
+type ExportConfirmation = {
+  action: 'current' | 'enter-zip' | 'zip-all' | 'zip-refined';
+  draftItems: { id: string; name: string }[];
+};
 
 function safeFileName(name: string): string {
   return `refined_${name.replace(/\.[^.]+$/, '')}.png`;
@@ -97,6 +101,7 @@ export default function RefinementWorkspaceClient({
   const [message, setMessage] = useState('編集workspaceを読み込んでいます…');
   const [fatalError, setFatalError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [exportConfirmation, setExportConfirmation] = useState<ExportConfirmation | null>(null);
   const [pendingMoveId, setPendingMoveId] = useState<string | null>(null);
   const [showUnlockPrompt, setShowUnlockPrompt] = useState(false);
   const [requiresOfferwallBeforeEdit, setRequiresOfferwallBeforeEdit] = useState(false);
@@ -109,6 +114,7 @@ export default function RefinementWorkspaceClient({
   const draftWriteRef = useRef<Promise<RefinementWorkspaceItem> | null>(null);
   const currentDraftRef = useRef<RefinementStroke[]>([]);
   const currentItemRef = useRef<RefinementWorkspaceItem | null>(null);
+  const acknowledgedZipDraftIdsRef = useRef<Set<string>>(new Set());
   const thumbnailCache = useMemo(() => createThumbnailCache(), []);
   const hasBatchAccess = isPro || routeMode === 'rewarded' && offerwallRequested;
 
@@ -421,6 +427,64 @@ export default function RefinementWorkspaceClient({
     }
   };
 
+  const hasDraft = (item: RefinementWorkspaceItem) =>
+    item.status === 'editing' || (item.id === currentId ? currentDraftRef.current.length > 0 : item.draftStrokes.length > 0);
+
+  const selectedZipItems = (onlyRefined: boolean) =>
+    items.filter(item => selectedIds.has(item.id) && item.eligible && (!onlyRefined || item.status === 'refined'));
+
+  const requestSaveCurrent = () => {
+    if (!currentItem) return;
+    if (hasDraft(currentItem)) {
+      setExportConfirmation({ action: 'current', draftItems: [{ id: currentItem.id, name: currentItem.name }] });
+      return;
+    }
+    void saveCurrent();
+  };
+
+  const toggleExportMode = () => {
+    if (exportMode) {
+      acknowledgedZipDraftIdsRef.current.clear();
+      setExportMode(false);
+      return;
+    }
+    const draftItems = selectedZipItems(false).filter(hasDraft);
+    if (draftItems.length > 0) {
+      setExportConfirmation({ action: 'enter-zip', draftItems: draftItems.map(({ id, name }) => ({ id, name })) });
+      return;
+    }
+    setExportMode(true);
+  };
+
+  const requestSaveZip = (onlyRefined: boolean) => {
+    const draftItems = selectedZipItems(onlyRefined)
+      .filter(item => hasDraft(item) && !acknowledgedZipDraftIdsRef.current.has(item.id));
+    if (draftItems.length > 0) {
+      setExportConfirmation({
+        action: onlyRefined ? 'zip-refined' : 'zip-all',
+        draftItems: draftItems.map(({ id, name }) => ({ id, name })),
+      });
+      return;
+    }
+    void saveZip(onlyRefined);
+  };
+
+  const confirmExport = () => {
+    if (!exportConfirmation) return;
+    const { action, draftItems } = exportConfirmation;
+    setExportConfirmation(null);
+    if (action === 'current') {
+      void saveCurrent();
+      return;
+    }
+    draftItems.forEach(item => acknowledgedZipDraftIdsRef.current.add(item.id));
+    if (action === 'enter-zip') {
+      setExportMode(true);
+      return;
+    }
+    void saveZip(action === 'zip-refined');
+  };
+
   if (fatalError) {
     return (
       <main className="mx-auto flex min-h-[70dvh] max-w-xl items-center px-4">
@@ -451,8 +515,8 @@ export default function RefinementWorkspaceClient({
             <p className="text-xs text-slate-500">{items.findIndex(item => item.id === currentId) + 1} / {items.length}・修正済み {refinedCount}枚</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            {!exportMode && <button type="button" onClick={() => void saveCurrent()} disabled={exporting || !currentItem.eligible} className="rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm font-bold text-blue-700 hover:bg-blue-50 focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-40">現在画像を保存</button>}
-            <button type="button" onClick={() => setExportMode(value => !value)} disabled={exporting} aria-pressed={exportMode} className={`rounded-lg px-3 py-2 text-sm font-bold focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-40 ${exportMode ? 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-100' : 'bg-blue-600 text-white hover:bg-blue-700'}`}>{exportMode ? '編集に戻る' : 'ZIPを書き出す'}</button>
+            {!exportMode && <button type="button" onClick={requestSaveCurrent} disabled={exporting || !currentItem.eligible} className="rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm font-bold text-blue-700 hover:bg-blue-50 focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-40">現在画像を保存</button>}
+            <button type="button" onClick={toggleExportMode} disabled={exporting} aria-pressed={exportMode} className={`rounded-lg px-3 py-2 text-sm font-bold focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-40 ${exportMode ? 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-100' : 'bg-blue-600 text-white hover:bg-blue-700'}`}>{exportMode ? '編集に戻る' : 'ZIPを書き出す'}</button>
             {!hasBatchAccess && (workspace.trialItemId || requiresOfferwallBeforeEdit) && <button type="button" onClick={() => setShowUnlockPrompt(true)} className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-bold text-amber-900 hover:bg-amber-100 focus-visible:ring-2 focus-visible:ring-amber-500">残りの画像を解放</button>}
             {!exportMode && <button type="button" onClick={() => setShowExitConfirm(true)} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-500">新しい画像を処理</button>}
           </div>
@@ -461,8 +525,8 @@ export default function RefinementWorkspaceClient({
           <span className="mr-1 font-bold text-blue-950" role="status" aria-live="polite">{selectedCount}枚を選択中</span>
           <button type="button" onClick={() => setSelectedIds(new Set(eligibleIds))} className="rounded-lg border border-blue-200 bg-white px-3 py-2 font-bold text-blue-800 hover:bg-blue-100 focus-visible:ring-2 focus-visible:ring-blue-500">全選択</button>
           <button type="button" onClick={() => setSelectedIds(new Set())} className="rounded-lg border border-blue-200 bg-white px-3 py-2 font-bold text-blue-800 hover:bg-blue-100 focus-visible:ring-2 focus-visible:ring-blue-500">選択解除</button>
-          <button type="button" onClick={() => void saveZip(false)} disabled={exporting || selectedCount === 0} className="rounded-lg bg-blue-600 px-3 py-2 font-bold text-white hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-40">{selectedCount}枚をZIP保存</button>
-          <button type="button" onClick={() => void saveZip(true)} disabled={exporting || selectedRefinedCount === 0} className="rounded-lg border border-emerald-300 bg-white px-3 py-2 font-bold text-emerald-700 hover:bg-emerald-50 focus-visible:ring-2 focus-visible:ring-emerald-500 disabled:opacity-40">修正済み {selectedRefinedCount}枚だけ保存</button>
+          <button type="button" onClick={() => requestSaveZip(false)} disabled={exporting || selectedCount === 0} className="rounded-lg bg-blue-600 px-3 py-2 font-bold text-white hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-40">{selectedCount}枚をZIP保存</button>
+          <button type="button" onClick={() => requestSaveZip(true)} disabled={exporting || selectedRefinedCount === 0} className="rounded-lg border border-emerald-300 bg-white px-3 py-2 font-bold text-emerald-700 hover:bg-emerald-50 focus-visible:ring-2 focus-visible:ring-emerald-500 disabled:opacity-40">修正済み {selectedRefinedCount}枚だけ保存</button>
         </div>}
         {message ? <p className="mt-2 text-sm text-blue-700" role="status" aria-live="polite">{message}</p> : null}
       </header>
@@ -539,6 +603,20 @@ export default function RefinementWorkspaceClient({
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <button type="button" onClick={() => setShowUnlockPrompt(false)} className="min-h-11 rounded-xl border border-slate-300 px-5 font-bold text-slate-700 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-500">後で決める</button>
           <a href={`/refine/editor/rewarded?workspace=${encodeURIComponent(workspace.id)}&from_unlock=1`} onClick={() => { allowExitRef.current = true; }} className="inline-flex min-h-11 items-center justify-center rounded-xl bg-blue-600 px-5 font-bold text-white hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500">広告の対象ページへ進む</a>
+        </div>
+      </WorkspaceDialog> : null}
+
+      {exportConfirmation ? <WorkspaceDialog
+        titleId="export-confirm-title"
+        title="下書き中の修正は書き出されません"
+        description={`${exportConfirmation.action === 'current' ? '現在の画像' : `選択した画像のうち${exportConfirmation.draftItems.length}枚`}に未適用の修正があります。保存する画像には適用済みの仕上がりだけが反映され、下書きはそのまま残ります。`}
+        onDismiss={() => setExportConfirmation(null)}
+      >
+        <p className="break-all text-sm text-slate-600">対象: {exportConfirmation.draftItems.slice(0, 3).map(item => item.name).join('、')}{exportConfirmation.draftItems.length > 3 ? `、ほか${exportConfirmation.draftItems.length - 3}枚` : ''}</p>
+        <p className="mt-2 text-sm text-slate-600">下書きを書き出しに反映するには、編集画面で修正を適用してください。</p>
+        <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <button type="button" onClick={() => setExportConfirmation(null)} className="min-h-11 rounded-xl border border-slate-300 px-5 font-bold text-slate-700 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-500">編集に戻る</button>
+          <button type="button" onClick={confirmExport} className="min-h-11 rounded-xl bg-blue-600 px-5 font-bold text-white hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500">{exportConfirmation.action === 'current' ? '下書きを含めず画像を保存' : exportConfirmation.action === 'enter-zip' ? 'ZIP選択へ進む' : '下書きを含めずZIP保存'}</button>
         </div>
       </WorkspaceDialog> : null}
     </main>
